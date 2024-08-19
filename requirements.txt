@@ -1,0 +1,6 @@
+Flask
+matplotlib
+numpy==1.26.4
+pandas
+squarify
+dexscreener # Adjust this version if needed based on the actual package version

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Flask App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <nav>
+        <form action="{{ request.path }}" method="get">
+            <input type="text" name="user_input" value="{{ request.args.get('user_input', 'SOL') }}">
+            <button type="submit">Search</button>
+        </form>
+        <ul>
+            <li><a href="{{ url_for('index', user_input=request.args.get('user_input', 'SOL')) }}">Home</a></li>
+            <li><a href="{{ url_for('summary', user_input=request.args.get('user_input', 'SOL')) }}">Summary</a></li>
+            <li><a href="{{ url_for('token_summary', user_input=request.args.get('user_input', 'SOL')) }}">Token Summary</a></li>
+            <li><a href="{{ url_for('charts', user_input=request.args.get('user_input', 'SOL')) }}">Charts</a></li>
+        </ul>
+    </nav>
+    <div class="container" id="content">
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>

@@ -1,0 +1,46 @@
+# Python-related
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.sqlite3
+
+# Flask-related
+instance/
+.env
+*.db
+*.log
+
+# IDE-related
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*.swo
+
+# Dependency directories
+venv/
+ENV/
+env/
+.venv/
+
+# Miscellaneous
+*.DS_Store
+*.thumb
+*.gz
+*.zip
+*.tar
+*.tgz
+*.rar
+*.7z
+
+# Coverage reports
+.coverage
+coverage.xml
+*.cover
+*.py,cover
+nosetests.xml
+test_coverage/
