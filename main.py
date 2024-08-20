@@ -228,13 +228,16 @@ def token_summary():
 def process_data():
     try:
         data = request.get_json()  # Get the JSON data from the request
-        card_title = data.get('cardTitle')  # Extract the 'cardTitle' key from the JSON data
-        print(f"Received cardTitle: {card_title}")  # Print or process the cardTitle as needed
+        token_pair_address = data.get('tokenPairAddress')  # Extract the 'tokenPairAddress' key from the JSON data
+        print(f"Received Token Pair Address: {token_pair_address}")
         
-        return jsonify({"message": "Data received", "cardTitle": card_title}), 200
+        search = client.search_pairs(token_pair_address)  # Print or process the tokenPairAddress as needed
+        print(search)
+        return jsonify({"message": "Data received", "tokenPairAddress": token_pair_address}), 200
     except Exception as e:
         print(f"Error: {e}")
         return jsonify({"message": "Error processing data"}), 500
+
 
 @app.route('/charts')
 def charts():

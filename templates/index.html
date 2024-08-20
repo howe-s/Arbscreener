@@ -29,14 +29,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     cards.forEach(card => {
         card.addEventListener('click', () => {
-            const tokenPair = card.dataset.tokenPair;
             const tokenPairAddress = card.querySelector('#pair_address').textContent;
             const cardTitle = card.querySelector('.card-title').textContent;
             const cardVolume = card.querySelector('#volume_24h').textContent;
             const cardPriceNative = card.querySelector('#price_native').textContent;
             const cardPriceUSD = card.querySelector('#price_usd').textContent;
             const cardLiquidity = card.querySelector('#liquidity').textContent;
-
+            console.log(tokenPairAddress)
             summaryDiv.innerHTML = `
                 <p>Token Pair Address: ${tokenPairAddress}</p>
                 <p>Title: ${cardTitle}</p>
@@ -47,8 +46,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 <img id="chart-summary"></img>
             `;
 
-            // Call the function to send data to Flask
-            sendCardTitleToFlask(cardTitle);
+            // Call the function to send data to Flask with TokenPairAddress
+            sendTokenPairAddressToFlask(tokenPairAddress);
 
             summaryDiv.style.display = 'inline-block';
             summaryDiv.style.top = '50%';
@@ -76,13 +75,13 @@ document.addEventListener('DOMContentLoaded', () => {
         summaryDiv.style.cursor = 'move';
     });
 
-    function sendCardTitleToFlask(cardTitle) {
+    function sendTokenPairAddressToFlask(tokenPairAddress) {
         fetch('/process-data', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ cardTitle: cardTitle }),
+            body: JSON.stringify({ tokenPairAddress: tokenPairAddress }),
         })
         .then(response => response.json())
         .then(data => {
@@ -93,6 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
 
 
 
