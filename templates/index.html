@@ -23,51 +23,62 @@
 document.addEventListener('DOMContentLoaded', () => {
     const cards = document.querySelectorAll('.card');
     const summaryDiv = document.getElementById('summary-div');
+    let isDragging = false;
+    let offsetX = 0;
+    let offsetY = 0;
 
     cards.forEach(card => {
         card.addEventListener('click', () => {
-            // Retrieve the token pair address
             const tokenPair = card.dataset.tokenPair;
-            
-            // Retrieve the card-title
-            const tokenPairAddress = card.querySelector('#pair_address').textContent
+            const tokenPairAddress = card.querySelector('#pair_address').textContent;
             const cardTitle = card.querySelector('.card-title').textContent;
             const cardVolume = card.querySelector('#volume_24h').textContent;
-            const cardPriceNative = card.querySelector('#price_native').textContent
-            const cardPriceUSD = card.querySelector('#price_usd').textContent
-            const cardLiquidity = card.querySelector('#liquidity').textContent
-            console.log(cardVolume)
+            const cardPriceNative = card.querySelector('#price_native').textContent;
+            const cardPriceUSD = card.querySelector('#price_usd').textContent;
+            const cardLiquidity = card.querySelector('#liquidity').textContent;
+            const tokenPair_send = document.querySelector('.card-title').textContent.trim();
+            fetch('/submit-data', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ tokenPair: tokenPair_send })
+        })
+        .then(response => response.json())
+        .then(data => console.log('Success:', data))
+        .catch((error) => console.error('Error:', error));
 
-            // Update the summaryDiv with both tokenPairAddress and cardTitle
             summaryDiv.innerHTML = `
-                <p>Token Pair Address: ${tokenPairAddress}</p>
-                <p>Title: ${cardTitle}</p>
-                <p>Volume: ${cardVolume}</p>
-                <p>Liquidity: ${cardLiquidity}</p>
-                <p>Price (Native): ${cardPriceNative}</p>
-                <p>Price (USD): ${cardPriceUSD}</p>
-                <img id="chart-summary"></img>
+               
             `;
 
             summaryDiv.style.display = 'inline-block';
-            summaryDiv.style.position = 'fixed';
-            summaryDiv.style.top = '50%'; /* Center vertically as well */
+            summaryDiv.style.top = '50%';
             summaryDiv.style.left = '50%';
-            summaryDiv.style.transform = 'translate(-50%, 0)'; /* Center both horizontally and vertically */
-            summaryDiv.style.maxWidth = 'fit-content';
-            summaryDiv.style.padding = '10px';
-            
-
-            const chart = LightweightCharts.createChart(document.getElementById('chart'), {
-                width: 600,
-                height: 400,
-            });
-
-            const lineSeries = chart.addLineSeries();
-            lineSeries.setData(solPairData);
+            summaryDiv.style.transform = 'translate(-50%, 0)';
         });
     });
+
+    summaryDiv.addEventListener('mousedown', (event) => {
+        isDragging = true;
+        offsetX = event.clientX - summaryDiv.offsetLeft;
+        offsetY = event.clientY - summaryDiv.offsetTop;
+        summaryDiv.style.cursor = 'grabbing';
+    });
+
+    document.addEventListener('mousemove', (event) => {
+        if (isDragging) {
+            summaryDiv.style.left = `${event.clientX - offsetX}px`;
+            summaryDiv.style.top = `${event.clientY - offsetY}px`;
+        }
+    });
+
+    document.addEventListener('mouseup', () => {
+        isDragging = false;
+        summaryDiv.style.cursor = 'move';
+    });
 });
+
 
 </script>
 <style>

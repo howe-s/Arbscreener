@@ -23,7 +23,7 @@ for package in required_packages:
     except ImportError:
         install(package)
 
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 from dexscreener import DexscreenerClient
 import matplotlib
 
@@ -222,6 +222,18 @@ def token_summary():
 
     return render_template('token_summary.html', tokens=tokens, user_input=searchTicker)
 
+@app.route('/submit-data', methods=['POST'])
+def submit_data():
+    # Extract the token pair from the incoming JSON request
+    token_pair = request.json.get('tokenPair')
+    print(f"Received token pair: {token_pair}")
+    search = client.search_pairs(token_pair)
+    for tokenPair in search:
+        print(tokenPair.chain_id, tokenPair.pair_address, tokenPair.transactions)
+    # print(search)
+    
+    # Return a response
+    return jsonify({"response": f"Received token pair: {token_pair}"})
 
 @app.route('/charts')
 def charts():
