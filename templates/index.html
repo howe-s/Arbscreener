@@ -36,15 +36,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const cardPriceUSD = card.querySelector('#price_usd').textContent;
             const cardLiquidity = card.querySelector('#liquidity').textContent;
             console.log(tokenPairAddress)
-            summaryDiv.innerHTML = `
-                <p>Token Pair Address: ${tokenPairAddress}</p>
-                <p>Title: ${cardTitle}</p>
-                <p>Volume: ${cardVolume}</p>
-                <p>Liquidity: ${cardLiquidity}</p>
-                <p>Price (Native): ${cardPriceNative}</p>
-                <p>Price (USD): ${cardPriceUSD}</p>
-                <img id="chart-summary"></img>
-            `;
+            // summaryDiv.innerHTML = `
+            //     <p>Token Pair Address: ${tokenPairAddress}</p>
+            //     <p>Title: ${cardTitle}</p>
+            //     <p>Volume: ${cardVolume}</p>
+            //     <p>Liquidity: ${cardLiquidity}</p>
+            //     <p>Price (Native): ${cardPriceNative}</p>
+            //     <p>Price (USD): ${cardPriceUSD}</p>
+            //     <img id="chart-summary"></img>
+            // `;
 
             // Call the function to send data to Flask with TokenPairAddress
             sendTokenPairAddressToFlask(tokenPairAddress);
@@ -85,7 +85,30 @@ document.addEventListener('DOMContentLoaded', () => {
         })
         .then(response => response.json())
         .then(data => {
-            console.log('Success:', data);
+            console.log('Success this one:', data);
+            const jsonString = JSON.stringify(data);
+            summaryDiv.innerHTML = `
+                <p>Token Pair Address: ${tokenPairAddress}</p>
+                <p>Trades: ${jsonString}</p>
+            `;
+            const table = document.getElementById('summary-div');
+            for (const [timeFrame, transactionDetails] of Object.entries(data)) {
+            // Create a new table row
+            const row = document.createElement('tr');
+            
+            // Create a cell for the time frame and add it to the row
+            const timeFrameCell = document.createElement('td');
+            timeFrameCell.textContent = timeFrame;
+            row.appendChild(timeFrameCell);
+
+            // Create a cell for the transaction details and add it to the row
+            const transactionDetailsCell = document.createElement('td');
+            transactionDetailsCell.textContent = transactionDetails;
+            row.appendChild(transactionDetailsCell);
+
+            // Add the row to the table
+            table.appendChild(row);
+        }
             console.log('test')
         })
         .catch((error) => {

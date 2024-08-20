@@ -236,12 +236,13 @@ def process_data():
             for pair in search:
                 if pair.pair_address == token_pair_address:
                     transactions = {
-                        "m5": pair.transactions.m5,
-                        "h1": pair.transactions.h1,
-                        "h6": pair.transactions.h6,
-                        "h24": pair.transactions.h24
+                        "m5": str(pair.transactions.m5),
+                        "h1": str(pair.transactions.h1),
+                        "h6": str(pair.transactions.h6),
+                        "h24": str(pair.transactions.h24)
                     }
-                    print('first', transactions)  # Or return it as needed
+                    print('first', transactions)
+                    return jsonify(transactions)  # Or return it as needed
                     break
             else:
                 print(f"Error: No TokenPair found for address {token_pair_address}")
@@ -256,6 +257,8 @@ def process_data():
             print('second', transactions) 
 
         # addressSearch = search.
+        print('third', type(transactions))
+        print('third', jsonify(transactions))
         return jsonify({"message": "Data received", "tokenPairAddress": token_pair_address}), 200
     except Exception as e:
         print(f"Error: {e}")
