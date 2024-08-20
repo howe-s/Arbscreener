@@ -36,21 +36,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const cardPriceNative = card.querySelector('#price_native').textContent;
             const cardPriceUSD = card.querySelector('#price_usd').textContent;
             const cardLiquidity = card.querySelector('#liquidity').textContent;
-            const tokenPair_send = document.querySelector('.card-title').textContent.trim();
-            fetch('/submit-data', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ tokenPair: tokenPair_send })
-        })
-        .then(response => response.json())
-        .then(data => console.log('Success:', data))
-        .catch((error) => console.error('Error:', error));
 
             summaryDiv.innerHTML = `
-               
+                <p>Token Pair Address: ${tokenPairAddress}</p>
+                <p>Title: ${cardTitle}</p>
+                <p>Volume: ${cardVolume}</p>
+                <p>Liquidity: ${cardLiquidity}</p>
+                <p>Price (Native): ${cardPriceNative}</p>
+                <p>Price (USD): ${cardPriceUSD}</p>
+                <img id="chart-summary"></img>
             `;
+
+            // Call the function to send data to Flask
+            sendCardTitleToFlask(cardTitle);
 
             summaryDiv.style.display = 'inline-block';
             summaryDiv.style.top = '50%';
@@ -77,7 +75,25 @@ document.addEventListener('DOMContentLoaded', () => {
         isDragging = false;
         summaryDiv.style.cursor = 'move';
     });
+
+    function sendCardTitleToFlask(cardTitle) {
+        fetch('/process-data', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ cardTitle: cardTitle }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Success:', data);
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+    }
 });
+
 
 
 </script>

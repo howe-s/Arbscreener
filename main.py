@@ -13,7 +13,8 @@ required_packages = [
     'pandas',
     'squarify',
     'dexscreener',
-    'plotly'
+    'plotly',
+    'flask_cors'
 ]
 
 # Check and install each package
@@ -34,6 +35,7 @@ import base64
 import numpy as np
 import squarify
 import pandas as pd
+from flask_cors import CORS
 
 app = Flask(__name__)
 client = DexscreenerClient()
@@ -222,18 +224,17 @@ def token_summary():
 
     return render_template('token_summary.html', tokens=tokens, user_input=searchTicker)
 
-@app.route('/submit-data', methods=['POST'])
-def submit_data():
-    # Extract the token pair from the incoming JSON request
-    token_pair = request.json.get('tokenPair')
-    print(f"Received token pair: {token_pair}")
-    search = client.search_pairs(token_pair)
-    for tokenPair in search:
-        print(tokenPair.chain_id, tokenPair.pair_address, tokenPair.transactions)
-    # print(search)
-    
-    # Return a response
-    return jsonify({"response": f"Received token pair: {token_pair}"})
+@app.route('/process-data', methods=['POST'])
+def process_data():
+    try:
+        data = request.get_json()  # Get the JSON data from the request
+        card_title = data.get('cardTitle')  # Extract the 'cardTitle' key from the JSON data
+        print(f"Received cardTitle: {card_title}")  # Print or process the cardTitle as needed
+        
+        return jsonify({"message": "Data received", "cardTitle": card_title}), 200
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({"message": "Error processing data"}), 500
 
 @app.route('/charts')
 def charts():
