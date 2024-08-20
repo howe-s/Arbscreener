@@ -6,7 +6,10 @@
     padding: 0 10px;
     width: 100%;
     box-sizing: border-box;
+    align-items: center;
+    transform: 'translate(-50%, -50%)';
 }
+  
 .card {
     border: 1px solid #ccc;
     border-radius: 5px;
@@ -18,7 +21,9 @@
     display: flex;
     float: left;
     position: relative;
+    text-align: left; /* Add this to center content within the card */
 }
+
 .card-title {
     font-size: 18px;
     font-weight: bold;
@@ -50,10 +55,7 @@
 }
 
 #summary-div {
-    display: none;
-    position: absolute;
-    top: 0;
-    left: 0;
+    position: flex;
     width: 75%;
     height: 200px;
     background-color: white;
@@ -61,4 +63,6 @@
     padding: 20px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     z-index: 1000;
+    left: auto;
+    width: 300px;
 }
