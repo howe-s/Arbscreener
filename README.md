@@ -30,20 +30,20 @@ This project is a Flask-based web application that integrates with the Dexscreen
 └── requirements.txt     # Python dependencies -->
 
 ### Documentation files
-
-Often it is beneficial to include some reference data into the project, such as
-Rich Text Format (RTF) documentation, which is usually stored into the `docs`
-or, less commonly, into the `doc` folder.
-
-    .
-    ├── ...
-    ├── docs                    # Documentation files (alternatively `doc`)
-    │   ├── TOC.md              # Table of contents
-    │   ├── faq.md              # Frequently asked questions
-    │   ├── misc.md             # Miscellaneous information
-    │   ├── usage.md            # Getting started guide
-    │   └── ...                 # etc.
-    └── ...
+project-root/
+├── main.py              # Main Flask application file
+├── templates/           # HTML templates for the application
+│   ├── base.html        # Base template for consistent layout
+│   ├── index.html       # Main page displaying token pair cards
+│   ├── charts.html      # Page displaying liquidity and volume charts
+│   ├── summary.html     # Page displaying a summary of token pair data
+│   ├── token_summary.html # Page displaying detailed token pair statistics
+│   └── ...
+├── static/              # Directory for static files (e.g., CSS, JavaScript)
+│   ├── style.css        # Custom styles for the application
+│   └── ...
+├── README.md            # Project documentation
+└── requirements.txt     # Python dependencies
 
 
 ## Installation
