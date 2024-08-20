@@ -48,3 +48,17 @@
 .summary-table th {
     background-color: #f2f2f2;
 }
+
+#summary-div {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 75%;
+    height: 200px;
+    background-color: white;
+    border: 1px solid #ccc;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    z-index: 1000;
+}

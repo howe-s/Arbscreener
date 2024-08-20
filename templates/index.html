@@ -4,18 +4,115 @@
 
 {% block content %}
     <div class="card-container">
+        <div id="summary-div">
+            </div>
         {% for TokenPair in search %}
-        <div class="card">
+        <div class="card" data-token-pair="{{ TokenPair.pair_address }}">
             <div class="card-content">
-                <div><span class="label">Chain ID:</span> <span class="value">{{ TokenPair.chain_id }}</span></div>
-                <div><span class="label">Liquidity (USD):</span> <span class="value">${{ TokenPair.liquidity.usd | round(0) }}</span></div>
-                <div><span class="label">Price (Native):</span> <span class="value">{{ TokenPair.price_native | round(2) }}</span></div>
-                <div><span class="label">Price (USD):</span> <span class="value">${{ TokenPair.price_usd | round(2) }}</span></div>
-                <div><span class="label">Volume (24h):</span> <span class="value">${{ TokenPair.volume.h24 | round(2) }}</span></div>
-                <div><span class="label">Pair Address:</span> <span class="value">{{ TokenPair.pair_address }}</span></div>
+                <div><span class="label">Chain ID:</span> <span class="value" id="chain_id">{{ TokenPair.chain_id }}</span></div>
+                <div><span class="label">Liquidity (USD):</span> <span class="value" id="liquidity">${{ TokenPair.liquidity.usd | round(0) }}</span></div>
+                <div><span class="label">Price (Native):</span> <span class="value" id="price_native">{{ TokenPair.price_native | round(2) }}</span></div>
+                <div><span class="label">Price (USD):</span> <span class="value" id="price_usd">${{ TokenPair.price_usd | round(2) }}</span></div>
+                <div><span class="label">Volume (24h):</span> <span class="value" id="volume_24h">${{ TokenPair.volume.h24 | round(2) }}</span></div>
+                <div><span class="label" >Pair Address:</span> <span class="value" id="pair_address">{{ TokenPair.pair_address }}</span></div>
             </div>
             <div class="card-title">{{ TokenPair.quote_token.symbol }} / {{ TokenPair.base_token.symbol }}</div>
         </div>
         {% endfor %}
     </div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const cards = document.querySelectorAll('.card');
+    const summaryDiv = document.getElementById('summary-div');
+
+    cards.forEach(card => {
+        card.addEventListener('click', () => {
+            // Retrieve the token pair address
+            const tokenPairAddress = card.dataset.tokenPair;
+            
+            // Retrieve the card-title
+            const cardTitle = card.querySelector('.card-title').textContent;
+            const cardVolume = card.querySelector('#volume_24h').textContent;
+            console.log(cardVolume)
+
+            // Update the summaryDiv with both tokenPairAddress and cardTitle
+            summaryDiv.innerHTML = `
+                <p>Token Pair Address: ${tokenPairAddress}</p>
+                <p>Title: ${cardTitle}</p>
+                <p>Volume: ${cardVolume}</p>
+            `;
+
+            summaryDiv.style.display = 'block';
+        });
+    });
+});
+
+</script>
+<style>
+    .card-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin: 0 auto;
+        padding: 0 10px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    .card {
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        padding: 10px;
+        margin: 20px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        background-color: #f9f9f9;
+        width: 425px;
+        display: flex;
+        float: left;
+        position: relative;
+        cursor: pointer;
+    }
+    .card-title {
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 10px;
+        align-self: flex-end;
+        position: absolute;
+        top: 10px;
+        right: 10px;
+    }
+    .card-content .label {
+        font-weight: bold;
+        display: inline-block;
+        width: 150px;
+    }
+    .card-content .value {
+        display: inline-block;
+    }
+    .summary-table table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .summary-table th, .summary-table td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+    .summary-table th {
+        background-color: #f2f2f2;
+    }
+
+    #summary-div {
+        display: none;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 75%;
+        height: 200px;
+        background-color: white;
+        border: 1px solid #ccc;
+        padding: 20px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        z-index: 1000;
+    }
+</style>
 {% endblock %}

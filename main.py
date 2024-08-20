@@ -12,7 +12,8 @@ required_packages = [
     'numpy==1.26.4',
     'pandas',
     'squarify',
-    'dexscreener'
+    'dexscreener',
+    'plotly'
 ]
 
 # Check and install each package
