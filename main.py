@@ -241,7 +241,7 @@ def process_data():
                         "h6": pair.transactions.h6,
                         "h24": pair.transactions.h24
                     }
-                    print(transactions)  # Or return it as needed
+                    print('first', transactions)  # Or return it as needed
                     break
             else:
                 print(f"Error: No TokenPair found for address {token_pair_address}")
@@ -253,7 +253,7 @@ def process_data():
                 "h6": search.transactions.h6,
                 "h24": search.transactions.h24
             }
-            print(transactions) 
+            print('second', transactions) 
 
         # addressSearch = search.
         return jsonify({"message": "Data received", "tokenPairAddress": token_pair_address}), 200
