@@ -1,0 +1,6 @@
+Challenges
+
+Instead of using React for saved states, I faced the challenge of passing data the server, to the client, back to the server, and the subsequentlly back to the client.
+This was done by making the initial request with python, detecting the div the user clicked on, extracted the relavent information from the div using Javascript, that data
+was then passed to a python route for a second request for information on the address speciically, and then posted back to the client side for display. 
+

@@ -231,8 +231,31 @@ def process_data():
         token_pair_address = data.get('tokenPairAddress')  # Extract the 'tokenPairAddress' key from the JSON data
         print(f"Received Token Pair Address: {token_pair_address}")
         
-        search = client.search_pairs(token_pair_address)  # Print or process the tokenPairAddress as needed
-        print(search)
+        search = client.search_pairs(token_pair_address) 
+        if isinstance(search, list):
+            for pair in search:
+                if pair.pair_address == token_pair_address:
+                    transactions = {
+                        "m5": pair.transactions.m5,
+                        "h1": pair.transactions.h1,
+                        "h6": pair.transactions.h6,
+                        "h24": pair.transactions.h24
+                    }
+                    print(transactions)  # Or return it as needed
+                    break
+            else:
+                print(f"Error: No TokenPair found for address {token_pair_address}")
+        else:
+            # Handle single TokenPair case (if applicable)
+            transactions = {
+                "m5": search.transactions.m5,
+                "h1": search.transactions.h1,
+                "h6": search.transactions.h6,
+                "h24": search.transactions.h24
+            }
+            print(transactions) 
+
+        # addressSearch = search.
         return jsonify({"message": "Data received", "tokenPairAddress": token_pair_address}), 200
     except Exception as e:
         print(f"Error: {e}")
