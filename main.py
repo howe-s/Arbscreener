@@ -277,7 +277,7 @@ def process_data():
 
                     plt.xlabel('Time Interval')
                     plt.ylabel('Transactions')
-                    plt.title('Transaction Volume by Time Interval')
+                    plt.title(f'Address: {token_pair_address.encode("utf-8") if isinstance(token_pair_address, str) else token_pair_address}')  # Handle potential encoding issues
                     plt.legend()
 
                     # Save the chart as a temporary file (consider using a dedicated temporary directory)
