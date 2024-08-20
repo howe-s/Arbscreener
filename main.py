@@ -24,7 +24,7 @@ for package in required_packages:
     except ImportError:
         install(package)
 
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_file, send_from_directory
 from dexscreener import DexscreenerClient
 import matplotlib
 
@@ -224,14 +224,23 @@ def token_summary():
 
     return render_template('token_summary.html', tokens=tokens, user_input=searchTicker)
 
+import re
+
+# Configure static folder (replace 'static' with your actual folder name)
+app.config['STATIC_FOLDER'] = 'static'
+
+
 @app.route('/process-data', methods=['POST'])
 def process_data():
     try:
-        data = request.get_json()  # Get the JSON data from the request
-        token_pair_address = data.get('tokenPairAddress')  # Extract the 'tokenPairAddress' key from the JSON data
-        print(f"Received Token Pair Address: {token_pair_address}")
-        
-        search = client.search_pairs(token_pair_address) 
+        data = request.get_json()
+        token_pair_address = data.get('tokenPairAddress')
+
+        if not token_pair_address:
+            return jsonify({"message": "Missing tokenPairAddress"}), 400
+
+        search = client.search_pairs(token_pair_address)
+
         if isinstance(search, list):
             for pair in search:
                 if pair.pair_address == token_pair_address:
@@ -241,28 +250,70 @@ def process_data():
                         "h6": str(pair.transactions.h6),
                         "h24": str(pair.transactions.h24)
                     }
-                    print('first', transactions)
-                    return jsonify(transactions)  # Or return it as needed
-                    break
-            else:
-                print(f"Error: No TokenPair found for address {token_pair_address}")
-        else:
-            # Handle single TokenPair case (if applicable)
-            transactions = {
-                "m5": search.transactions.m5,
-                "h1": search.transactions.h1,
-                "h6": search.transactions.h6,
-                "h24": search.transactions.h24
-            }
-            print('second', transactions) 
+                    print(transactions)
+                    transactionsJson = jsonify(transactions)
+                    print('thisone')
+                    print(transactionsJson)
 
-        # addressSearch = search.
-        print('third', type(transactions))
-        print('third', jsonify(transactions))
-        return jsonify({"message": "Data received", "tokenPairAddress": token_pair_address}), 200
+                    # Extract buys and sells values
+                    transaction_data = {}
+                    for time_interval, data in transactions.items():
+                        match = re.match(r"buys=(\d+) sells=(\d+)", data)
+                        if match:
+                            transaction_data[time_interval] = {"buys": int(match.group(1)), "sells": int(match.group(2))}
+
+                    print(transaction_data)
+
+                    # Create the chart (assuming you have libraries like matplotlib)
+                    plt.clf()
+                    time_intervals = list(transaction_data.keys())
+                    buys = [data["buys"] for data in transaction_data.values()]
+                    sells = [data["sells"] for data in transaction_data.values()]
+
+                    width = 0.35
+
+                    plt.bar(time_intervals, buys, width, label='Buys')
+                    plt.bar(time_intervals, sells, width, bottom=buys, label='Sells')
+
+                    plt.xlabel('Time Interval')
+                    plt.ylabel('Transactions')
+                    plt.title('Transaction Volume by Time Interval')
+                    plt.legend()
+
+                    # Save the chart as a temporary file (consider using a dedicated temporary directory)
+                    with open(f'{app.config["STATIC_FOLDER"]}/transaction_chart.png', 'wb') as f:
+                        plt.savefig(f, format='png')  # Specify format for clarity
+
+                    # Create response data
+                    response_data = {
+                        'transactions': transactions,
+                        'chart_url': '/transaction_chart.png'  # Assuming a route to serve the image
+                    }
+                    return jsonify(response_data), 200
+
+        else:
+            try:
+                transactions = {
+                    "m5": str(search.transactions.m5),
+                    "h1": str(search.transactions.h1),
+                    "h6": str(search.transactions.h6),
+                    "h24": str(search.transactions.h24)
+                }
+                return jsonify(transactions), 200
+            except AttributeError:
+                return jsonify({"message": "Invalid search object or missing transactions attribute"}), 500
+
     except Exception as e:
         print(f"Error: {e}")
         return jsonify({"message": "Error processing data"}), 500
+
+# Route to serve the image from the static folder (optional)
+@app.route('/transaction_chart.png')
+def serve_image():
+    try:
+        return send_from_directory(app.config['STATIC_FOLDER'], 'transaction_chart.png')
+    except FileNotFoundError:
+        return jsonify({"message": "Image not found"}), 404
 
 
 @app.route('/charts')
