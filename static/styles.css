@@ -54,7 +54,7 @@
     background-color: #f2f2f2;
 }
 
-#summary-div {
+/* #summary-div {
     display: none;
     position: absolute;
     width: fit-content;
@@ -65,8 +65,7 @@
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     z-index: 1000;
     resize: both;
-    /* overflow: auto;  */
     cursor: move;
-}
+} */
 
 

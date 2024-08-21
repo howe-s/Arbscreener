@@ -3,9 +3,9 @@
 {% block title %}Home - Dexscreener{% endblock %}
 
 {% block content %}
-    <div class="card-container">
-        <div class="card" id="summary-div">            
-        </div>
+<div class="card" id="summary-div">            
+</div>
+    <div class="card-container">        
         {% for TokenPair in search %}
         <div class="card" data-token-pair="{{ TokenPair }}">
             <div class="card-content">
@@ -162,7 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     #summary-div {
         display: none;
-        position: absolute;
+        position: flex;
         top: 0;
         left: 0;
         width: 75%;
