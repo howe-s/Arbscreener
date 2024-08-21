@@ -27,7 +27,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let isDragging = false;
     let offsetX = 0;
     let offsetY = 0;
-
     cards.forEach(card => {
         card.addEventListener('click', () => {
             const tokenPairAddress = card.querySelector('#pair_address').textContent;
@@ -44,27 +43,29 @@ document.addEventListener('DOMContentLoaded', () => {
             summaryDiv.style.top = '50%';
             summaryDiv.style.left = '50%';
             summaryDiv.style.transform = 'translate(-50%, 0)';
+            summaryDiv.style.width = 'auto';
+            summaryDiv.style.height = 'auto';
         });
     });
 
-    summaryDiv.addEventListener('mousedown', (event) => {
-        isDragging = true;
-        offsetX = event.clientX - summaryDiv.offsetLeft;
-        offsetY = event.clientY - summaryDiv.offsetTop;
-        summaryDiv.style.cursor = 'grabbing';
-    });
+    // summaryDiv.addEventListener('mousedown', (event) => {
+    //     isDragging = true;
+    //     offsetX = event.clientX - summaryDiv.offsetLeft;
+    //     offsetY = event.clientY - summaryDiv.offsetTop;
+    //     summaryDiv.style.cursor = 'grabbing';
+    // });
 
-    document.addEventListener('mousemove', (event) => {
-        if (isDragging) {
-            summaryDiv.style.left = `${event.clientX - offsetX}px`;
-            summaryDiv.style.top = `${event.clientY - offsetY}px`;
-        }
-    });
+    // document.addEventListener('mousemove', (event) => {
+    //     if (isDragging) {
+    //         summaryDiv.style.left = `${event.clientX - offsetX}px`;
+    //         summaryDiv.style.top = `${event.clientY - offsetY}px`;
+    //     }
+    // });
 
-    document.addEventListener('mouseup', () => {
-        isDragging = false;
-        summaryDiv.style.cursor = 'move';
-    });
+    // document.addEventListener('mouseup', () => {
+    //     isDragging = false;
+    //     summaryDiv.style.cursor = 'move';
+    // });
 
     function sendTokenPairAddressToFlask(tokenPairAddress) {
     fetch('/process-data', {
@@ -78,17 +79,21 @@ document.addEventListener('DOMContentLoaded', () => {
     .then(data => {
       console.log('Success this one:', data);
       const jsonString = JSON.stringify(data);
-
+      summaryDiv.innerHTML = '';
       // Create a new element for the image
       const image = new Image();
-      image.src = "transaction_chart.png";
+      image.src = "transaction_chart.png?t=" + new Date().getTime();
       image.alt = "Transaction Chart";
 
-      // Find the last child element in summaryDiv (likely the paragraph)
-      const lastChild = summaryDiv.lastChild;
+      summaryDiv.appendChild(image);
 
-      // Insert the image after the last child
-      summaryDiv.insertBefore(image, lastChild.nextSibling);
+    //   // Find the last child element in summaryDiv (likely the paragraph)
+    //   const lastChild = summaryDiv.lastChild;
+    
+    //   // clear existing image
+      
+    //   // Insert the image after the last child
+    //   summaryDiv.insertBefore(image, lastChild.nextSibling);
 
       // ... rest of your code for creating the table
     })

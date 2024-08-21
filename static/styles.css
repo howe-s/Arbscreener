@@ -57,16 +57,16 @@
 #summary-div {
     display: none;
     position: absolute;
-    width: 300px;
-    height: 200px;
+    width: fit-content;
+    height: fit-content;
     background-color: white;
     border: 1px solid #ccc;
     padding: 20px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     z-index: 1000;
-    resize: both; /* Allows resizing */
-    overflow: auto; /* Ensures content is scrollable if it exceeds the div's size */
-    cursor: move; /* Indicates the div can be moved */
+    resize: both;
+    /* overflow: auto;  */
+    cursor: move;
 }
 
 
