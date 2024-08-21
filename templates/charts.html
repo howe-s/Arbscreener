@@ -3,15 +3,20 @@
 {% block title %}Charts - Dexscreener{% endblock %}
 
 {% block content %}
+<div class="card">
     <h2>Liquidity Distribution (Treemap)</h2>
     <img src="data:image/png;base64,{{ tree_liquidity_img }}"/>
-
+</div>
+<div class="card">
     <h2>Liquidity Distribution (Pie Chart)</h2>
     <img src="data:image/png;base64,{{ pie_liquidity_img }}"/>
-
+</div>
+<div class="card">
     <h2>Volume Distribution (Treemap)</h2>
     <img src="data:image/png;base64,{{ tree_volume_img }}"/>
-
+</div>
+<div class="card">
     <h2>Volume Distribution (Pie Chart)</h2>
     <img src="data:image/png;base64,{{ pie_volume_img }}"/>
+</div>
 {% endblock %}

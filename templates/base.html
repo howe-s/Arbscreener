@@ -6,15 +6,14 @@
     <title>My Flask App</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 </head>
 <body>
     <nav>
-        <form action="{{ request.path }}" method="get">
-            <input type="text" name="user_input" value="{{ request.args.get('user_input', 'SOL') }}">
+        <form action="{{ request.path }}" method="get" class="search-form">
+            <input type="text" name="user_input" value="{{ request.args.get('user_input', 'SOL') }}" placeholder="Search...">
             <button type="submit">Search</button>
         </form>
-        <ul>
+        <ul class="nav-links">
             <li><a href="{{ url_for('index', user_input=request.args.get('user_input', 'SOL')) }}">Home</a></li>
             <li><a href="{{ url_for('summary', user_input=request.args.get('user_input', 'SOL')) }}">Summary</a></li>
             <li><a href="{{ url_for('token_summary', user_input=request.args.get('user_input', 'SOL')) }}">Token Table</a></li>

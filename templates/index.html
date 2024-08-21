@@ -23,10 +23,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const cards = document.querySelectorAll('.card');
-    const summaryDiv = document.getElementById('summary-div');
-    let isDragging = false;
-    let offsetX = 0;
-    let offsetY = 0;
+    const summaryDiv = document.getElementById('summary-div');   
     cards.forEach(card => {
         card.addEventListener('click', () => {
             const tokenPairAddress = card.querySelector('#pair_address').textContent;
@@ -48,25 +45,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // summaryDiv.addEventListener('mousedown', (event) => {
-    //     isDragging = true;
-    //     offsetX = event.clientX - summaryDiv.offsetLeft;
-    //     offsetY = event.clientY - summaryDiv.offsetTop;
-    //     summaryDiv.style.cursor = 'grabbing';
-    // });
-
-    // document.addEventListener('mousemove', (event) => {
-    //     if (isDragging) {
-    //         summaryDiv.style.left = `${event.clientX - offsetX}px`;
-    //         summaryDiv.style.top = `${event.clientY - offsetY}px`;
-    //     }
-    // });
-
-    // document.addEventListener('mouseup', () => {
-    //     isDragging = false;
-    //     summaryDiv.style.cursor = 'move';
-    // });
-
     function sendTokenPairAddressToFlask(tokenPairAddress) {
     fetch('/process-data', {
       method: 'POST',
@@ -87,24 +65,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
       summaryDiv.appendChild(image);
 
-    //   // Find the last child element in summaryDiv (likely the paragraph)
-    //   const lastChild = summaryDiv.lastChild;
-    
-    //   // clear existing image
-      
-    //   // Insert the image after the last child
-    //   summaryDiv.insertBefore(image, lastChild.nextSibling);
-
-      // ... rest of your code for creating the table
     })
     .catch((error) => {
       console.error('Error:', error);
     });
   }
 });
-
-
-
 
 </script>
 <style>

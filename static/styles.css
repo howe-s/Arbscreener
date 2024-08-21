@@ -7,24 +7,23 @@
     width: 100%;
     box-sizing: border-box;
     align-items: center;
-    transform: 'translate(-50%, -50%)';
-}
+  }
   
-.card {
+  .card {
     border: 1px solid #ccc;
     border-radius: 5px;
     padding: 10px;
     margin: 20px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     background-color: #f9f9f9;
-    width: 425px;
+    width: auto;
+    height: auto;
     display: flex;
-    float: left;
     position: relative;
-    text-align: left; /* Add this to center content within the card */
-}
-
-.card-title {
+    /* text-align: center; */
+  }
+  
+  .card-title {
     font-size: 18px;
     font-weight: bold;
     margin-bottom: 10px;
@@ -32,40 +31,96 @@
     position: absolute;
     top: 10px;
     right: 10px;
-}
-.card-content .label {
+  }
+  
+  .card-content {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .card-content .label {
     font-weight: bold;
     display: inline-block;
     width: 150px;
-}
-.card-content .value {
+  }
+  
+  .card-content .value {
     display: inline-block;
-}
-.summary-table table {
+  }
+  
+  .summary-table {
     width: 100%;
     border-collapse: collapse;
-}
-.summary-table th, .summary-table td {
+  }
+  
+  .summary-table th,
+  .summary-table td {
     border: 1px solid #ddd;
     padding: 8px;
     text-align: left;
-}
-.summary-table th {
+  }
+  
+  .summary-table th {
     background-color: #f2f2f2;
-}
-
-/* #summary-div {
-    display: none;
-    position: absolute;
-    width: fit-content;
-    height: fit-content;
-    background-color: white;
-    border: 1px solid #ccc;
+  }
+  
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+  }
+  
+  nav {
+    background-color: #f8f9fa;
+    padding: 10px 20px;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  .search-form {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  
+  .search-form input[type="text"] {
+    padding: 5px;
+    margin-right: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+  
+  .search-form button {
+    padding: 5px 10px;
+    border: none;
+    background-color: #007bff;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .search-form button:hover {
+    background-color: #0056b3;
+  }
+  
+  .nav-links {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .nav-links li {
+    display: inline;
+    margin-right: 10px;
+  }
+  
+  .nav-links a {
+    text-decoration: none;
+    color: #007bff;
+  }
+  
+  .nav-links a:hover {
+    text-decoration: underline;
+  }
+  
+  .container {
     padding: 20px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    z-index: 1000;
-    resize: both;
-    cursor: move;
-} */
-
-
+  }
