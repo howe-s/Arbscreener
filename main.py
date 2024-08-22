@@ -144,12 +144,44 @@ def pie_chart_volume(data):
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    #Passing the initial data
+    # Get the user input for ticker and perform the search
     searchTicker = request.args.get('user_input', 'SOL').lower()
     search = client.search_pairs(searchTicker)
-    # print('initial ping', search)
     
-    return render_template('index.html', search=search, user_input=searchTicker)
+    # Extract data for processing
+    token_pairs = []
+    for TokenPair in search:
+        # print(TokenPair)
+        token_pairs.append({
+            'pair': TokenPair.pair_address,
+            'price_usd': TokenPair.price_usd,
+            'liquidity_usd': TokenPair.liquidity.usd
+        })
+    
+    # Initialize a list to store arbitrage opportunities
+    arbitrage_opportunities = []
+    
+    # Compare each TokenPair with others to find arbitrage opportunities
+    for i in range(len(token_pairs)):
+        for j in range(i + 1, len(token_pairs)):
+            pair1 = token_pairs[i]
+            pair2 = token_pairs[j]
+            
+            # Arbitrage opportunity condition
+            if (pair1['price_usd'] < pair2['price_usd'] and 
+                pair1['liquidity_usd'] > pair2['liquidity_usd']):
+                
+                arbitrage_opportunities.append({
+                    'pair1': pair1['pair'],
+                    'pair2': pair2['pair'],
+                    'price_diff': pair2['price_usd'] - pair1['price_usd'],
+                    'liquidity_diff': pair1['liquidity_usd'] - pair2['liquidity_usd']
+                })
+    print(arbitrage_opportunities)
+    
+    # Pass the data to the template
+    return render_template('index.html', search=search, user_input=searchTicker, arbitrage_opportunities=arbitrage_opportunities)
+
 
 @app.route('/trending', methods=['GET', 'POST'])
 def trending():
@@ -248,7 +280,7 @@ def process_data():
     
         if isinstance(search, list):            
             for pair in search:
-                print('Initial pair data', pair)
+                # print('Initial pair data', pair)
                 ##coingecko
                 # print('pair address:', pair.pair_address)
 
@@ -307,7 +339,7 @@ def process_data():
                         'quote_token': pair.quote_token.name
 
                     }
-                    print('response data', response_data)
+                    # print('response data', response_data)
                     return jsonify(response_data), 200
 
         else:
