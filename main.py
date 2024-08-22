@@ -200,7 +200,7 @@ def arb():
     token_pairs = []
     for TokenPair in search:
         token_pairs.append({
-            'pair': TokenPair.base_token.name + '/' + TokenPair.quote_token.name,
+            'pair': TokenPair.quote_token.name + '/' + TokenPair.base_token.name,
             'pool_address': TokenPair.pair_address,
             'pool_url': TokenPair.url,
             'price_usd': TokenPair.price_usd,
