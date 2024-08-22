@@ -335,7 +335,7 @@ app.config['STATIC_FOLDER'] = 'static'
 
 @app.route('/process-data', methods=['POST'])
 def process_data():
-    
+    print('process data awake')
     try:
         data = request.get_json()
         token_pair_address = data.get('tokenPairAddress')

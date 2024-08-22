@@ -33,42 +33,34 @@
 document.addEventListener('DOMContentLoaded', () => {
     const cards = document.querySelectorAll('.card');
     const summaryDiv = document.getElementById('summary-div');   
+
     cards.forEach(card => {
         card.addEventListener('click', () => {
-            const tokenPairAddress = card.querySelector('[data-token-pair]').getAttribute('data-token-pair');
-            const cardTitle = card.querySelector('.card-title').textContent;
-            const cardVolume = card.querySelector('[data-volume]').textContent;
-            const cardPriceNative = card.querySelector('[data-price-native]').textContent;
-            const cardPriceUSD = card.querySelector('[data-price-usd]').textContent;
-            const cardLiquidity = card.querySelector('[data-liquidity]').textContent;           
+            const tokenPairAddress = card.getAttribute('data-token-pair');
             console.log(tokenPairAddress);
 
-            sendTokenPairAddressToFlask(tokenPairAddress, cardTitle);
+            sendTokenPairAddressToFlask(tokenPairAddress);
 
             summaryDiv.style.display = 'block';
             summaryDiv.innerHTML = `
                 <div> 
-                    <p> ${cardTitle} </p> 
-                    <p> Chain: ${data.chain_id} </p> 
-                    <p> Dex: ${data.dex_id} </p>
-                    <p> URL: <a href="${data.pair_URL}">${data.pair_URL}</a> </p>
                     <img src="transaction_chart.png?t=${new Date().getTime()}" alt="Transaction Chart">
                 </div>
             `;
         });
     });
 
-    function sendTokenPairAddressToFlask(tokenPairAddress, cardTitle) {
+    function sendTokenPairAddressToFlask(tokenPairAddress) {
         fetch('/process-data', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ tokenPairAddress: tokenPairAddress, cardTitle: cardTitle }),
+            body: JSON.stringify({ tokenPairAddress: tokenPairAddress }),
         })
         .then(response => response.json())
         .then(data => {
-            console.log('Success this one:', data.pair_URL);
+            console.log('Success:', data.pair_URL);
             const pair_URL = data.pair_URL;
             const chain_id = data.chain_id;
             const dex_id = data.dex_id;
@@ -90,5 +82,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
 </script>
 {% endblock %}

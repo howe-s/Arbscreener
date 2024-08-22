@@ -4,117 +4,60 @@
 
 {% block content %}
 <div class="container mt-4">
-    <div class="row">
-        {% for opportunity in arbitrage_opportunities %}
-        <div class="col-md-4 mb-4 d-flex">
-            <div class="card w-100 d-flex flex-column shadow-sm">
-                <div class="card-body flex-grow-1">
-                    <h5 class="card-title mb-3">Summary</h5>
-                    
-                    <div class="mb-3">
-                        <h6 class="card-subtitle mb-2 text-dark">Arbitrage Details</h6>
-                        <p class="card-text">
-                            <strong>Price Difference:</strong> {{ opportunity.price_diff }}
-                        </p>
-                        <p class="card-text">
-                            <strong>Liquidity Difference:</strong> {{ opportunity.liquidity_diff }}
-                        </p>
-                        <p class="card-text">
-                            <strong>Profit:</strong> {{ opportunity.profit }}
-                        </p>
-                    </div>
-                    
-                    <hr>
-                    
-                    <div class="mb-3">
-                        <h6 class="card-subtitle mb-2 text-primary">{{ opportunity.pair1 }}</h6>
-                        <p class="card-text">
-                            <strong>Price:</strong> {{ opportunity.pair1_price }}
-                        </p>
-                        <p class="card-text">
-                            <strong>Liquidity:</strong> {{ opportunity.pair1_liquidity }}
-                        </p>
-                        <p class="card-text">
-                            <strong>Address:</strong> {{ opportunity.pool_pair1_address }}
-                        </p>
-                        <p class="card-text">
-                            <a href="{{ opportunity.pool_pair1_url }}" target="_blank" class="card-link">{{ opportunity.pool_pair1_url }}</a>
-                        </p>
-                    </div>
-                    
-                    <hr>
-                    
-                    <div class="mb-3">
-                        <h6 class="card-subtitle mb-2 text-success">{{ opportunity.pair2 }}</h6>
-                        <p class="card-text">
-                            <strong>Price:</strong> {{ opportunity.pair2_price }}
-                        </p>
-                        <p class="card-text">
-                            <strong>Liquidity:</strong> {{ opportunity.pair2_liquidity }}
-                        </p>
-                        <p class="card-text">
-                            <strong>Address:</strong> {{ opportunity.pool_pair2_address }}
-                        </p>
-                        <p class="card-text">
-                            <a href="{{ opportunity.pool_pair2_url }}" target="_blank" class="card-link">{{ opportunity.pool_pair2_url }}</a>
-                        </p>
-                    </div>
-                    
-                </div>
-            </div>
+  <div class="row">
+    {% for opportunity in arbitrage_opportunities %}
+    <div class="col-md-4 mb-4 d-flex">
+      <div class="card w-100 d-flex flex-column shadow-sm">
+        <div class="card-body flex-grow-1">
+          <h5 class="card-title mb-3">Summary</h5>
+          <div class="mb-3">
+            <h6 class="card-subtitle mb-2 text-dark">Arbitrage Details</h6>
+            <p class="card-text">
+              <strong>Price Difference:</strong> {{ opportunity.price_diff }}
+            </p>
+            <p class="card-text">
+              <strong>Liquidity Difference:</strong> {{ opportunity.liquidity_diff }}
+            </p>
+            <p class="card-text">
+              <strong>Profit:</strong> {{ opportunity.profit }}
+            </p>
+          </div>
+          <hr>
+          <div class="mb-3">
+            <h6 class="card-subtitle mb-2 text-primary">{{ opportunity.pair1 }}</h6>
+            <p class="card-text">
+              <strong>Price:</strong> {{ opportunity.pair1_price }}
+            </p>
+            <p class="card-text">
+              <strong>Liquidity:</strong> {{ opportunity.pair1_liquidity }}
+            </p>
+            <p class="card-text">
+              <strong>Address:</strong> {{ opportunity.pool_pair1_address }}
+            </p>
+            <p class="card-text">
+              <a href="{{ opportunity.pool_pair1_url }}" target="_blank" class="card-link">{{ opportunity.pool_pair1_url }}</a>
+            </p>
+          </div>
+          <hr>
+          <div class="mb-3">
+            <h6 class="card-subtitle mb-2 text-success">{{ opportunity.pair2 }}</h6>
+            <p class="card-text">
+              <strong>Price:</strong> {{ opportunity.pair2_price }}
+            </p>
+            <p class="card-text">
+              <strong>Liquidity:</strong> {{ opportunity.pair2_liquidity }}
+            </p>
+            <p class="card-text">
+              <strong>Address:</strong> {{ opportunity.pool_pair2_address }}
+            </p>
+            <p class="card-text">
+              <a href="{{ opportunity.pool_pair2_url }}" target="_blank" class="card-link">{{ opportunity.pool_pair2_url }}</a>
+            </p>
+          </div>
         </div>
-        {% endfor %}
+      </div>
     </div>
+    {% endfor %}
+  </div>
 </div>
-<style>
-    body {
-        background-color: #4f4f4f; /* Light Peach */
-        color: #1A4870; /* Deep Blue */
-        font-family: Arial, sans-serif;
-    }
-
-    .container {
-        background-color: #959595; /* White background for the container */
-        border-radius: 8px;
-        padding: 20px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-
-    .card {
-        border: 1px solid #416382; /* Deep Blue border */
-        background-color: #bbb5b5; /* White background for the card */
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-
-    .card-title {
-        color: #1F316F; /* Navy Blue */
-        background-color: #5B99C2; /* Sky Blue */
-        padding: 10px;
-        border-radius: 4px;
-    }
-
-    .card-subtitle {
-        color: #1F316F; /* Navy Blue */
-    }
-
-    .card-text {
-        margin-bottom: 10px;
-        color: #1A4870; /* Deep Blue */
-    }
-
-    .card-link {
-        color: #1F316F; /* Navy Blue */
-        text-decoration: none;
-    }
-
-    .card-link:hover {
-        text-decoration: underline;
-    }
-
-    hr {
-        border-color: #5B99C2; /* Sky Blue */
-        margin: 20px 0;
-    }
-</style>
 {% endblock %}

@@ -7,3 +7,53 @@
   width: auto;
   height: auto;
 }
+
+body {
+  background-color: #F5F5F5; /* Light Gray */
+  color: #333333; /* Dark Gray */
+  font-family: Arial, sans-serif;
+}
+
+.container {
+  background-color: #FFFFFF; /* White background for the container */
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.card {
+  border: 1px solid #E0E0E0; /* Light Gray border */
+  background-color: #FFFFFF; /* White background for the card */
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.card-title {
+  color: #222222; /* Dark Gray */
+  background-color: #F0F0F0; /* Light Gray */
+  padding: 10px;
+  border-radius: 4px;
+}
+
+.card-subtitle {
+  color: #666666; /* Gray */
+}
+
+.card-text {
+  margin-bottom: 10px;
+  color: #333333; /* Dark Gray */
+}
+
+.card-link {
+  color: #007BFF; /* Blue */
+  text-decoration: none;
+}
+
+.card-link:hover {
+  text-decoration: underline;
+}
+
+hr {
+  border-color: #E0E0E0; /* Light Gray */
+  margin: 20px 0;
+}
