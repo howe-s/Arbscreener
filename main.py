@@ -199,13 +199,14 @@ def arb():
     # Extract data for processing
     token_pairs = []
     for TokenPair in search:
-        # print(TokenPair)
         token_pairs.append({
             'pair': TokenPair.base_token.name + '/' + TokenPair.quote_token.name,
             'pool_address': TokenPair.pair_address,
             'pool_url': TokenPair.url,
             'price_usd': TokenPair.price_usd,
             'liquidity_usd': TokenPair.liquidity.usd,
+            'liquidity_base': TokenPair.liquidity.base,
+            'liquidity_quote': TokenPair.liquidity.quote
         })
     
     # Initialize a list to store arbitrage opportunities
@@ -222,36 +223,44 @@ def arb():
                 liquidity_diff = pair1['liquidity_usd'] - pair2['liquidity_usd']
                 price_diff = pair2['price_usd'] - pair1['price_usd']
                 profit = liquidity_diff * price_diff
-                pair1_liquidity = pair1['liquidity_usd']
-                pair2_liquidity = pair2['liquidity_usd']
-                pair1_price = pair1['price_usd']
-                pair2_price = pair2['price_usd']
+                
+                # Determine base liquidity and potential profit
+                if pair1['price_usd'] < pair2['price_usd']:
+                    base_liquidity = pair1['liquidity_base']
+                else:
+                    base_liquidity = pair2['liquidity_base']
 
+                potential_profit = base_liquidity * price_diff
                 
                 arbitrage_opportunities.append({
                     'pair1': pair1['pair'],
-                    'pair1_price': f"${pair1_price:,.2f}",
-                    'pair1_liquidity': f"${pair1_liquidity:,.2f}",
+                    'pair1_price': f"${pair1['price_usd']:,.2f}",
+                    'pair1_liquidity': f"${pair1['liquidity_usd']:,.2f}",
+                    'pair1_liquidity_base': f"{pair1['liquidity_base']:,.2f}",
+                    'pair1_liquidity_quote': f"{pair1['liquidity_quote']:,.2f}",
                     'pool_pair1_address': pair1['pool_address'],
                     'pool_pair1_url': pair1['pool_url'],
                     'pair2': pair2['pair'],
-                    'pair2_price': f"${pair2_price:,.2f}",
-                    'pair2_liquidity': f"${pair2_liquidity:,.2f}",
+                    'pair2_price': f"${pair2['price_usd']:,.2f}",
+                    'pair2_liquidity': f"${pair2['liquidity_usd']:,.2f}",
+                    'pair2_liquidity_base': f"{pair2['liquidity_base']:,.2f}",
+                    'pair2_liquidity_quote': f"{pair2['liquidity_quote']:,.2f}",
                     'pool_pair2_address': pair2['pool_address'],  
-                    'pool_pair2_url': pair2['pool_url'],                  
-                    'price_diff': f"${price_diff:,.2f}",                    
+                    'pool_pair2_url': pair2['pool_url'],
+                    'price_diff': f"${price_diff:,.2f}",
                     'liquidity_diff': f"${liquidity_diff:,.2f}",
-                    'profit': f"${profit:,.2f}"
+                    'profit': f"${profit:,.2f}",
+                    'potential_profit': f"${potential_profit:,.2f}"  # Add the potential profit
                 })
 
-                #Sort big -> small
-                sorted_opportunities = sorted(arbitrage_opportunities, key=lambda x: x['price_diff'], reverse=True)
+    # Sort arbitrage opportunities by price_diff (big -> small)
+    sorted_opportunities = sorted(arbitrage_opportunities, key=lambda x: x['price_diff'], reverse=True)
 
     print(arbitrage_opportunities)
-
     
     # Pass the data to the template
     return render_template('arb.html', search=search, user_input=searchTicker, arbitrage_opportunities=sorted_opportunities)
+
 
 
 

@@ -19,7 +19,7 @@
               <strong>Liquidity Difference:</strong> {{ opportunity.liquidity_diff }}
             </p>
             <p class="card-text">
-              <strong>Profit:</strong> {{ opportunity.profit }}
+              <strong>Potential Profit:</strong> {{ opportunity.potential_profit }}
             </p>
           </div>
           <hr>
@@ -31,6 +31,12 @@
             <p class="card-text">
               <strong>Liquidity:</strong> {{ opportunity.pair1_liquidity }}
             </p>
+            <p class="card-text">
+                <strong>Base Liquidity:</strong> {{ opportunity.pair1_liquidity_base }}
+              </p>
+              <p class="card-text">
+                <strong>Quote Liquidity:</strong> {{ opportunity.pair1_liquidity_quote }}
+              </p>
             <p class="card-text">
               <strong>Address:</strong> {{ opportunity.pool_pair1_address }}
             </p>
@@ -47,6 +53,12 @@
             <p class="card-text">
               <strong>Liquidity:</strong> {{ opportunity.pair2_liquidity }}
             </p>
+            <p class="card-text">
+                <strong>Base Liquidity:</strong> {{ opportunity.pair2_liquidity_base }}
+              </p>
+              <p class="card-text">
+                <strong>Quote Liquidity:</strong> {{ opportunity.pair2_liquidity_quote }}
+              </p>
             <p class="card-text">
               <strong>Address:</strong> {{ opportunity.pool_pair2_address }}
             </p>
