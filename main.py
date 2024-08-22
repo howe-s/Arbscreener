@@ -444,7 +444,12 @@ def process_data():
                         'chain_id': pair.chain_id,
                         'pair_address': pair.pair_address,
                         'base_token': pair.base_token.name,
-                        'quote_token': pair.quote_token.name
+                        'quote_token': pair.quote_token.name,
+                        'liquidity_usd': pair.liquidity.usd,
+                        'price_native': pair.price_native,
+                        'price_usd' : pair.price_usd,
+                        'volume_24h': pair.volume.h24,
+                        "base_price": pair.base_token.symbol                     
 
                     }
                     # print('response data', response_data)
