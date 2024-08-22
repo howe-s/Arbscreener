@@ -120,7 +120,9 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 
 
-![image](https://github.com/user-attachments/assets/3ee9b9a6-bf24-4075-8111-e42263f42ae7)
+![image](https://github.com/user-attachments/assets/f390c314-cc08-41c1-b758-20b4f0448e75)
+
+![image](https://github.com/user-attachments/assets/997ca61f-8e06-4615-97aa-42a3a86addcc)
 
 ![image](https://github.com/user-attachments/assets/4f8102e3-3394-4786-bb9c-afdca85de3a0)
 
