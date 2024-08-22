@@ -110,20 +110,19 @@ The charts are generated using Matplotlib and Squarify. You can modify the funct
 - Dexscreener
 - Plotly
 
-## Contributing
-
-Feel free to fork this repository, create a new branch, and submit a pull request with any enhancements or bug fixes.
-
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
+![image](https://github.com/user-attachments/assets/d7474b52-cd48-4106-ac1b-6109455ce982)
 
+![image](https://github.com/user-attachments/assets/0448fe36-bbe4-4af1-a80d-20bc3193e95f)
 
-![image](https://github.com/user-attachments/assets/3ee9b9a6-bf24-4075-8111-e42263f42ae7)
+![image](https://github.com/user-attachments/assets/dc00d19b-64e6-4e1c-8d68-173b7c36ee7b)
+
+![image](https://github.com/user-attachments/assets/997ca61f-8e06-4615-97aa-42a3a86addcc)
 
 ![image](https://github.com/user-attachments/assets/4f8102e3-3394-4786-bb9c-afdca85de3a0)
 
-![image](https://github.com/user-attachments/assets/6203f77d-4b54-4a06-a7f4-bab6f7b4f345)
 
 
