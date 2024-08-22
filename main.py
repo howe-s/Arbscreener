@@ -15,7 +15,8 @@ required_packages = [
     'dexscreener',
     'plotly',
     'flask_cors', 
-    'requests'
+    'requests',
+    'jinja2'
 ]
 
 # Check and install each package
@@ -141,49 +142,53 @@ def pie_chart_volume(data):
 
     return img
 
+from jinja2 import Environment
+from markupsafe import Markup
+from html import escape
+
+def format_number(value, decimals=0, thousands_sep=',', decimal_sep='.'):
+    """Formats a number with the specified decimal places, thousands separator, and decimal separator.
+
+    Args:
+        value (float or int): The number to be formatted.
+        decimals (int, optional): The number of decimal places to display. Defaults to 0.
+        thousands_sep (str, optional): The character to use as the thousands separator. Defaults to ','.
+        decimal_sep (str, optional): The character to use as the decimal separator. Defaults to '.'.
+
+    Returns:
+        str: The formatted number.
+    """
+
+    formatted_value = f"{value:,.{decimals}f}"
+    return Markup(escape(formatted_value))  # Use Markup for safe HTML output
+
+
+
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
     # Get the user input for ticker and perform the search
-    searchTicker = request.args.get('user_input', 'SOL').lower()
+    searchTicker = request.args.get('user_input', 'SOL').lower()    
     search = client.search_pairs(searchTicker)
-    
-    # Extract data for processing
-    token_pairs = []
+    pool_data = []
     for TokenPair in search:
-        # print(TokenPair)
-        token_pairs.append({
-            'pair': TokenPair.base_token.name + '/' + TokenPair.quote_token.name,
-            'pool_address': TokenPair.pair_address,
+        pool_data.append({
+            'chain_id': TokenPair.chain_id,
+            'liquidity': TokenPair.liquidity,
+            'price_native': TokenPair.price_native,
             'price_usd': TokenPair.price_usd,
-            'liquidity_usd': TokenPair.liquidity.usd
+            'price_usd_formatted': f"${TokenPair.price_usd:,.2f}",
+            'volume_24h': TokenPair.volume.h24,  # Store the raw numerical value
+            'volume_24h_formatted': f"${TokenPair.volume.h24:,.2f}",  # Formatted string for display
+            'pool_address': TokenPair.pair_address,
+            'quote_token': TokenPair.quote_token.symbol,
+            'base_token': TokenPair.base_token.symbol
         })
-    
-    # Initialize a list to store arbitrage opportunities
-    arbitrage_opportunities = []
-    
-    # Compare each TokenPair with others to find arbitrage opportunities
-    for i in range(len(token_pairs)):
-        for j in range(i + 1, len(token_pairs)):
-            pair1 = token_pairs[i]
-            pair2 = token_pairs[j]
-            
-            # Arbitrage opportunity condition
-            if (pair1['price_usd'] < pair2['price_usd'] and 
-                pair1['liquidity_usd'] > pair2['liquidity_usd']):
-                
-                arbitrage_opportunities.append({
-                    'pair1': pair1['pair'],
-                    'pool_pair1_address': pair1['pool_address'],
-                    'pair2': pair2['pair'],
-                    'pool_pair2_address': pair2['pool_address'],                    
-                    'price_diff': f"${pair2['price_usd'] - pair1['price_usd']:,.8f}",                    
-                    'liquidity_diff': f"${pair1['liquidity_usd'] - pair2['liquidity_usd']:,.2f}",
-                })
-    print(arbitrage_opportunities)
-    
+
+    sorted_pool = sorted(pool_data, key=lambda x: x['volume_24h'], reverse=True)
     # Pass the data to the template
-    return render_template('index.html', search=search, user_input=searchTicker, arbitrage_opportunities=arbitrage_opportunities)
+    return render_template('index.html', pool_data=sorted_pool, user_input=searchTicker)
+
 
 @app.route('/arb', methods=['GET', 'POST'])
 def arb():
@@ -222,7 +227,7 @@ def arb():
                     'liquidity_diff': f"${pair1['liquidity_usd'] - pair2['liquidity_usd']:,.2f}",
                 })
 
-                #sort big -> small
+                #Sort big -> small
                 sorted_opportunities = sorted(arbitrage_opportunities, key=lambda x: x['price_diff'], reverse=True)
 
     print(arbitrage_opportunities)

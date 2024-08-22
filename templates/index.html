@@ -6,19 +6,19 @@
 <div class="card" id="summary-div">            
 </div>
     <div class="card-container">        
-        {% for TokenPair in search %}
-        <div class="card" data-token-pair="{{ TokenPair }}">
+        {% for data in pool_data %}
+        <div class="card" data-token-pair="{{ data['pool_address'] }}">
             <div class="card-content">
-                <div><span class="label">Chain ID:</span> <span class="value" id="chain_id">{{ TokenPair.chain_id }}</span></div>
-                <div><span class="label">Liquidity (USD):</span> <span class="value" id="liquidity">${{ TokenPair.liquidity.usd | round(0) }}</span></div>
-                <div><span class="label">Price (Native):</span> <span class="value" id="price_native">{{ TokenPair.price_native | round(2) }}</span></div>
-                <div><span class="label">Price (USD):</span> <span class="value" id="price_usd">${{ TokenPair.price_usd | round(2) }}</span></div>
-                <div><span class="label">Volume (24h):</span> <span class="value" id="volume_24h">${{ TokenPair.volume.h24 | round(2) }}</span></div>
-                <div><span class="label" >Pair Address:</span> <span class="value" id="pair_address">{{ TokenPair.pair_address }}</span></div>
+                <div><span class="label">Chain ID:</span> <span class="value">{{ data['chain_id'] }}</span></div>
+                <div><span class="label">Liquidity (USD):</span> <span class="value">${{ data['liquidity'].usd | round(0) }}</span></div>
+                <div><span class="label">Price (Native):</span> <span class="value">{{ data['price_native'] | round(2) }}</span></div>
+                <div><span class="label">Price (USD):</span> <span class="value">{{ data['price_usd_formatted'] }}</span></div>
+                <div><span class="label">Volume (24h):</span> <span class="value">{{ data['volume_24h_formatted'] }}</span></div>
+                <div><span class="label">Pair Address:</span> <span class="value">{{ data['pool_address'] }}</span></div>
             </div>
-            <div class="card-title">{{ TokenPair.quote_token.symbol }} / {{ TokenPair.base_token.symbol }}</div>
+            <div class="card-title">{{ data['quote_token'] }} / {{ data['base_token'] }}</div>
         </div>
-        {% endfor %}
+        {% endfor %}        
     </div>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
