@@ -44,3 +44,4 @@ coverage.xml
 *.py,cover
 nosetests.xml
 test_coverage/
+notes.txt

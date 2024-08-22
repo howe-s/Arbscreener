@@ -1,7 +1,8 @@
 Flask
 matplotlib
-numpy==1.26.4
+numpy==1.26.4 #Version specific
 pandas
 squarify
 dexscreener
-plotly# Adjust this version if needed based on the actual package version
+plotly
+flask_cors

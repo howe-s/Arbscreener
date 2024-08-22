@@ -14,7 +14,8 @@ required_packages = [
     'squarify',
     'dexscreener',
     'plotly',
-    'flask_cors'
+    'flask_cors', 
+    'requests'
 ]
 
 # Check and install each package
@@ -36,6 +37,7 @@ import numpy as np
 import squarify
 import pandas as pd
 from flask_cors import CORS
+import requests
 
 app = Flask(__name__)
 client = DexscreenerClient()
@@ -142,24 +144,20 @@ def pie_chart_volume(data):
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    #Passing the initial data
     searchTicker = request.args.get('user_input', 'SOL').lower()
     search = client.search_pairs(searchTicker)
+    # print('initial ping', search)
+    
+    return render_template('index.html', search=search, user_input=searchTicker)
 
-    if not search:
-        return render_template('index.html', search=[], tree_liquidity_img=None, pie_liquidity_img=None,
-                               tree_volume_img=None, pie_volume_img=None, user_input=searchTicker)
-
-    liquidityTicker = [(f"{pair.pair_address[-5:]}({pair.chain_id})", pair.liquidity.usd) for pair in search]
-    volumeTicker = [(f"{pair.pair_address[-5:]}({pair.chain_id})", pair.volume.h24) for pair in search]
-
-    tree_liquidity_img = tree_chart_liquidity(liquidityTicker)
-    pie_liquidity_img = pie_chart_liquidity(liquidityTicker)
-    tree_volume_img = tree_chart_volume(volumeTicker)
-    pie_volume_img = pie_chart_volume(volumeTicker)
-
-    return render_template('index.html', search=search, tree_liquidity_img=tree_liquidity_img,
-                           pie_liquidity_img=pie_liquidity_img, tree_volume_img=tree_volume_img,
-                           pie_volume_img=pie_volume_img, user_input=searchTicker)
+@app.route('/trending', methods=['GET', 'POST'])
+def trending():
+    #Passing the initial data
+    searchTicker = request.args.get('user_input', 'SOL').lower()
+    search = client.search_pairs(searchTicker)
+    
+    return render_template('trending.html', search=search, user_input=searchTicker)
 
 
 @app.route('/summary')
@@ -221,6 +219,7 @@ def token_summary():
             'h6_change_style': h6_change_style,
             'h24_change_style': h24_change_style,
         })
+        # print(tokens)
 
     return render_template('token_summary.html', tokens=tokens, user_input=searchTicker)
 
@@ -232,28 +231,40 @@ app.config['STATIC_FOLDER'] = 'static'
 
 @app.route('/process-data', methods=['POST'])
 def process_data():
+    
     try:
         data = request.get_json()
         token_pair_address = data.get('tokenPairAddress')
+        # base_token = data.get('cardTitle')
+        
+        base_token = request.args.get('user_input', 'SOL').lower()
+        print(base_token)
 
         if not token_pair_address:
             return jsonify({"message": "Missing tokenPairAddress"}), 400
 
         search = client.search_pairs(token_pair_address)
-
-        if isinstance(search, list):
+        # can add another function here for coingecko?
+    
+        if isinstance(search, list):            
             for pair in search:
+                print('Initial pair data', pair)
+                ##coingecko
+                # print('pair address:', pair.pair_address)
+
+
+                #buys and sells
                 if pair.pair_address == token_pair_address:
+                    
                     transactions = {
                         "m5": str(pair.transactions.m5),
                         "h1": str(pair.transactions.h1),
                         "h6": str(pair.transactions.h6),
                         "h24": str(pair.transactions.h24)
                     }
-                    print(transactions)
+                    # print('before JSON', transactions)
                     transactionsJson = jsonify(transactions)
-                    print('thisone')
-                    print(transactionsJson)
+                    # print('after JSON', transactionsJson)
 
                     # Extract buys and sells values
                     transaction_data = {}
@@ -262,7 +273,7 @@ def process_data():
                         if match:
                             transaction_data[time_interval] = {"buys": int(match.group(1)), "sells": int(match.group(2))}
 
-                    print(transaction_data)
+                    # print(transaction_data)
 
                     # Create the chart (assuming you have libraries like matplotlib)
                     plt.clf()
@@ -280,15 +291,23 @@ def process_data():
                     plt.title(f'Address: {token_pair_address.encode("utf-8") if isinstance(token_pair_address, str) else token_pair_address}')  # Handle potential encoding issues
                     plt.legend()
 
-                    # Save the chart as a temporary file (consider using a dedicated temporary directory)
+                    # Save the chart as a temporary file (consider a dedicated temporary directory)
                     with open(f'{app.config["STATIC_FOLDER"]}/transaction_chart.png', 'wb') as f:
                         plt.savefig(f, format='png')  # Specify format for clarity
-
+                    
                     # Create response data
                     response_data = {
                         'transactions': transactions,
-                        'chart_url': '/transaction_chart.png'  # Assuming a route to serve the image
+                        'chart_url': '/transaction_chart.png',  # Assuming a route to serve the image
+                        'pair_URL': pair.url,
+                        'dex_id': pair.dex_id,
+                        'chain_id': pair.chain_id,
+                        'pair_address': pair.pair_address,
+                        'base_token': pair.base_token.name,
+                        'quote_token': pair.quote_token.name
+
                     }
+                    print('response data', response_data)
                     return jsonify(response_data), 200
 
         else:
