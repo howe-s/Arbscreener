@@ -3,48 +3,54 @@
 {% block title %}Token Summary{% endblock %}
 
 {% block content %}
-    <div class="token-summary-table">
-        <table border="1" cellpadding="5" cellspacing="0">
-            <thead>
-                <tr>
-                    <th>Chain ID</th>
-                    <th>Pair Address</th>
-                    <th>Liquidity (USD)</th>
-                    <th>Quote Token</th>
-                    <th>Price (Native)</th>
-                    <th>Base Token</th>
-                    <th>Price (USD)</th>
-                    <th>Volume (5m)</th>
-                    <th>Change (5m)</th>
-                    <th>Change (1h)</th>
-                    <th>Change (6h)</th>
-                    <th>Change (24h)</th>
-                    <th>Volume (1h)</th>
-                    <th>Volume (6h)</th>
-                    <th>Volume (24h)</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for token in tokens %}
-                <tr>
-                    <td>{{ token.chain_id }}</td>
-                    <td>{{ token.pair_address }}</td>
-                    <td>${{ token.liquidity_usd }}</td>
-                    <td>{{ token.quote_token_symbol }}</td>
-                    <td>{{ token.price_native }}</td>
-                    <td>{{ token.base_token_symbol }}</td>
-                    <td>${{ token.price_usd }}</td>
-                    <td>${{ token.volume_m5 }}</td>
-                    <td style="{{ token.m5_change_style }}">{{ token.m5_change }}%</td>
-                    <td style="{{ token.h1_change_style }}">{{ token.h1_change }}%</td>
-                    <td style="{{ token.h6_change_style }}">{{ token.h6_change }}%</td>
-                    <td style="{{ token.h24_change_style }}">{{ token.h24_change }}%</td>
-                    <td>${{ token.volume_h1 }}</td>
-                    <td>${{ token.volume_h6 }}</td>
-                    <td>${{ token.volume_h24 }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+<div class="custom-container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>Chain ID</th>
+                            <th>Pair Address</th>
+                            <th>Liquidity (USD)</th>
+                            <th>Quote Token</th>
+                            <th>Price (Native)</th>
+                            <th>Base Token</th>
+                            <th>Price (USD)</th>
+                            <th>Volume (5m)</th>
+                            <th>Change (5m)</th>
+                            <th>Change (1h)</th>
+                            <th>Change (6h)</th>
+                            <th>Change (24h)</th>
+                            <th>Volume (1h)</th>
+                            <th>Volume (6h)</th>
+                            <th>Volume (24h)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for token in tokens %}
+                        <tr>
+                            <td>{{ token.chain_id }}</td>
+                            <td>{{ token.pair_address }}</td>
+                            <td>${{ token.liquidity_usd }}</td>
+                            <td>{{ token.quote_token_symbol }}</td>
+                            <td>{{ token.price_native }}</td>
+                            <td>{{ token.base_token_symbol }}</td>
+                            <td>${{ token.price_usd }}</td>
+                            <td>${{ token.volume_m5 }}</td>
+                            <td style="{{ token.m5_change_style }}">{{ token.m5_change }}%</td>
+                            <td style="{{ token.h1_change_style }}">{{ token.h1_change }}%</td>
+                            <td style="{{ token.h6_change_style }}">{{ token.h6_change }}%</td>
+                            <td style="{{ token.h24_change_style }}">{{ token.h24_change }}%</td>
+                            <td>${{ token.volume_h1 }}</td>
+                            <td>${{ token.volume_h6 }}</td>
+                            <td>${{ token.volume_h24 }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
+</div>
 {% endblock %}
