@@ -153,7 +153,8 @@ def index():
     for TokenPair in search:
         # print(TokenPair)
         token_pairs.append({
-            'pair': TokenPair.pair_address,
+            'pair': TokenPair.base_token.name + '/' + TokenPair.quote_token.name,
+            'pool_address': TokenPair.pair_address,
             'price_usd': TokenPair.price_usd,
             'liquidity_usd': TokenPair.liquidity.usd
         })
@@ -173,14 +174,63 @@ def index():
                 
                 arbitrage_opportunities.append({
                     'pair1': pair1['pair'],
+                    'pool_pair1_address': pair1['pool_address'],
                     'pair2': pair2['pair'],
-                    'price_diff': pair2['price_usd'] - pair1['price_usd'],
-                    'liquidity_diff': pair1['liquidity_usd'] - pair2['liquidity_usd']
+                    'pool_pair2_address': pair2['pool_address'],                    
+                    'price_diff': f"${pair2['price_usd'] - pair1['price_usd']:,.8f}",                    
+                    'liquidity_diff': f"${pair1['liquidity_usd'] - pair2['liquidity_usd']:,.2f}",
                 })
     print(arbitrage_opportunities)
     
     # Pass the data to the template
     return render_template('index.html', search=search, user_input=searchTicker, arbitrage_opportunities=arbitrage_opportunities)
+
+@app.route('/arb', methods=['GET', 'POST'])
+def arb():
+    # Get the user input for ticker and perform the search
+    searchTicker = request.args.get('user_input', 'SOL').lower()
+    search = client.search_pairs(searchTicker)
+    
+    # Extract data for processing
+    token_pairs = []
+    for TokenPair in search:
+        # print(TokenPair)
+        token_pairs.append({
+            'pair': TokenPair.base_token.name + '/' + TokenPair.quote_token.name,
+            'pool_address': TokenPair.pair_address,
+            'price_usd': TokenPair.price_usd,
+            'liquidity_usd': TokenPair.liquidity.usd
+        })
+    
+    # Initialize a list to store arbitrage opportunities
+    arbitrage_opportunities = []
+    
+    # Compare each TokenPair with others to find arbitrage opportunities
+    for i, pair1 in enumerate(token_pairs):
+        for pair2 in token_pairs[i + 1:]:
+            
+            # Arbitrage opportunity condition
+            if (pair1['price_usd'] < pair2['price_usd'] and 
+                pair1['liquidity_usd'] > pair2['liquidity_usd']):
+                
+                arbitrage_opportunities.append({
+                    'pair1': pair1['pair'],
+                    'pool_pair1_address': pair1['pool_address'],
+                    'pair2': pair2['pair'],
+                    'pool_pair2_address': pair2['pool_address'],                    
+                    'price_diff': f"${pair2['price_usd'] - pair1['price_usd']:,.8f}",                    
+                    'liquidity_diff': f"${pair1['liquidity_usd'] - pair2['liquidity_usd']:,.2f}",
+                })
+
+                #sort big -> small
+                sorted_opportunities = sorted(arbitrage_opportunities, key=lambda x: x['price_diff'], reverse=True)
+
+    print(arbitrage_opportunities)
+
+    
+    # Pass the data to the template
+    return render_template('arb.html', search=search, user_input=searchTicker, arbitrage_opportunities=sorted_opportunities)
+
 
 
 @app.route('/trending', methods=['GET', 'POST'])
