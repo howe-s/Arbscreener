@@ -272,6 +272,33 @@ def trending():
     
     return render_template('trending.html', search=search, user_input=searchTicker)
 
+@app.route('/raydium', methods=['GET', 'POST'])
+def raydium():
+    url = "https://api.raydium.io/v2/ammV3/ammPools"
+
+    try:
+        response = requests.get(url)
+        response.raise_for_status()  # Raise an exception for error status codes
+
+        data = response.json()
+        amm_pools = []
+
+        for pool in data['data']:
+            pool_data = {
+                "pool_id": pool['id'],
+                "price": pool["price"],  # Uncomment and add relevant fields
+                "tvl": pool["tvl"],
+                # Add other relevant information if needed
+            }
+            # print(pool_data)
+            amm_pools.append(pool_data)
+
+        return render_template('raydium.html', pool_data=amm_pools)
+
+    except requests.exceptions.RequestException as e:
+        print("Error fetching data:", e)
+        return render_template('raydium.html', amm_pools=[])
+
 
 @app.route('/summary')
 def summary():
