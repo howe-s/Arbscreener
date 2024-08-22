@@ -360,6 +360,8 @@ def token_summary():
             'h24_change_style': h24_change_style,
         })
         # print(tokens)
+        # SQL Input if wanted
+        # insert_sql = "INSERT INTO token_pairs (chain_id, pair_address, liquidity_usd, quote_token_symbol, price_native, base_token_symbol, price_usd, volume_m5, m5_change, h1_change, h6_change, h24_change, volume_h1, volume_h6, volume_h24, m5_change_style, h1_change_style, h6_change_style, h24_change_style) VALUES " + ", ".join(tokens) + ";"
 
     return render_template('token_summary.html', tokens=tokens, user_input=searchTicker)
 
@@ -435,7 +437,7 @@ def process_data():
                     with open(f'{app.config["STATIC_FOLDER"]}/transaction_chart.png', 'wb') as f:
                         plt.savefig(f, format='png')  # Specify format for clarity
                     
-                    # Create response data
+                    # Create response data for both index.html AND arb
                     response_data = {
                         'transactions': transactions,
                         'chart_url': '/transaction_chart.png',  # Assuming a route to serve the image
@@ -448,9 +450,7 @@ def process_data():
                         'liquidity_usd': pair.liquidity.usd,
                         'price_native': pair.price_native,
                         'price_usd' : pair.price_usd,
-                        'volume_24h': pair.volume.h24,
-                        "base_price": pair.base_token.symbol                     
-
+                        'volume_24h': pair.volume.h24                 
                     }
                     # print('response data', response_data)
                     return jsonify(response_data), 200
