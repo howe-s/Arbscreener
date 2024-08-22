@@ -203,8 +203,9 @@ def arb():
         token_pairs.append({
             'pair': TokenPair.base_token.name + '/' + TokenPair.quote_token.name,
             'pool_address': TokenPair.pair_address,
+            'pool_url': TokenPair.url,
             'price_usd': TokenPair.price_usd,
-            'liquidity_usd': TokenPair.liquidity.usd
+            'liquidity_usd': TokenPair.liquidity.usd,
         })
     
     # Initialize a list to store arbitrage opportunities
@@ -217,14 +218,30 @@ def arb():
             # Arbitrage opportunity condition
             if (pair1['price_usd'] < pair2['price_usd'] and 
                 pair1['liquidity_usd'] > pair2['liquidity_usd']):
+
+                liquidity_diff = pair1['liquidity_usd'] - pair2['liquidity_usd']
+                price_diff = pair2['price_usd'] - pair1['price_usd']
+                profit = liquidity_diff * price_diff
+                pair1_liquidity = pair1['liquidity_usd']
+                pair2_liquidity = pair2['liquidity_usd']
+                pair1_price = pair1['price_usd']
+                pair2_price = pair2['price_usd']
+
                 
                 arbitrage_opportunities.append({
                     'pair1': pair1['pair'],
+                    'pair1_price': f"${pair1_price:,.2f}",
+                    'pair1_liquidity': f"${pair1_liquidity:,.2f}",
                     'pool_pair1_address': pair1['pool_address'],
+                    'pool_pair1_url': pair1['pool_url'],
                     'pair2': pair2['pair'],
-                    'pool_pair2_address': pair2['pool_address'],                    
-                    'price_diff': f"${pair2['price_usd'] - pair1['price_usd']:,.8f}",                    
-                    'liquidity_diff': f"${pair1['liquidity_usd'] - pair2['liquidity_usd']:,.2f}",
+                    'pair2_price': f"${pair2_price:,.2f}",
+                    'pair2_liquidity': f"${pair2_liquidity:,.2f}",
+                    'pool_pair2_address': pair2['pool_address'],  
+                    'pool_pair2_url': pair2['pool_url'],                  
+                    'price_diff': f"${price_diff:,.2f}",                    
+                    'liquidity_diff': f"${liquidity_diff:,.2f}",
+                    'profit': f"${profit:,.2f}"
                 })
 
                 #Sort big -> small

@@ -8,11 +8,25 @@
     <div class="card">
         <div class="card-content">
             <p class="card-text">{{opportunity.pair1}}</p>
-            <p class="card-text">{{opportunity.pool_pair1_address}}</p>
-            <p class="card-text">{{opportunity.pair2}}</p> 
-            <p class="card-text">{{opportunity.pool_pair2_address}}</p>
+            <p class="card-text">Price: {{opportunity.pair1_price}}</p>
+            <p class="card-text">Liquidity: {{opportunity.pair1_liquidity}}</p>
+            <p class="card-text"> Address: {{opportunity.pool_pair1_address}}</p>
+            <p class="card-text">
+                <a href="{{opportunity.pool_pair1_url}}" target="_blank">{{opportunity.pool_pair1_url}}</a>
+            </p>
+        </div>
+        <div class="card-content">
+            <p class="card-text">{{opportunity.pair2}}</p>  
+            <p class="card-text">Price:{{opportunity.pair2_price}}</p>
+            <p class="card-text">Liquidity: {{opportunity.pair2_liquidity}}</p>
+            <p class="card-text">Address: {{opportunity.pool_pair2_address}}</p>
+            <p class="card-text">
+                <a href="{{opportunity.pool_pair2_url}}" target="_blank">{{opportunity.pool_pair2_url}}</a>
+            </p>
+        </div>
             <p class="card-text">Price Difference: {{opportunity.price_diff}}</p>
             <p class="card-text">Liquidity difference: {{opportunity.liquidity_diff}}</p>
+            <p class="card-text">Profit(?): {{opportunity.profit}}</p>
         </div>
     </div>
     {% endfor %}
