@@ -118,7 +118,9 @@ Feel free to fork this repository, create a new branch, and submit a pull reques
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
+![image](https://github.com/user-attachments/assets/d7474b52-cd48-4106-ac1b-6109455ce982)
 
+![image](https://github.com/user-attachments/assets/0448fe36-bbe4-4af1-a80d-20bc3193e95f)
 
 ![image](https://github.com/user-attachments/assets/f390c314-cc08-41c1-b758-20b4f0448e75)
 
@@ -126,6 +128,5 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ![image](https://github.com/user-attachments/assets/4f8102e3-3394-4786-bb9c-afdca85de3a0)
 
-![image](https://github.com/user-attachments/assets/6203f77d-4b54-4a06-a7f4-bab6f7b4f345)
 
 
