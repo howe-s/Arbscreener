@@ -18,8 +18,8 @@
             <li><a href="{{ url_for('summary', user_input=request.args.get('user_input', 'SOL')) }}">Summary</a></li>
             <li><a href="{{ url_for('token_summary', user_input=request.args.get('user_input', 'SOL')) }}">Token Table</a></li>
             <li><a href="{{ url_for('charts', user_input=request.args.get('user_input', 'SOL')) }}">Charts</a></li>
-            <li><a href="{{ url_for('trending') }}">Trending</a></li>
-            <li><a href="{{ url_for('arb') }}">Arb</a></li>
+            <li><a href="{{ url_for('trending', user_input=request.args.get('user_input', 'SOL')) }}">Trending</a></li>
+            <li><a href="{{ url_for('arb', user_input=request.args.get('user_input', 'SOL')) }}">Arb</a></li>
             
         </ul>
     </nav>

@@ -10,28 +10,33 @@
             <p class="card-text">{{opportunity.pair1}}</p>
             <p class="card-text">Price: {{opportunity.pair1_price}}</p>
             <p class="card-text">Liquidity: {{opportunity.pair1_liquidity}}</p>
-            <p class="card-text"> Address: {{opportunity.pool_pair1_address}}</p>
+            <p class="card-text">Address: {{opportunity.pool_pair1_address}}</p>
             <p class="card-text">
                 <a href="{{opportunity.pool_pair1_url}}" target="_blank">{{opportunity.pool_pair1_url}}</a>
             </p>
         </div>
         <div class="card-content">
-            <p class="card-text">{{opportunity.pair2}}</p>  
-            <p class="card-text">Price:{{opportunity.pair2_price}}</p>
+            <p class="card-text">{{opportunity.pair2}}</p>
+            <p class="card-text">Price: {{opportunity.pair2_price}}</p>
             <p class="card-text">Liquidity: {{opportunity.pair2_liquidity}}</p>
             <p class="card-text">Address: {{opportunity.pool_pair2_address}}</p>
             <p class="card-text">
                 <a href="{{opportunity.pool_pair2_url}}" target="_blank">{{opportunity.pool_pair2_url}}</a>
             </p>
         </div>
+        <div class="card-content summary-content">
             <p class="card-text">Price Difference: {{opportunity.price_diff}}</p>
-            <p class="card-text">Liquidity difference: {{opportunity.liquidity_diff}}</p>
+            <p class="card-text">Liquidity Difference: {{opportunity.liquidity_diff}}</p>
             <p class="card-text">Profit(?): {{opportunity.profit}}</p>
         </div>
     </div>
     {% endfor %}
 </div>
 <style>
+
+body {
+    background: #111111;
+}
 .card-container {
     display: flex;
     flex-wrap: wrap; /* Allows cards to wrap to the next line if needed */
@@ -51,12 +56,23 @@
 }
 
 .card-content {
-    word-wrap: break-word; /* Breaks long words if needed */
+    display: flex;
+    flex-direction: column; /* Stack items vertically by default */
+}
+
+@media (max-width: 768px) {
+    .card {
+        flex: 1 1 100%; /* Makes each card take the full width */
+    }
+
+    .card-content {
+        flex-direction: column; /* Stack items vertically on small screens */
+    }
 }
 
 .card-content p {
     margin: 0; /* Removes default margins */
-    padding: 10px; /* Removes default padding */
+    padding: 10px; /* Padding inside each paragraph */
     overflow-wrap: break-word; /* Breaks long words to prevent overflow */
 }
 </style>
