@@ -2,3 +2,8 @@
   margin-left: none;
   margin-right: none;
 }
+
+.table-container mt-4 {
+  width: auto;
+  height: auto;
+}

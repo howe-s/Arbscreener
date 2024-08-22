@@ -3,158 +3,92 @@
 {% block title %}Home - Dexscreener{% endblock %}
 
 {% block content %}
-<div class="card" id="summary-div">            
-</div>
-    <div class="card-container">        
-        {% for data in pool_data %}
-        <div class="card" data-token-pair="{{ data['pool_address'] }}">
-            <div class="card-content">
-                <div><span class="label">Chain ID:</span> <span class="value">{{ data['chain_id'] }}</span></div>
-                <div><span class="label">Liquidity (USD):</span> <span class="value">${{ data['liquidity'].usd | round(0) }}</span></div>
-                <div><span class="label">Price (Native):</span> <span class="value">{{ data['price_native'] | round(2) }}</span></div>
-                <div><span class="label">Price (USD):</span> <span class="value">{{ data['price_usd_formatted'] }}</span></div>
-                <div><span class="label">Volume (24h):</span> <span class="value">{{ data['volume_24h_formatted'] }}</span></div>
-                <div><span class="label">Pair Address:</span> <span class="value">{{ data['pool_address'] }}</span></div>
-            </div>
-            <div class="card-title">{{ data['quote_token'] }} / {{ data['base_token'] }}</div>
-        </div>
-        {% endfor %}        
+<div class="container mt-4">
+    <!-- Summary Div -->
+    <div class="d-none d-md-block" id="summary-div">
+        <!-- Summary content will be dynamically inserted here -->
     </div>
+
+    <!-- Card Container -->
+    <div class="row">
+        {% for data in pool_data %}
+        <div class="col-md-4 mb-4">
+            <div class="card" data-token-pair="{{ data['pool_address'] }}">
+                <div class="card-body">
+                    <h5 class="card-title">{{ data['quote_token'] }} / {{ data['base_token'] }}</h5>
+                    <p><strong>Chain ID:</strong> {{ data['chain_id'] }}</p>
+                    <p><strong>Liquidity (USD):</strong> ${{ data['liquidity'].usd | round(0) }}</p>
+                    <p><strong>Price (Native):</strong> {{ data['price_native'] | round(2) }}</p>
+                    <p><strong>Price (USD):</strong> {{ data['price_usd_formatted'] }}</p>
+                    <p><strong>Volume (24h):</strong> {{ data['volume_24h_formatted'] }}</p>
+                    <p><strong>Pair Address:</strong> {{ data['pool_address'] }}</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const cards = document.querySelectorAll('.card');
     const summaryDiv = document.getElementById('summary-div');   
     cards.forEach(card => {
         card.addEventListener('click', () => {
-            const tokenPairAddress = card.querySelector('#pair_address').textContent;
+            const tokenPairAddress = card.querySelector('[data-token-pair]').getAttribute('data-token-pair');
             const cardTitle = card.querySelector('.card-title').textContent;
-            const cardVolume = card.querySelector('#volume_24h').textContent;
-            const cardPriceNative = card.querySelector('#price_native').textContent;
-            const cardPriceUSD = card.querySelector('#price_usd').textContent;
-            const cardLiquidity = card.querySelector('#liquidity').textContent;           
-            console.log(tokenPairAddress)
+            const cardVolume = card.querySelector('[data-volume]').textContent;
+            const cardPriceNative = card.querySelector('[data-price-native]').textContent;
+            const cardPriceUSD = card.querySelector('[data-price-usd]').textContent;
+            const cardLiquidity = card.querySelector('[data-liquidity]').textContent;           
+            console.log(tokenPairAddress);
 
             sendTokenPairAddressToFlask(tokenPairAddress, cardTitle);
-            // sendTokenPairAddressToFlask(cardTitle)
 
-            summaryDiv.style.display = 'inline-block';
-            summaryDiv.style.top = '50%';
-            summaryDiv.style.left = '50%';
-            summaryDiv.style.transform = 'translate(-50%, 0)';
-            summaryDiv.style.width = 'auto';
-            summaryDiv.style.height = 'auto';
+            summaryDiv.style.display = 'block';
+            summaryDiv.innerHTML = `
+                <div> 
+                    <p> ${cardTitle} </p> 
+                    <p> Chain: ${data.chain_id} </p> 
+                    <p> Dex: ${data.dex_id} </p>
+                    <p> URL: <a href="${data.pair_URL}">${data.pair_URL}</a> </p>
+                    <img src="transaction_chart.png?t=${new Date().getTime()}" alt="Transaction Chart">
+                </div>
+            `;
         });
     });
 
     function sendTokenPairAddressToFlask(tokenPairAddress, cardTitle) {
-    fetch('/process-data', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ tokenPairAddress: tokenPairAddress, cardTitle: cardTitle}),
-    })
-    .then(response => response.json())
-    .then(data => {
-      console.log('Success this one:', data.pair_URL);
-      const pair_URL = data.pair_URL
-      const chain_id = data.chain_id
-      const dex_id = data.dex_id
-      const quote_token = data.quote_token
-      const base_token = data.base_token
-      console.log(pair_URL, chain_id, dex_id)
-    //   const jsonString = JSON.stringify(data);
-    //   console.log(jsonString)
-      summaryDiv.innerHTML = '';
-      // Create a new element for the image
-      const image = new Image();
-      image.src = "transaction_chart.png?t=" + new Date().getTime();
-      image.alt = "Transaction Chart";
-    //   summaryDiv.appendChild()
-      summaryDiv.innerHTML = `
-      <div> 
-       <p> ${quote_token} / ${base_token}</p> 
-       <p> Chain: ${chain_id} </p> 
-       <p> Dex: ${dex_id} </p>
-       <p> URL: <a href="${pair_URL}">${pair_URL}</a> </p>
-       
-      </div>
-      `
-      summaryDiv.appendChild(image);
-
-    })
-    .catch((error) => {
-      console.error('Error:', error);
-    });
-  }
+        fetch('/process-data', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ tokenPairAddress: tokenPairAddress, cardTitle: cardTitle }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Success this one:', data.pair_URL);
+            const pair_URL = data.pair_URL;
+            const chain_id = data.chain_id;
+            const dex_id = data.dex_id;
+            const quote_token = data.quote_token;
+            const base_token = data.base_token;
+            
+            summaryDiv.innerHTML = `
+                <div> 
+                    <p> ${quote_token} / ${base_token} </p> 
+                    <p> Chain: ${chain_id} </p> 
+                    <p> Dex: ${dex_id} </p>
+                    <p> URL: <a href="${pair_URL}">${pair_URL}</a> </p>
+                    <img src="transaction_chart.png?t=${new Date().getTime()}" alt="Transaction Chart">
+                </div>
+            `;
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+    }
 });
-
 </script>
-<style>
-    .card-container {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        margin: 0 auto;
-        padding: 0 10px;
-        width: 100%;
-        box-sizing: border-box;
-    }
-    .card {
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        padding: 10px;
-        margin: 20px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        background-color: #f9f9f9;
-        width: 425px;
-        display: flex;
-        float: left;
-        position: relative;
-        cursor: pointer;
-    }
-    .card-title {
-        font-size: 18px;
-        font-weight: bold;
-        margin-bottom: 10px;
-        align-self: flex-end;
-        position: absolute;
-        top: 10px;
-        right: 10px;
-    }
-    .card-content .label {
-        font-weight: bold;
-        display: inline-block;
-        width: 150px;
-    }
-    .card-content .value {
-        display: inline-block;
-    }
-    .summary-table table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-    .summary-table th, .summary-table td {
-        border: 1px solid #ddd;
-        padding: 8px;
-        text-align: left;
-    }
-    .summary-table th {
-        background-color: #f2f2f2;
-    }
-
-    #summary-div {
-        display: none;
-        position: flex;
-        top: 0;
-        left: 0;
-        width: 75%;
-        height: 200px;
-        background-color: white;
-        border: 1px solid #ccc;
-        padding: 20px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        z-index: 1000;
-    }
-</style>
 {% endblock %}
