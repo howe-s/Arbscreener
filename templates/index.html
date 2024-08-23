@@ -1,130 +1,125 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Finance Analytics</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .hero-section {
+            background: #0d6efd;
+            color: white;
+            padding: 100px 0;
+            text-align: center;
+        }
 
-{% block title %}Home - Dexscreener{% endblock %}
+        .feature-section {
+            padding: 50px 0;
+        }
 
-{% block content %}
-<div class="container mt-6">
-    <!-- Summary Div -->
-    <div class="interactive-chart-container">
-        
-        <div class="d-none d-md-block" id="summary-div">        
-          {{ chart_div | safe }}
-            <!-- Summary content will be dynamically inserted here -->
+        .feature-card {
+            border: none;
+            background-color: #f8f9fa;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .feature-card:hover {
+            transform: scale(1.05);
+        }
+
+        .chart-container {
+            padding: 50px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <h1 class="display-4">Welcome to Crypto Finance Analytics</h1>
+            <p class="lead">Your one-stop solution for cryptocurrency liquidity and volume analysis</p>
+            <a href="/search" class="btn btn-light btn-lg">Explore Features</a>
+            <a href="/login" class="btn btn-light btn-lg">Login</a>
         </div>
-    </div>
-    <!-- Card Container -->
-    <div class="row">
-        {% for data in pool_data %}
-        <div class="col-md-6">
-          <div class="card" data-token-pair="{{ data['pool_address'] }}">
-            <div class="card-body">
-              <h5 class="card-title">{{ data['base_token'] }} / {{ data['quote_token'] }}</h5>
-              <p><strong>Chain ID:</strong>{{ data['chain_id'] }}</p>
-              <table class="table table-striped">
-                <tbody>
-                  <tr>
-                    <th>Liquidity</th>
-                    <th>base</th>
-                    <th>quote</th>
-                  </tr>
-                  <tr>
-                    <td><strong></strong>{{ data['liquidity_usd_formatted']}}</p></td>
-                    <td><strong>{{ data['base_token'] }}:</strong> {{ data['liquidity_base_formatted']}}</p></td>
-                    <td><strong>{{ data['quote_token'] }}:</strong> {{ data['liquidity_quote_formatted']}}</p></td>
-                  </tr>
-                </tbody>
-              </table>
-              <table class="table table-striped">
-                <tbody>
-                  <tr>
-                    <th>5m</th>
-                    <th>1h</th>
-                    <th>6h</th>
-                    <th>24h</th>
-                  </tr>
-                  <tr>
-                    <td><strong></strong>{{ data['volume_5m_formatted'] }}</p></td>
-                    <td><strong></strong>{{ data['volume_1h_formatted'] }}</p></td>
-                    <td><strong></strong>{{ data['volume_6h_formatted'] }}</p></td>
-                    <td><strong></strong>{{ data['volume_24h_formatted'] }}</td>
-                  </tr>
-                </tbody>
-              </table>
-              <p><strong>Price (Native): </strong>{{ data['price_native_formatted']}}</p>
-              <p><strong>Price (USD): </strong>{{ data['price_usd_formatted'] }}</p>
-              <p><strong>Pair Address: </strong>{{ data['pool_address'] }}</p>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="feature-section">
+        <div class="container">
+            <div class="row text-center">
+                <h2 class="mb-5">Key Features</h2>
+
+                <!-- Feature 1 -->
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card feature-card">
+                        <div class="card-body">
+                            <h5 class="card-title">Liquidity Analysis</h5>
+                            <p class="card-text">Visualize and analyze liquidity across various cryptocurrency pairs using treemaps and pie charts.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature 2 -->
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card feature-card">
+                        <div class="card-body">
+                            <h5 class="card-title">Volume Analysis</h5>
+                            <p class="card-text">Gain insights into trading volume trends with easy-to-understand charts.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature 3 -->
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card feature-card">
+                        <div class="card-body">
+                            <h5 class="card-title">Arbitrage Opportunities</h5>
+                            <p class="card-text">Identify and leverage arbitrage opportunities across different trading pairs and exchanges.</p>
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
         </div>
-        {% endfor %}
-      </div>
-</div>
+    </section>
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    const cards = document.querySelectorAll('.card');
-    const summaryDiv = document.getElementById('summary-div');   
+    <!-- Chart Examples Section -->
+    <section id="charts" class="chart-container bg-light">
+        <div class="container">
+            <div class="row text-center">
+                <h2 class="mb-5">Sample Data Visualizations</h2>
 
-    cards.forEach(card => {
-        card.addEventListener('click', () => {
-            const tokenPairAddress = card.getAttribute('data-token-pair');
-            console.log(tokenPairAddress);
+                <!-- Example Chart 1 -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Liquidity Treemap</h5>
+                            <img src="{{ url_for('static', filename='images/liquidity_treemap.png') }}" class="img-fluid" alt="Liquidity Treemap">
+                        </div>
+                    </div>
+                </div>
 
-            sendTokenPairAddressToFlask(tokenPairAddress);
+                <!-- Example Chart 2 -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Volume Pie Chart</h5>
+                            <img src="{{ url_for('static', filename='images/volume_pie_chart.png') }}" class="img-fluid" alt="Volume Pie Chart">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-            summaryDiv.style.display = 'block';
-        });
-    });
+    <!-- Footer -->
+    <footer class="bg-dark text-white text-center py-3">
+        <p>&copy; 2024 Crypto Finance Analytics. All Rights Reserved.</p>
+        <a href="/login" class="btn btn-outline-light btn-sm">Login</a>
+    </footer>
 
-    function sendTokenPairAddressToFlask(tokenPairAddress) {
-        fetch('/process-data', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ tokenPairAddress: tokenPairAddress }),
-        })
-        .then(response => response.json())
-        .then(data => {
-          console.log('Success:', data.pair_URL);
-          const pair_URL = data.pair_URL;
-          const chain_id = data.chain_id;
-          const dex_id = data.dex_id;
-          const quote_token = data.quote_token;
-          const base_token = data.base_token;
-          const chart_div = data.chart_div;
-          const x_data = data.x_data;
-          const y_data = data.y_data;
-
-          summaryDiv.innerHTML = `
-              <div> 
-                  <p>${base_token} / ${quote_token}</p> 
-                  <p>Chain: ${chain_id}</p> 
-                  <p>Dex: ${dex_id}</p>
-                  <p>URL: <a href="${pair_URL}">${pair_URL}</a></p>
-                  <div id="chart"></div>
-              </div>
-          `;
-              // Generate the chart directly on the client side
-          const trace = {
-              x: x_data,
-              y: y_data,
-              type: 'bar'
-          };
-          
-          const layout = {
-              title: base_token + '/' + quote_token,
-              xaxis: { title: 'Time Frame' },
-              yaxis: { title: 'Volume' }
-          };
-          
-          Plotly.newPlot('chart', [trace], layout);
-          })
-          .catch((error) => {
-              console.error('Error:', error);
-          });
-    }
-});
-
-</script>
-{% endblock %}
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
