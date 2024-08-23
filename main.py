@@ -215,7 +215,8 @@ def dex_search():
             'volume_24h_formatted': f"${TokenPair.volume.h24:,.2f}",  # Formatted string for display
             'pool_address': TokenPair.pair_address,
             'quote_token': TokenPair.quote_token.symbol,
-            'base_token': TokenPair.base_token.symbol
+            'base_token': TokenPair.base_token.symbol,
+            'pair_url': TokenPair.url
         })
 
     sorted_pool = sorted(pool_data, key=lambda x: x['volume_24h'], reverse=True)

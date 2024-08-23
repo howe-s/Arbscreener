@@ -53,6 +53,10 @@
               <p><strong>Price (Native): </strong>{{ data['price_native_formatted']}}</p>
               <p><strong>Price (USD): </strong>{{ data['price_usd_formatted'] }}</p>
               <p><strong>Pair Address: </strong>{{ data['pool_address'] }}</p>
+              <!-- <p><strong></strong>{{ data['pair_url'] }}</p> -->
+              <a href="{{ data['pair_url'] }}" target="_blank" class="card-link" title="{{ data['pair_url'] }}">
+                {{ data['pair_url'] | truncate(60, True) }}
+              </a>
             </div>
           </div>
         </div>
