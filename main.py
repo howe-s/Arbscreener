@@ -184,6 +184,9 @@ def dex_search():
     # Get the user input for ticker and perform the search
     searchTicker = request.args.get('user_input', 'SOL').lower()    
     search = client.search_pairs(searchTicker)
+    # searchTicker = request.args.get('user_input', '0x2170Ed0880ac9A755fd29B2688956BD959F933F8').lower()    
+    # search = client.get_token_pairs(searchTicker)
+    
     pool_data = []
  
     for TokenPair in search:

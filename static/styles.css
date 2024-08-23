@@ -61,3 +61,7 @@ hr {
 .custom-container {
   padding-top: 60px; /* or however tall your navbar is */
 }
+
+.address {
+  text-wrap: auto;
+}
