@@ -126,7 +126,7 @@ def tree_chart_volume(data):
 
 
 def pie_chart_volume(data):
-    print("Pie Chart Data", data)
+    # print("Pie Chart Data", data)
     data = combine_others(data)
     labels = [f"{label} (${value:,.0f})" for label, value in data]
     sizes = [value for _, value in data]
@@ -237,7 +237,7 @@ def index():
             'liquidity_base_formatted': f"{TokenPair.liquidity.base:,.2f}",
             'liquidity_quote_formatted': f"{TokenPair.liquidity.quote:,.2f}",            
             'price_native': TokenPair.price_native,
-            'price_native_formatted': f"{TokenPair.price_native:,.2f}",
+            'price_native_formatted': f"${TokenPair.price_native:,.2f}",
             'price_usd': TokenPair.price_usd,
             'price_usd_formatted': f"${TokenPair.price_usd:,.2f}",
             'volume_5m': TokenPair.volume.m5,  # Store the raw numerical value
@@ -267,6 +267,7 @@ def arb():
     # Extract data for processing
     token_pairs = []
     for TokenPair in search:
+        print(TokenPair)
         token_pairs.append({
             'pair': TokenPair.base_token.name + '/' + TokenPair.quote_token.name,
             'pool_address': TokenPair.pair_address,
@@ -274,7 +275,11 @@ def arb():
             'price_usd': TokenPair.price_usd,
             'liquidity_usd': TokenPair.liquidity.usd,
             'liquidity_base': TokenPair.liquidity.base,
-            'liquidity_quote': TokenPair.liquidity.quote
+            'liquidity_quote': TokenPair.liquidity.quote,
+            'base_token_address': TokenPair.base_token.address,
+            'quote_token_address': TokenPair.quote_token.address,
+            'chain_id': TokenPair.chain_id,
+            'dex_id': TokenPair.dex_id
         })
     
     # Initialize a list to store arbitrage opportunities
@@ -307,6 +312,8 @@ def arb():
                     'pair1_liquidity_base': f"{pair1['liquidity_base']:,.2f}",
                     'pair1_liquidity_quote': f"{pair1['liquidity_quote']:,.2f}",
                     'pool_pair1_address': pair1['pool_address'],
+                    'pair1_baseToken_address': pair1['base_token_address'],
+                    'pair1_quoteToken_address': pair1['quote_token_address'],
                     'pool_pair1_url': pair1['pool_url'],
                     'pair2': pair2['pair'],
                     'pair2_price': f"${pair2['price_usd']:,.2f}",
@@ -314,17 +321,23 @@ def arb():
                     'pair2_liquidity_base': f"{pair2['liquidity_base']:,.2f}",
                     'pair2_liquidity_quote': f"{pair2['liquidity_quote']:,.2f}",
                     'pool_pair2_address': pair2['pool_address'],  
+                    'pair2_baseToken_address': pair2['base_token_address'],
+                    'pair2_quoteToken_address': pair2['quote_token_address'],
                     'pool_pair2_url': pair2['pool_url'],
                     'price_diff': f"${price_diff:,.2f}",
                     'liquidity_diff': f"${liquidity_diff:,.2f}",
                     'profit': f"${profit:,.2f}",
-                    'potential_profit': f"${potential_profit:,.2f}"  # Add the potential profit
+                    'potential_profit': f"${potential_profit:,.2f}",
+                    'pair1_chain_id': pair1['chain_id'],
+                    'pair1_dex_id': pair1['dex_id'], 
+                    'pair2_chain_id': pair2['chain_id'],
+                    'pair2_dex_id': pair2['dex_id']
                 })
 
     # Sort arbitrage opportunities by price_diff (big -> small)
     sorted_opportunities = sorted(arbitrage_opportunities, key=lambda x: x['price_diff'], reverse=True)
 
-    print(arbitrage_opportunities)
+    # print(arbitrage_opportunities)
     
     # Pass the data to the template
     return render_template('arb.html', search=search, user_input=searchTicker, arbitrage_opportunities=sorted_opportunities)

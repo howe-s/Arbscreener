@@ -13,19 +13,6 @@
           <h5 class="card-title mb-0">Arbitrage Opportunity</h5>
         </div>
         <div class="card-body d-flex flex-column flex-grow-1">
-          <!-- Arbitrage Details -->
-          <div class="mb-4">
-            <h6 class="card-subtitle mb-2 text-dark">Arbitrage Details</h6>
-            <p class="card-text">
-              <strong>Price Difference:</strong> {{ opportunity.price_diff }}
-            </p>
-            <p class="card-text">
-              <strong>Liquidity Difference:</strong> {{ opportunity.liquidity_diff }}
-            </p>
-            <p class="card-text">
-              <strong>Potential Profit:</strong> {{ opportunity.potential_profit }}
-            </p>
-          </div>
           <!-- Pair Details in Table -->
           <table class="table table-bordered table-sm">
             <thead>
@@ -57,6 +44,26 @@
                 <td>{{ opportunity.pair2_liquidity_quote }}</td>
               </tr>
               <tr>
+                <th scope="row">Chain ID</th>
+                <td>{{ opportunity.pair1_chain_id }}</td>
+                <td>{{ opportunity.pair2_chain_id }}</td>
+              </tr>
+              <tr>
+                <th scope="row">Dex ID</th>
+                <td>{{ opportunity.pair1_dex_id }}</td>
+                <td>{{ opportunity.pair2_dex_id }}</td>
+              </tr>
+              <tr>
+                <th scope="row">Base Token Address</th>
+                <td>{{ opportunity.pair1_baseToken_address }}</td>
+                <td>{{ opportunity.pair2_baseToken_address }}</td>
+              </tr>
+              <tr>
+                <th scope="row">Quote Token Address</th>
+                <td>{{ opportunity.pair1_quoteToken_address }}</td>
+                <td>{{ opportunity.pair2_quoteToken_address }}</td>
+              </tr>
+              <tr>
                 <th scope="row">Address</th>
                 <td>{{ opportunity.pool_pair1_address }}</td>
                 <td>{{ opportunity.pool_pair2_address }}</td>
@@ -76,6 +83,19 @@
               </tr>
             </tbody>
           </table>
+            <!-- Arbitrage Details -->
+            <div class="mb-4">
+              <!-- <h6 class="card-subtitle mb-2 text-dark">Arbitrage Details</h6> -->
+              <p class="card-text">
+                <strong>Price Difference:</strong> {{ opportunity.price_diff }}
+              </p>
+              <p class="card-text">
+                <strong>Liquidity Difference:</strong> {{ opportunity.liquidity_diff }}
+              </p>
+              <p class="card-text">
+                <strong>Potential Profit:</strong> {{ opportunity.potential_profit }}
+              </p>
+            </div>
         </div>
       </div>
     </div>
