@@ -179,8 +179,8 @@ def login():
  
     return render_template('login.html')
 
-@app.route('/search', methods=['GET', 'POST'])
-def search():
+@app.route('/dex_search', methods=['GET', 'POST'])
+def dex_search():
     # Get the user input for ticker and perform the search
     searchTicker = request.args.get('user_input', 'SOL').lower()    
     search = client.search_pairs(searchTicker)
@@ -220,7 +220,7 @@ def search():
 
     sorted_pool = sorted(pool_data, key=lambda x: x['volume_24h'], reverse=True)
     # Pass the data to the template
-    return render_template('search.html', pool_data=sorted_pool, user_input=searchTicker, chart_div=chart_div)
+    return render_template('dex_search.html', pool_data=sorted_pool, user_input=searchTicker, chart_div=chart_div)
 
 
 @app.route('/arb', methods=['GET', 'POST'])
