@@ -3,7 +3,7 @@
 {% block title %}Home - Dexscreener{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="container md-6">
     <!-- Summary Div -->
     <div class="interactive-chart-container">
         
@@ -12,11 +12,10 @@
             <!-- Summary content will be dynamically inserted here -->
         </div>
     </div>
-
     <!-- Card Container -->
     <div class="row">
         {% for data in pool_data %}
-        <div class="col-md-6 mb-6">
+        <div class="col-md-6">
           <div class="card" data-token-pair="{{ data['pool_address'] }}">
             <div class="card-body">
               <h5 class="card-title">{{ data['base_token'] }} / {{ data['quote_token'] }}</h5>
@@ -24,7 +23,7 @@
               <table class="table table-striped">
                 <tbody>
                   <tr>
-                    <th>USD</th>
+                    <th>Liquidity</th>
                     <th>base</th>
                     <th>quote</th>
                   </tr>
@@ -35,27 +34,24 @@
                   </tr>
                 </tbody>
               </table>
-              <p><strong>Price (Native):</strong>{{ data['price_native'] | round(2) }}</p>
-              <p><strong>Price (USD):</strong>{{ data['price_usd_formatted'] }}</p>
               <table class="table table-striped">
                 <tbody>
                   <tr>
-                    <th>USD</th>
-                    <th>base</th>
-                    <th>quote</th>
+                    <th>5m</th>
+                    <th>1h</th>
+                    <th>6h</th>
+                    <th>24h</th>
                   </tr>
                   <tr>
-                    <td><strong>Volume (5m):</strong>{{ data['volume_5m_formatted'] }}</p></td>
-                    <td><strong>Volume (1h):</strong>{{ data['volume_1h_formatted'] }}</p></td>
-                    <td><strong>Volume (6h):</strong>{{ data['volume_6h_formatted'] }}</p></td>
-                    <td><strong>Volume (24h):</strong>{{ data['volume_24h_formatted'] }}</td>
+                    <td><strong></strong>{{ data['volume_5m_formatted'] }}</p></td>
+                    <td><strong></strong>{{ data['volume_1h_formatted'] }}</p></td>
+                    <td><strong></strong>{{ data['volume_6h_formatted'] }}</p></td>
+                    <td><strong></strong>{{ data['volume_24h_formatted'] }}</td>
                   </tr>
                 </tbody>
               </table>
-              <p><strong>Volume (5m):</strong>{{ data['volume_5m_formatted'] }}</p>
-              <p><strong>Volume (1h):</strong>{{ data['volume_1h_formatted'] }}</p>
-              <p><strong>Volume (6h):</strong>{{ data['volume_6h_formatted'] }}</p>
-              <p><strong>Volume (24h):</strong>{{ data['volume_24h_formatted'] }}</p>
+              <p><strong>Price (Native):</strong>{{ data['price_native'] | round(2) }}</p>
+              <p><strong>Price (USD):</strong>{{ data['price_usd_formatted'] }}</p>
               <p><strong>Pair Address:</strong>{{ data['pool_address'] }}</p>
             </div>
           </div>
