@@ -237,6 +237,7 @@ def index():
             'liquidity_base_formatted': f"{TokenPair.liquidity.base:,.2f}",
             'liquidity_quote_formatted': f"{TokenPair.liquidity.quote:,.2f}",            
             'price_native': TokenPair.price_native,
+            'price_native_formatted': f"{TokenPair.price_native:,.2f}",
             'price_usd': TokenPair.price_usd,
             'price_usd_formatted': f"${TokenPair.price_usd:,.2f}",
             'volume_5m': TokenPair.volume.m5,  # Store the raw numerical value
@@ -426,7 +427,7 @@ def token_summary():
             'h6_change_style': h6_change_style,
             'h24_change_style': h24_change_style,
         })
-        # print(tokens)
+
         # SQL Input if wanted
         # insert_sql = "INSERT INTO token_pairs (chain_id, pair_address, liquidity_usd, quote_token_symbol, price_native, base_token_symbol, price_usd, volume_m5, m5_change, h1_change, h6_change, h24_change, volume_h1, volume_h6, volume_h24, m5_change_style, h1_change_style, h6_change_style, h24_change_style) VALUES " + ", ".join(tokens) + ";"
 
@@ -457,12 +458,6 @@ def process_data():
     
         if isinstance(search, list):            
             for pair in search:
-                # print('Initial pair data', pair)
-                ##coingecko
-                # print('pair address:', pair.pair_address)
-
-
-                #buys and sells
                 if pair.pair_address == token_pair_address:
                     
                     transactions = {
@@ -471,40 +466,7 @@ def process_data():
                         "h6": str(pair.transactions.h6),
                         "h24": str(pair.transactions.h24)
                     }
-                    # print('before JSON', transactions)
-                    transactionsJson = jsonify(transactions)
-                    # print('after JSON', transactionsJson)
 
-                    # Extract buys and sells values
-                    transaction_data = {}
-                    for time_interval, data in transactions.items():
-                        match = re.match(r"buys=(\d+) sells=(\d+)", data)
-                        if match:
-                            transaction_data[time_interval] = {"buys": int(match.group(1)), "sells": int(match.group(2))}
-
-                    # print(transaction_data)
-
-                    # Create the chart (assuming you have libraries like matplotlib)
-                    plt.clf()
-                    time_intervals = list(transaction_data.keys())
-                    buys = [data["buys"] for data in transaction_data.values()]
-                    sells = [data["sells"] for data in transaction_data.values()]
-
-                    width = 0.35
-
-                    plt.bar(time_intervals, buys, width, label='Buys')
-                    plt.bar(time_intervals, sells, width, bottom=buys, label='Sells')
-
-                    plt.xlabel('Time Interval')
-                    plt.ylabel('Transactions')
-                    plt.title(f'Address: {token_pair_address.encode("utf-8") if isinstance(token_pair_address, str) else token_pair_address}')  # Handle potential encoding issues
-                    plt.legend()
-
-                    # Save the chart as a temporary file (consider a dedicated temporary directory)
-                    with open(f'{app.config["STATIC_FOLDER"]}/transaction_chart.png', 'wb') as f:
-                        plt.savefig(f, format='png')  # Specify format for clarity
-
-                    # Generate x_data and y_data based on your application logic
                     x_data = ['5m', '1h', '6h', '24h']
                     y_data = [pair.volume.m5, pair.volume.h1, pair.volume.h6, pair.volume.h24]
 
@@ -514,7 +476,7 @@ def process_data():
                     # Prepare response data
                     response_data = {
                         'transactions': transactions,
-                        'chart_div': chart_div,  # Include the chart div as part of the response
+                        'chart_div': chart_div,
                         'pair_URL': pair.url,
                         'dex_id': pair.dex_id,
                         'chain_id': pair.chain_id,
@@ -528,8 +490,7 @@ def process_data():
                         'x_data': ['5m', '1h', '6h', '24h'],
                         'y_data': [pair.volume.m5, pair.volume.h1, pair.volume.h6, pair.volume.h24],                
                     }
-                    # print(response_data['chart_url'])
-                    # print('response data', response_data)
+
                     return jsonify(response_data), 200
 
         else:
@@ -547,15 +508,6 @@ def process_data():
     except Exception as e:
         print(f"Error: {e}")
         return jsonify({"message": "Error processing data"}), 500
-
-# Route to serve the image from the static folder (optional)
-@app.route('/transaction_chart.png')
-def serve_image():
-    try:
-        return send_from_directory(app.config['STATIC_FOLDER'], 'transaction_chart.png')
-    except FileNotFoundError:
-        return jsonify({"message": "Image not found"}), 404
-
 
 @app.route('/charts')
 def charts():
