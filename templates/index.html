@@ -12,21 +12,52 @@
     <!-- Card Container -->
     <div class="row">
         {% for data in pool_data %}
-        <div class="col-md-4 mb-4">
-            <div class="card" data-token-pair="{{ data['pool_address'] }}">
-                <div class="card-body">
-                    <h5 class="card-title">{{ data['quote_token'] }} / {{ data['base_token'] }}</h5>
-                    <p><strong>Chain ID:</strong> {{ data['chain_id'] }}</p>
-                    <p><strong>Liquidity (USD):</strong> ${{ data['liquidity'].usd | round(0) }}</p>
-                    <p><strong>Price (Native):</strong> {{ data['price_native'] | round(2) }}</p>
-                    <p><strong>Price (USD):</strong> {{ data['price_usd_formatted'] }}</p>
-                    <p><strong>Volume (24h):</strong> {{ data['volume_24h_formatted'] }}</p>
-                    <p><strong>Pair Address:</strong> {{ data['pool_address'] }}</p>
-                </div>
+        <div class="col-md-6 mb-6">
+          <div class="card" data-token-pair="{{ data['pool_address'] }}">
+            <div class="card-body">
+              <h5 class="card-title">{{ data['base_token'] }} / {{ data['quote_token'] }}</h5>
+              <p><strong>Chain ID:</strong>{{ data['chain_id'] }}</p>
+              <table class="table table-striped">
+                <tbody>
+                  <tr>
+                    <th>USD</th>
+                    <th>base</th>
+                    <th>quote</th>
+                  </tr>
+                  <tr>
+                    <td><strong></strong>{{ data['liquidity_usd_formatted']}}</p></td>
+                    <td><strong>{{ data['base_token'] }}:</strong> {{ data['liquidity_base_formatted']}}</p></td>
+                    <td><strong>{{ data['quote_token'] }}:</strong> {{ data['liquidity_quote_formatted']}}</p></td>
+                  </tr>
+                </tbody>
+              </table>
+              <p><strong>Price (Native):</strong>{{ data['price_native'] | round(2) }}</p>
+              <p><strong>Price (USD):</strong>{{ data['price_usd_formatted'] }}</p>
+              <table class="table table-striped">
+                <tbody>
+                  <tr>
+                    <th>USD</th>
+                    <th>base</th>
+                    <th>quote</th>
+                  </tr>
+                  <tr>
+                    <td><strong>Volume (5m):</strong>{{ data['volume_5m_formatted'] }}</p></td>
+                    <td><strong>Volume (1h):</strong>{{ data['volume_1h_formatted'] }}</p></td>
+                    <td><strong>Volume (6h):</strong>{{ data['volume_6h_formatted'] }}</p></td>
+                    <td><strong>Volume (24h):</strong>{{ data['volume_24h_formatted'] }}</td>
+                  </tr>
+                </tbody>
+              </table>
+              <p><strong>Volume (5m):</strong>{{ data['volume_5m_formatted'] }}</p>
+              <p><strong>Volume (1h):</strong>{{ data['volume_1h_formatted'] }}</p>
+              <p><strong>Volume (6h):</strong>{{ data['volume_6h_formatted'] }}</p>
+              <p><strong>Volume (24h):</strong>{{ data['volume_24h_formatted'] }}</p>
+              <p><strong>Pair Address:</strong>{{ data['pool_address'] }}</p>
             </div>
+          </div>
         </div>
         {% endfor %}
-    </div>
+      </div>
 </div>
 
 <script>

@@ -172,12 +172,22 @@ def index():
     search = client.search_pairs(searchTicker)
     pool_data = []
     for TokenPair in search:
+        print(TokenPair.liquidity)
         pool_data.append({
             'chain_id': TokenPair.chain_id,
             'liquidity': TokenPair.liquidity,
+            'liquidity_usd_formatted': f"${TokenPair.liquidity.usd:,.2f}",
+            'liquidity_base_formatted': f"{TokenPair.liquidity.base:,.2f}",
+            'liquidity_quote_formatted': f"{TokenPair.liquidity.quote:,.2f}",            
             'price_native': TokenPair.price_native,
             'price_usd': TokenPair.price_usd,
             'price_usd_formatted': f"${TokenPair.price_usd:,.2f}",
+            'volume_5m': TokenPair.volume.m5,  # Store the raw numerical value
+            'volume_5m_formatted': f"${TokenPair.volume.m5:,.2f}",  # Formatted string for display
+            'volume_1h': TokenPair.volume.h1,  # Store the raw numerical value
+            'volume_1h_formatted': f"${TokenPair.volume.h1:,.2f}",  # Formatted string for display
+            'volume_6h': TokenPair.volume.h6,  # Store the raw numerical value
+            'volume_6h_formatted': f"${TokenPair.volume.h6:,.2f}",  # Formatted string for display
             'volume_24h': TokenPair.volume.h24,  # Store the raw numerical value
             'volume_24h_formatted': f"${TokenPair.volume.h24:,.2f}",  # Formatted string for display
             'pool_address': TokenPair.pair_address,
