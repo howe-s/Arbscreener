@@ -37,11 +37,6 @@ document.addEventListener('DOMContentLoaded', () => {
             sendTokenPairAddressToFlask(tokenPairAddress);
 
             summaryDiv.style.display = 'block';
-            summaryDiv.innerHTML = `
-                <div> 
-                    <img src="transaction_chart.png?t=${new Date().getTime()}" alt="Transaction Chart">
-                </div>
-            `;
         });
     });
 
@@ -65,6 +60,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const price_usd = data.price_usd
             const volume_24h = data.volume_24h
             const price_native = data.price_native
+            const x_data = data.x_data;
+            const y_data = data.y_data;
             
             summaryDiv.innerHTML = `
             <div class="row">
@@ -79,14 +76,27 @@ document.addEventListener('DOMContentLoaded', () => {
                     <p> Price USD: ${price_usd} </p>
                     <p> Volume 24H: ${volume_24h} </p>                   
                     <p> URL: <a href="${pair_URL}">${pair_URL}</a> </p>
-                    <img src="transaction_chart.png?t=${new Date().getTime()}" alt="Transaction Chart">
+                    <div id="chart"></div>
                 </div>
             </div>
             `;
-        })
-        .catch((error) => {
-            console.error('Error:', error);
-        });
+                            // Generate the chart directly on the client side
+            const trace = {
+                x: x_data,
+                y: y_data,
+                type: 'bar'
+            };
+            const layout = {
+                title: base_token + '/' + quote_token,
+                xaxis: { title: 'Time Frame' },
+                yaxis: { title: 'Volume' }
+            };
+
+            Plotly.newPlot('chart', [trace], layout);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
     }
 });
 
