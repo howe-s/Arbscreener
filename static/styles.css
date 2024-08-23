@@ -57,3 +57,7 @@ hr {
   border-color: #E0E0E0; /* Light Gray */
   margin: 20px 0;
 }
+
+.custom-container {
+  padding-top: 60px; /* or however tall your navbar is */
+}

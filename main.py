@@ -143,7 +143,7 @@ def pie_chart_volume(data):
 
     return img
 
-def generate_bar_chart(x_data, y_data, title="Interactive Bar Chart", x_label="X Axis", y_label="Y Axis"):
+def generate_bar_chart(x_data, y_data, title="Volume Chart", x_label="Time Frame", y_label="Volume"):
     """
     Generate an interactive bar chart using Plotly and return it as an HTML div string.
     
