@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}Summary - Dexscreener{% endblock %}
+
+{% block content %}
+    <div class="trending-table">
+        <table border="1" cellpadding="5" cellspacing="0">
+            <h1>My Interactive Bar Chart</h1>
+            <!-- Insert the chart here -->
+            {{ chart_div | safe }}
+        </table>
+    </div>
+{% endblock %}

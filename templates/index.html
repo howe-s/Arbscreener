@@ -5,8 +5,12 @@
 {% block content %}
 <div class="container mt-4">
     <!-- Summary Div -->
-    <div class="d-none d-md-block" id="summary-div">
-        <!-- Summary content will be dynamically inserted here -->
+    <div class="interactive-chart-container">
+        
+        <div class="d-none d-md-block" id="summary-div">        
+          {{ chart_div | safe }}
+            <!-- Summary content will be dynamically inserted here -->
+        </div>
     </div>
 
     <!-- Card Container -->
@@ -73,11 +77,6 @@ document.addEventListener('DOMContentLoaded', () => {
             sendTokenPairAddressToFlask(tokenPairAddress);
 
             summaryDiv.style.display = 'block';
-            summaryDiv.innerHTML = `
-                <div> 
-                    <img src="transaction_chart.png?t=${new Date().getTime()}" alt="Transaction Chart">
-                </div>
-            `;
         });
     });
 
@@ -91,22 +90,39 @@ document.addEventListener('DOMContentLoaded', () => {
         })
         .then(response => response.json())
         .then(data => {
-            console.log('Success:', data.pair_URL);
-            const pair_URL = data.pair_URL;
-            const chain_id = data.chain_id;
-            const dex_id = data.dex_id;
-            const quote_token = data.quote_token;
-            const base_token = data.base_token;
-            
-            summaryDiv.innerHTML = `
-                <div> 
-                    <p> ${quote_token} / ${base_token} </p> 
-                    <p> Chain: ${chain_id} </p> 
-                    <p> Dex: ${dex_id} </p>
-                    <p> URL: <a href="${pair_URL}">${pair_URL}</a> </p>
-                    <img src="transaction_chart.png?t=${new Date().getTime()}" alt="Transaction Chart">
-                </div>
-            `;
+        console.log('Success:', data.pair_URL);
+        const pair_URL = data.pair_URL;
+        const chain_id = data.chain_id;
+        const dex_id = data.dex_id;
+        const quote_token = data.quote_token;
+        const base_token = data.base_token;
+        const chart_div = data.chart_div;
+        const x_data = data.x_data;
+        const y_data = data.y_data;
+
+        summaryDiv.innerHTML = `
+            <div> 
+                <p>${base_token} / ${quote_token}</p> 
+                <p>Chain: ${chain_id}</p> 
+                <p>Dex: ${dex_id}</p>
+                <p>URL: <a href="${pair_URL}">${pair_URL}</a></p>
+                <div id="chart"></div>
+            </div>
+        `;
+            // Generate the chart directly on the client side
+        const trace = {
+            x: x_data,
+            y: y_data,
+            type: 'bar'
+        };
+        
+        const layout = {
+            title: base_token + '/' + quote_token,
+            xaxis: { title: 'Time Frame' },
+            yaxis: { title: 'Volume' }
+        };
+        
+        Plotly.newPlot('chart', [trace], layout);
         })
         .catch((error) => {
             console.error('Error:', error);

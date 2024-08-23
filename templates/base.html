@@ -38,6 +38,9 @@
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('raydium') }}">Raydium AMM</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('test') }}">Test Page</a>
+                </li>
             </ul>
             <form action="{{ request.path }}" method="get" class="form-inline ml-auto">
                 <input class="form-control mr-sm-2" type="text" name="user_input" value="{{ request.args.get('user_input', 'SOL') }}" placeholder="Search...">

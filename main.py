@@ -16,7 +16,7 @@ required_packages = [
     'plotly',
     'flask_cors', 
     'requests',
-    'jinja2'
+    'jinja2',
 ]
 
 # Check and install each package
@@ -126,6 +126,7 @@ def tree_chart_volume(data):
 
 
 def pie_chart_volume(data):
+    print("Pie Chart Data", data)
     data = combine_others(data)
     labels = [f"{label} (${value:,.0f})" for label, value in data]
     sizes = [value for _, value in data]
@@ -141,6 +142,40 @@ def pie_chart_volume(data):
     buf.close()
 
     return img
+
+def generate_bar_chart(x_data, y_data, title="Interactive Bar Chart", x_label="X Axis", y_label="Y Axis"):
+    """
+    Generate an interactive bar chart using Plotly and return it as an HTML div string.
+    
+    :param x_data: List of x-axis values
+    :param y_data: List of y-axis values
+    :param title: Title of the chart
+    :param x_label: Label for the x-axis
+    :param y_label: Label for the y-axis
+    :return: HTML div string containing the chart
+    """
+    # Create the bar chart data
+    data = [
+        go.Bar(
+            x=x_data,
+            y=y_data
+        )
+    ]
+
+    # Define the layout
+    layout = go.Layout(
+        title=title,
+        xaxis=dict(title=x_label),
+        yaxis=dict(title=y_label)
+    )
+
+    # Create the figure
+    fig = go.Figure(data=data, layout=layout)
+
+    # Convert the figure to an HTML div string
+    chart_div = pio.to_html(fig, full_html=False)
+
+    return chart_div
 
 from jinja2 import Environment
 from markupsafe import Markup
@@ -162,7 +197,21 @@ def format_number(value, decimals=0, thousands_sep=',', decimal_sep='.'):
     formatted_value = f"{value:,.{decimals}f}"
     return Markup(escape(formatted_value))  # Use Markup for safe HTML output
 
+import plotly.graph_objs as go
+import plotly.io as pio
 
+# test route
+@app.route('/test')
+def test():
+    # Example data
+    x_data = ['A', 'B', 'C', 'D', 'E']
+    y_data = [5, 10, 15, 20, 25]
+
+    # Generate the bar chart
+    chart_div = generate_bar_chart(x_data, y_data)
+
+    # Render the chart in an HTML template
+    return render_template('test.html', chart_div=chart_div)
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -171,7 +220,15 @@ def index():
     searchTicker = request.args.get('user_input', 'SOL').lower()    
     search = client.search_pairs(searchTicker)
     pool_data = []
+ 
     for TokenPair in search:
+        # chart
+            # Example data
+        x_data = ['5m', '1h', '6h', '24h']
+        y_data = [TokenPair.volume.m5, TokenPair.volume.h1, TokenPair.volume.h6, TokenPair.volume.h24]
+
+        # Generate the bar chart
+        chart_div = generate_bar_chart(x_data, y_data)
         print(TokenPair.liquidity)
         pool_data.append({
             'chain_id': TokenPair.chain_id,
@@ -197,7 +254,7 @@ def index():
 
     sorted_pool = sorted(pool_data, key=lambda x: x['volume_24h'], reverse=True)
     # Pass the data to the template
-    return render_template('index.html', pool_data=sorted_pool, user_input=searchTicker)
+    return render_template('index.html', pool_data=sorted_pool, user_input=searchTicker, chart_div=chart_div)
 
 
 @app.route('/arb', methods=['GET', 'POST'])
@@ -446,11 +503,18 @@ def process_data():
                     # Save the chart as a temporary file (consider a dedicated temporary directory)
                     with open(f'{app.config["STATIC_FOLDER"]}/transaction_chart.png', 'wb') as f:
                         plt.savefig(f, format='png')  # Specify format for clarity
-                    
-                    # Create response data for both index.html AND arb
+
+                    # Generate x_data and y_data based on your application logic
+                    x_data = ['5m', '1h', '6h', '24h']
+                    y_data = [pair.volume.m5, pair.volume.h1, pair.volume.h6, pair.volume.h24]
+
+                    # Generate the interactive chart
+                    chart_div = generate_bar_chart(x_data, y_data)
+
+                    # Prepare response data
                     response_data = {
                         'transactions': transactions,
-                        'chart_url': '/transaction_chart.png',  # Assuming a route to serve the image
+                        'chart_div': chart_div,  # Include the chart div as part of the response
                         'pair_URL': pair.url,
                         'dex_id': pair.dex_id,
                         'chain_id': pair.chain_id,
@@ -459,9 +523,12 @@ def process_data():
                         'quote_token': pair.quote_token.name,
                         'liquidity_usd': pair.liquidity.usd,
                         'price_native': pair.price_native,
-                        'price_usd' : pair.price_usd,
-                        'volume_24h': pair.volume.h24                 
+                        'price_usd': pair.price_usd,
+                        'volume_24h': pair.volume.h24,
+                        'x_data': ['5m', '1h', '6h', '24h'],
+                        'y_data': [pair.volume.m5, pair.volume.h1, pair.volume.h6, pair.volume.h24],                
                     }
+                    # print(response_data['chart_url'])
                     # print('response data', response_data)
                     return jsonify(response_data), 200
 
