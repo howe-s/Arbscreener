@@ -227,6 +227,30 @@ def dex_search():
     return render_template('dex_search.html', pool_data=sorted_pool, user_input=searchTicker, chart_div=chart_div)
 
 
+# arb helper function
+def calculate_arbitrage_profit(initial_investment, price_pair1, price_pair2, slippage_pair1, slippage_pair2, fee_percentage):
+    # Convert initial investment to units of the first pair
+    amount_pair1 = initial_investment / price_pair1
+    
+    # Apply slippage for the first pair
+    adjusted_amount_pair1 = amount_pair1 * (1 - slippage_pair1)
+    
+    # Convert the adjusted amount to the value in the second pair
+    value_pair2 = adjusted_amount_pair1 * price_pair2
+    
+    # Apply slippage for the second pair
+    final_amount_pair2 = value_pair2 * (1 - slippage_pair2)
+    
+    # Calculate the fees (assuming fee percentage is for both trades)
+    fees = initial_investment * fee_percentage * 2  # Two trades
+    
+    # Calculate profit
+    profit = final_amount_pair2 - initial_investment - fees
+    print('profit?', profit)
+    
+    return profit
+
+
 @app.route('/arb', methods=['GET', 'POST'])
 def arb():
     # Get the user input for ticker and perform the search
@@ -236,12 +260,12 @@ def arb():
     # Extract data for processing
     token_pairs = []
     for TokenPair in search:
-        print(TokenPair)
         token_pairs.append({
             'pair': TokenPair.base_token.name + '/' + TokenPair.quote_token.name,
             'pool_address': TokenPair.pair_address,
             'pool_url': TokenPair.url,
             'price_usd': TokenPair.price_usd,
+            'price_native': TokenPair.price_native,
             'liquidity_usd': TokenPair.liquidity.usd,
             'liquidity_base': TokenPair.liquidity.base,
             'liquidity_quote': TokenPair.liquidity.quote,
@@ -251,6 +275,12 @@ def arb():
             'dex_id': TokenPair.dex_id
         })
     
+    # Parameters for slippage and fees
+    slippage_pair1 = 0.01  # 1% slippage
+    slippage_pair2 = 0.01  # 1% slippage
+    fee_percentage = 0.003  # 0.3% trading fee
+    initial_investment = 1000  # Example initial investment
+
     # Initialize a list to store arbitrage opportunities
     arbitrage_opportunities = []
     
@@ -264,16 +294,18 @@ def arb():
 
                 liquidity_diff = pair1['liquidity_usd'] - pair2['liquidity_usd']
                 price_diff = pair2['price_usd'] - pair1['price_usd']
-                profit = liquidity_diff * price_diff
+                
+                # Calculate potential profit using the function
+                profit = calculate_arbitrage_profit(initial_investment, 
+                                                   pair1['price_usd'], 
+                                                   pair2['price_usd'], 
+                                                   slippage_pair1, 
+                                                   slippage_pair2, 
+                                                   fee_percentage)
                 
                 # Determine base liquidity and potential profit
-                if pair1['price_usd'] < pair2['price_usd']:
-                    base_liquidity = pair1['liquidity_base']
-                else:
-                    base_liquidity = pair2['liquidity_base']
+                base_liquidity = min(pair1['liquidity_base'], pair2['liquidity_base'])
 
-                potential_profit = base_liquidity * price_diff
-                
                 arbitrage_opportunities.append({
                     'pair1': pair1['pair'],
                     'pair1_price': f"${pair1['price_usd']:,.2f}",
@@ -296,18 +328,18 @@ def arb():
                     'price_diff': f"${price_diff:,.2f}",
                     'liquidity_diff': f"${liquidity_diff:,.2f}",
                     'profit': f"${profit:,.2f}",
-                    'potential_profit': f"${potential_profit:,.2f}",
+                    'potential_profit': f"${base_liquidity * price_diff:,.2f}",
                     'pair1_chain_id': pair1['chain_id'],
                     'pair1_dex_id': pair1['dex_id'], 
                     'pair2_chain_id': pair2['chain_id'],
-                    'pair2_dex_id': pair2['dex_id']
+                    'pair2_dex_id': pair2['dex_id'],
+                    'pair1_price_native': pair1['price_native'],
+                    'pair2_price_native': pair2['price_native']
                 })
 
-    # Sort arbitrage opportunities by price_diff (big -> small)
-    sorted_opportunities = sorted(arbitrage_opportunities, key=lambda x: x['price_diff'], reverse=True)
+    # Sort arbitrage opportunities by profit (big -> small)
+    sorted_opportunities = sorted(arbitrage_opportunities, key=lambda x: x['profit'], reverse=True)
 
-    # print(arbitrage_opportunities)
-    
     # Pass the data to the template
     return render_template('arb.html', search=search, user_input=searchTicker, arbitrage_opportunities=sorted_opportunities)
 

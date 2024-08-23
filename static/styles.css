@@ -65,3 +65,7 @@ hr {
 .address {
   text-wrap: auto;
 }
+
+#content {
+  padding-top: 60px;
+}

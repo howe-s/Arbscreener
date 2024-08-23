@@ -84,7 +84,7 @@
     <div class="col-12 mb-4">
       <div class="card shadow-sm">
         <!-- Card Header -->
-        <div class="card-header text-center">
+        <div class="card-header text-left">
           <h5 class="card-title mb-0">Arbitrage Opportunity</h5>
         </div>
         <div class="card-body p-3">
@@ -104,6 +104,12 @@
                 <td>{{ opportunity.pair2_price }}</td>
               </tr>
               <tr>
+                <tr>
+                  <th scope="row">Price Native</th>
+                  <td>{{ opportunity.pair1_price_native }}</td>
+                  <td>{{ opportunity.pair2_price_native }}</td>
+                </tr>
+                <tr>
                 <th scope="row">Liquidity</th>
                 <td>{{ opportunity.pair1_liquidity }}</td>
                 <td>{{ opportunity.pair2_liquidity }}</td>
@@ -167,7 +173,7 @@
               <strong>Liquidity Difference:</strong> {{ opportunity.liquidity_diff }}
             </p>
             <p class="card-text">
-              <strong>Potential Profit:</strong> {{ opportunity.potential_profit }}
+              <strong>Potential Profit:</strong> {{ opportunity.profit }}
             </p>
           </div>
         </div>
