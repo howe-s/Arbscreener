@@ -1,11 +1,28 @@
 import subprocess
 import sys
+import matplotlib.pyplot as plt
+import io
+import base64
+import numpy as np
+import squarify
+import pandas as pd
+from flask_cors import CORS
+import requests
+import plotly.graph_objs as go
+import plotly.io as pio
+from flask import Flask, render_template, request, jsonify, send_file, send_from_directory
+from dexscreener import DexscreenerClient
+from jinja2 import Environment
+from markupsafe import Markup
+from html import escape
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend for server-side plotting
 
-# Function to install packages
+# INSTALL
 def install(package):
     subprocess.check_call([sys.executable, "-m", "pip", "install", package])
 
-# List of required packages
+# REQS
 required_packages = [
     'Flask',
     'matplotlib',
@@ -19,31 +36,18 @@ required_packages = [
     'jinja2',
 ]
 
-# Check and install each package
+# CHECK AND INSTALL
 for package in required_packages:
     try:
         __import__(package.split('==')[0])
     except ImportError:
         install(package)
 
-from flask import Flask, render_template, request, jsonify, send_file, send_from_directory
-from dexscreener import DexscreenerClient
-import matplotlib
-
-matplotlib.use('Agg')  # Use non-interactive backend for server-side plotting
-import matplotlib.pyplot as plt
-import io
-import base64
-import numpy as np
-import squarify
-import pandas as pd
-from flask_cors import CORS
-import requests
-
+#RUN FLASK
 app = Flask(__name__)
 client = DexscreenerClient()
 
-
+# HELPER FUNCTIONS
 def get_price_change_style(price_change):
     if price_change > 0:
         return "color: green;"
@@ -52,10 +56,8 @@ def get_price_change_style(price_change):
     else:
         return "color: gray;"
 
-
 def format_price_change(price_change):
     return f"{price_change:.2f}%"
-
 
 def combine_others(data, threshold=0.05):
     total = sum(value for _, value in data)
@@ -69,7 +71,6 @@ def combine_others(data, threshold=0.05):
     if other_sum > 0:
         result.append(("Others", other_sum))
     return result
-
 
 def tree_chart_liquidity(data):
     data = combine_others(data)
@@ -88,7 +89,6 @@ def tree_chart_liquidity(data):
 
     return img
 
-
 def pie_chart_liquidity(data):
     data = combine_others(data)
     labels = [f"{label} (${value:,.0f})" for label, value in data]
@@ -105,7 +105,6 @@ def pie_chart_liquidity(data):
     buf.close()
 
     return img
-
 
 def tree_chart_volume(data):
     data = combine_others(data)
@@ -124,9 +123,7 @@ def tree_chart_volume(data):
 
     return img
 
-
 def pie_chart_volume(data):
-    # print("Pie Chart Data", data)
     data = combine_others(data)
     labels = [f"{label} (${value:,.0f})" for label, value in data]
     sizes = [value for _, value in data]
@@ -144,17 +141,7 @@ def pie_chart_volume(data):
     return img
 
 def generate_bar_chart(x_data, y_data, title="Volume Chart", x_label="Time Frame", y_label="Volume"):
-    """
-    Generate an interactive bar chart using Plotly and return it as an HTML div string.
-    
-    :param x_data: List of x-axis values
-    :param y_data: List of y-axis values
-    :param title: Title of the chart
-    :param x_label: Label for the x-axis
-    :param y_label: Label for the y-axis
-    :return: HTML div string containing the chart
-    """
-    # Create the bar chart data
+    # Construct data
     data = [
         go.Bar(
             x=x_data,
@@ -169,51 +156,19 @@ def generate_bar_chart(x_data, y_data, title="Volume Chart", x_label="Time Frame
         yaxis=dict(title=y_label)
     )
 
-    # Create the figure
+    # Create figure
     fig = go.Figure(data=data, layout=layout)
 
-    # Convert the figure to an HTML div string
+    # Convert to HTML div string
     chart_div = pio.to_html(fig, full_html=False)
 
     return chart_div
 
-from jinja2 import Environment
-from markupsafe import Markup
-from html import escape
-
 def format_number(value, decimals=0, thousands_sep=',', decimal_sep='.'):
-    """Formats a number with the specified decimal places, thousands separator, and decimal separator.
-
-    Args:
-        value (float or int): The number to be formatted.
-        decimals (int, optional): The number of decimal places to display. Defaults to 0.
-        thousands_sep (str, optional): The character to use as the thousands separator. Defaults to ','.
-        decimal_sep (str, optional): The character to use as the decimal separator. Defaults to '.'.
-
-    Returns:
-        str: The formatted number.
-    """
-
     formatted_value = f"{value:,.{decimals}f}"
-    return Markup(escape(formatted_value))  # Use Markup for safe HTML output
+    return Markup(escape(formatted_value))
 
-import plotly.graph_objs as go
-import plotly.io as pio
-
-# test route
-@app.route('/test')
-def test():
-    # Example data
-    x_data = ['A', 'B', 'C', 'D', 'E']
-    y_data = [5, 10, 15, 20, 25]
-
-    # Generate the bar chart
-    chart_div = generate_bar_chart(x_data, y_data)
-
-    # Render the chart in an HTML template
-    return render_template('test.html', chart_div=chart_div)
-
-
+#APPLICATION ROUTES
 @app.route('/', methods=['GET', 'POST'])
 def index():
  

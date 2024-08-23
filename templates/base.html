@@ -42,15 +42,13 @@
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('raydium') }}">Raydium AMM</a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('test') }}">Test Page</a>
-                </li>
             </ul>
             <form action="{{ request.path }}" method="get" class="form-inline ml-auto">
                 <input class="form-control mr-sm-2" type="text" name="user_input" value="{{ request.args.get('user_input', 'SOL') }}" placeholder="Search...">
                 <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
                 <!-- Bootstrap login button -->
                 <a class="btn btn-primary ml-2" href="{{ url_for('login') }}">Login</a>
+                <button class="btn btn-primary ml-2" id="loginButton">Connect</button>
             </form>
         </div>
     </nav>
@@ -64,5 +62,25 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="https://unpkg.com/sortabletable@latest/dist/sortabletable.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        const loginButton = document.getElementById('loginButton');
+        const statusText = document.getElementById('status');
+
+        loginButton.addEventListener('click', async () => {
+            if (typeof window.ethereum !== 'undefined') {
+                try {
+                    // Request account access if needed
+                    const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+                    statusText.innerText = `Logged in as: ${accounts[0]}`;
+                } catch (error) {
+                    console.error('User rejected the request.');
+                    statusText.innerText = 'Login failed: User rejected the request.';
+                }
+            } else {
+                console.log('MetaMask is not installed.');
+                statusText.innerText = 'MetaMask is not installed. Please install it to use this feature.';
+            }
+        });
+    </script>
 </body>
 </html>
