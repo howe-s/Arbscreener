@@ -63,26 +63,5 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="https://unpkg.com/sortabletable@latest/dist/sortabletable.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-        const loginButton = document.getElementById('loginButton');
-        const statusText = document.getElementById('status');
-
-        loginButton.addEventListener('click', async () => {
-            if (typeof window.ethereum !== 'undefined') {
-                try {
-                    // Request account access if needed
-                    const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
-                    statusText.innerText = `Logged in as: ${accounts[0]}`;
-                    console.log('User Wallet Connected')
-                } catch (error) {
-                    console.error('User rejected the request.');
-                    statusText.innerText = 'Login failed: User rejected the request.';
-                }
-            } else {
-                console.log('MetaMask is not installed.');
-                statusText.innerText = 'MetaMask is not installed. Please install it to use this feature.';
-            }
-        });
-    </script>
 </body>
 </html>
