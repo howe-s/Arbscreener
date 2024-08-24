@@ -324,12 +324,17 @@ def arb():
                     print(profit_int)
                     if profit_int > 0:
                         nativePrice_ratio = pair2['price_native']/ pair1['price_native']
-                        nativePrice_ratio_format = f"{round(nativePrice_ratio, 4)}"
+                        nativePrice_ratio_round = f"{round(nativePrice_ratio, 4)}"
+                        pair1_price_round = f"{round(pair1['price_usd'], 8)}"
+                        pair2_price_round = f"{round(pair2['price_usd'], 8)}"
+                        pair1_priceNative_round = f"{round(pair1['price_native'], 8)}"
+                        pair2_priceNative_round = f"{round(pair2['price_native'], 8)}"
                         
 
                         arbitrage_opportunities.append({
                             'pair1': pair1['pair'],
-                            'pair1_price': f"${pair1['price_usd']:,.2f}",
+                            'pair1_price': pair1['price_usd'],
+                            'pair1_price_round': pair1_price_round,
                             'pair1_liquidity': f"${pair1['liquidity_usd']:,.2f}",
                             'pair1_liquidity_base': f"{pair1['liquidity_base']:,.2f}",
                             'pair1_liquidity_quote': f"{pair1['liquidity_quote']:,.2f}",
@@ -338,7 +343,8 @@ def arb():
                             'pair1_quoteToken_address': pair1['quoteToken_address'],
                             'pool_pair1_url': pair1['pool_url'],
                             'pair2': pair2['pair'],
-                            'pair2_price': f"${pair2['price_usd']:,.2f}",
+                            'pair2_price': pair2['price_usd'],
+                            'pair2_price_round': pair2_price_round,
                             'pair2_liquidity': f"${pair2['liquidity_usd']:,.2f}",
                             'pair2_liquidity_base': f"{pair2['liquidity_base']:,.2f}",
                             'pair2_liquidity_quote': f"{pair2['liquidity_quote']:,.2f}",
@@ -355,10 +361,12 @@ def arb():
                             'pair1_dex_id': pair1['dex_id'], 
                             'pair2_chain_id': pair2['chain_id'],
                             'pair2_dex_id': pair2['dex_id'],
-                            'pair1_price_native': pair1['price_native'],
-                            'pair2_price_native': pair2['price_native'],
+                            'pair1_priceNative': pair1['price_native'],
+                            'pair2_priceNative': pair2['price_native'],
+                            'pair1_priceNative_round': pair1_priceNative_round,
+                            'pair2_priceNative_round': pair2_priceNative_round,
                             'nativePrice_ratio': nativePrice_ratio,
-                            'nativePrice_ratio_format': nativePrice_ratio_format
+                            'nativePrice_ratio_round': nativePrice_ratio_round
                         })
                 else:
                     # arbitrage_opportunities.append({

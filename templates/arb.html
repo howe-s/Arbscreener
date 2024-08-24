@@ -100,14 +100,14 @@
             <tbody>
               <tr>
                 <th scope="row">Price</th>
-                <td>{{ opportunity.pair1_price }}</td>
-                <td>{{ opportunity.pair2_price }}</td>
+                <td>{{ opportunity.pair1_price_round }}</td>
+                <td>{{ opportunity.pair2_price_round }}</td>
               </tr>
               <tr>
                 <tr>
                   <th scope="row">Price Native</th>
-                  <td>{{ opportunity.pair1_price_native }}</td>
-                  <td>{{ opportunity.pair2_price_native }}</td>
+                  <td>{{ opportunity.pair1_priceNative_round }}</td>
+                  <td>{{ opportunity.pair2_priceNative_round }}</td>
                 </tr>
                 <tr>
                 <th scope="row">Liquidity</th>
@@ -176,7 +176,7 @@
               <strong>Profit - (Fees + Slippage):</strong> {{ opportunity.profit }}
             </p>
             <p class="card-text">
-              <strong>Ratio</strong> {{ opportunity.nativePrice_ratio_format }}
+              <strong>Ratio</strong> {{ opportunity.nativePrice_ratio_round }}
             </p>
           </div>
         </div>
