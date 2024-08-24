@@ -10,6 +10,7 @@ from flask_cors import CORS
 import requests
 import plotly.graph_objs as go
 import plotly.io as pio
+import math
 from flask import Flask, render_template, request, jsonify, send_file, send_from_directory
 from dexscreener import DexscreenerClient
 from jinja2 import Environment
@@ -322,6 +323,10 @@ def arb():
                     profit_int = int(profit)
                     print(profit_int)
                     if profit_int > 0:
+                        nativePrice_ratio = pair2['price_native']/ pair1['price_native']
+                        # nativePrice_ratio_format = f"{nativePrice_ratio:.8f}"
+                        nativePrice_ratio_format = f"{round(nativePrice_ratio, 4)}"
+                        
 
                         arbitrage_opportunities.append({
                             'pair1': pair1['pair'],
@@ -352,9 +357,14 @@ def arb():
                             'pair2_chain_id': pair2['chain_id'],
                             'pair2_dex_id': pair2['dex_id'],
                             'pair1_price_native': pair1['price_native'],
-                            'pair2_price_native': pair2['price_native']
+                            'pair2_price_native': pair2['price_native'],
+                            'nativePrice_ratio': nativePrice_ratio,
+                            'nativePrice_ratio_format': nativePrice_ratio_format
                         })
                 else:
+                    # arbitrage_opportunities.append({
+                    #     'arbResponse': 'No opprotunities at this time'
+                    # })
                     print('no arbs')
 
     # sorted_opportunities = arbitrage_opportunities.sort(key=myFunc)
