@@ -114,10 +114,6 @@ The charts are generated using Matplotlib and Squarify. You can modify the funct
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
-![image](https://github.com/user-attachments/assets/d7474b52-cd48-4106-ac1b-6109455ce982)
-
-![image](https://github.com/user-attachments/assets/0448fe36-bbe4-4af1-a80d-20bc3193e95f)
-
 ![image](https://github.com/user-attachments/assets/ce363fa7-dae2-451b-909d-5d8fd812006d)
 
 ![image](https://github.com/user-attachments/assets/997ca61f-8e06-4615-97aa-42a3a86addcc)
