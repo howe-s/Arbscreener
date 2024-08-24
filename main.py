@@ -323,6 +323,7 @@ def arb():
                     profit_int = int(profit)
                     print(profit_int)
                     if profit_int > 0:
+                        
                         nativePrice_ratio = pair2['price_native']/ pair1['price_native']
                         nativePrice_ratio_round = f"{round(nativePrice_ratio, 4)}"
                         pair1_price_round = f"{round(pair1['price_usd'], 8)}"
@@ -330,7 +331,7 @@ def arb():
                         pair1_priceNative_round = f"{round(pair1['price_native'], 8)}"
                         pair2_priceNative_round = f"{round(pair2['price_native'], 8)}"
                         
-
+                        # compile to pass
                         arbitrage_opportunities.append({
                             'pair1': pair1['pair'],
                             'pair1_price': pair1['price_usd'],
@@ -376,7 +377,7 @@ def arb():
 
     # sorted_opportunities = arbitrage_opportunities.sort(key=myFunc)
     print(type(arbitrage_opportunities))
-    # Sort arbitrage opportunities by profit (big -> small)
+    # Sort data by profit (int)
     sorted_opportunities = sorted(arbitrage_opportunities, key=lambda x: x['int_profit'], reverse=True)
 
     # Pass the data to the template
