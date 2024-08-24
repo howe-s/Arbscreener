@@ -219,7 +219,10 @@ def dex_search():
             'pool_address': TokenPair.pair_address,
             'quote_token': TokenPair.quote_token.symbol,
             'base_token': TokenPair.base_token.symbol,
-            'pair_url': TokenPair.url
+            'pair_url': TokenPair.url,
+            'baseToken_address': TokenPair.base_token.address,
+            'quoteToken_address': TokenPair.quote_token.address
+            
         })
 
     sorted_pool = sorted(pool_data, key=lambda x: x['volume_24h'], reverse=True)
@@ -273,10 +276,12 @@ def arb():
             'liquidity_usd': TokenPair.liquidity.usd,
             'liquidity_base': TokenPair.liquidity.base,
             'liquidity_quote': TokenPair.liquidity.quote,
-            'base_token_address': TokenPair.base_token.address,
-            'quote_token_address': TokenPair.quote_token.address,
+            'baseToken_address': TokenPair.base_token.address,
+            'quoteToken_address': TokenPair.quote_token.address,
             'chain_id': TokenPair.chain_id,
-            'dex_id': TokenPair.dex_id
+            'dex_id': TokenPair.dex_id,
+            'baseToken_name': TokenPair.base_token.name,
+            'quoteToken_Name': TokenPair.quote_token.name
         })
     
     # Parameters for slippage and fees
@@ -291,60 +296,66 @@ def arb():
     # Compare each TokenPair with others to find arbitrage opportunities
     for i, pair1 in enumerate(token_pairs):
         for pair2 in token_pairs[i + 1:]:
-            
-            # Arbitrage opportunity condition
-            if (pair1['price_usd'] < pair2['price_usd'] and 
-                pair1['liquidity_usd'] > pair2['liquidity_usd']):
 
-                liquidity_diff = pair1['liquidity_usd'] - pair2['liquidity_usd']
-                price_diff = pair2['price_usd'] - pair1['price_usd']
-                
-                # Calculate potential profit using the function
-                profit = calculate_arbitrage_profit(initial_investment, 
-                                                   pair1['price_usd'], 
-                                                   pair2['price_usd'], 
-                                                   slippage_pair1, 
-                                                   slippage_pair2, 
-                                                   fee_percentage)
-                
-                # Determine base liquidity and potential profit
-                base_liquidity = min(pair1['liquidity_base'], pair2['liquidity_base'])
-                profit_sort_format = f"{profit:,.2f}"
-                profit_int = int(profit)
-                print(profit_int)
-                if profit_int > 0:
+            # quote/base sorting
+            if (pair1['baseToken_address'] == pair2['baseToken_address'] and
+                pair1['quoteToken_address'] == pair2['quoteToken_address']):
+                print('Pair Check: True', pair1['baseToken_address'] + '=' + pair2['baseToken_address'] )
+                # Arbitrage opportunity condition
+                if (pair1['price_usd'] < pair2['price_usd'] and 
+                    pair1['liquidity_usd'] > pair2['liquidity_usd']):
 
-                    arbitrage_opportunities.append({
-                        'pair1': pair1['pair'],
-                        'pair1_price': f"${pair1['price_usd']:,.2f}",
-                        'pair1_liquidity': f"${pair1['liquidity_usd']:,.2f}",
-                        'pair1_liquidity_base': f"{pair1['liquidity_base']:,.2f}",
-                        'pair1_liquidity_quote': f"{pair1['liquidity_quote']:,.2f}",
-                        'pool_pair1_address': pair1['pool_address'],
-                        'pair1_baseToken_address': pair1['base_token_address'],
-                        'pair1_quoteToken_address': pair1['quote_token_address'],
-                        'pool_pair1_url': pair1['pool_url'],
-                        'pair2': pair2['pair'],
-                        'pair2_price': f"${pair2['price_usd']:,.2f}",
-                        'pair2_liquidity': f"${pair2['liquidity_usd']:,.2f}",
-                        'pair2_liquidity_base': f"{pair2['liquidity_base']:,.2f}",
-                        'pair2_liquidity_quote': f"{pair2['liquidity_quote']:,.2f}",
-                        'pool_pair2_address': pair2['pool_address'],  
-                        'pair2_baseToken_address': pair2['base_token_address'],
-                        'pair2_quoteToken_address': pair2['quote_token_address'],
-                        'pool_pair2_url': pair2['pool_url'],
-                        'price_diff': f"${price_diff:,.2f}",
-                        'liquidity_diff': f"${liquidity_diff:,.2f}",
-                        'profit': f"${profit:,.2f}",
-                        'int_profit': profit_int,
-                        'potential_profit': f"${base_liquidity * price_diff:,.2f}",
-                        'pair1_chain_id': pair1['chain_id'],
-                        'pair1_dex_id': pair1['dex_id'], 
-                        'pair2_chain_id': pair2['chain_id'],
-                        'pair2_dex_id': pair2['dex_id'],
-                        'pair1_price_native': pair1['price_native'],
-                        'pair2_price_native': pair2['price_native']
-                    })
+                    liquidity_diff = pair1['liquidity_usd'] - pair2['liquidity_usd']
+                    price_diff = pair2['price_usd'] - pair1['price_usd']
+                    
+                    # Calculate potential profit using the function
+                    profit = calculate_arbitrage_profit(initial_investment, 
+                                                    pair1['price_usd'], 
+                                                    pair2['price_usd'], 
+                                                    slippage_pair1, 
+                                                    slippage_pair2, 
+                                                    fee_percentage)
+                    
+                    # Determine base liquidity and potential profit
+                    base_liquidity = min(pair1['liquidity_base'], pair2['liquidity_base'])
+                    profit_sort_format = f"{profit:,.2f}"
+                    profit_int = int(profit)
+                    print(profit_int)
+                    if profit_int > 0:
+
+                        arbitrage_opportunities.append({
+                            'pair1': pair1['pair'],
+                            'pair1_price': f"${pair1['price_usd']:,.2f}",
+                            'pair1_liquidity': f"${pair1['liquidity_usd']:,.2f}",
+                            'pair1_liquidity_base': f"{pair1['liquidity_base']:,.2f}",
+                            'pair1_liquidity_quote': f"{pair1['liquidity_quote']:,.2f}",
+                            'pool_pair1_address': pair1['pool_address'],
+                            'pair1_baseToken_address': pair1['baseToken_address'],
+                            'pair1_quoteToken_address': pair1['quoteToken_address'],
+                            'pool_pair1_url': pair1['pool_url'],
+                            'pair2': pair2['pair'],
+                            'pair2_price': f"${pair2['price_usd']:,.2f}",
+                            'pair2_liquidity': f"${pair2['liquidity_usd']:,.2f}",
+                            'pair2_liquidity_base': f"{pair2['liquidity_base']:,.2f}",
+                            'pair2_liquidity_quote': f"{pair2['liquidity_quote']:,.2f}",
+                            'pool_pair2_address': pair2['pool_address'],  
+                            'pair2_baseToken_address': pair2['baseToken_address'],
+                            'pair2_quoteToken_address': pair2['quoteToken_address'],
+                            'pool_pair2_url': pair2['pool_url'],
+                            'price_diff': f"${price_diff:,.2f}",
+                            'liquidity_diff': f"${liquidity_diff:,.2f}",
+                            'profit': f"${profit:,.2f}",
+                            'int_profit': profit_int,
+                            'potential_profit': f"${base_liquidity * price_diff:,.2f}",
+                            'pair1_chain_id': pair1['chain_id'],
+                            'pair1_dex_id': pair1['dex_id'], 
+                            'pair2_chain_id': pair2['chain_id'],
+                            'pair2_dex_id': pair2['dex_id'],
+                            'pair1_price_native': pair1['price_native'],
+                            'pair2_price_native': pair2['price_native']
+                        })
+                else:
+                    print('no arbs')
 
     # sorted_opportunities = arbitrage_opportunities.sort(key=myFunc)
     print(type(arbitrage_opportunities))
