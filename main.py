@@ -286,9 +286,9 @@ def arb():
         })
     
     # Parameters for slippage and fees
-    slippage_pair1 = 0.01  # 1% slippage
-    slippage_pair2 = 0.01  # 1% slippage
-    fee_percentage = 0.003  # 0.3% trading fee
+    slippage_pair1 = 0.03  # 1% slippage
+    slippage_pair2 = 0.03 # 1% slippage
+    fee_percentage = 0.001  # 0.3% trading fee
     initial_investment = 1000  # Example initial investment
 
     # Initialize a list to store arbitrage opportunities
@@ -324,7 +324,6 @@ def arb():
                     print(profit_int)
                     if profit_int > 0:
                         nativePrice_ratio = pair2['price_native']/ pair1['price_native']
-                        # nativePrice_ratio_format = f"{nativePrice_ratio:.8f}"
                         nativePrice_ratio_format = f"{round(nativePrice_ratio, 4)}"
                         
 
