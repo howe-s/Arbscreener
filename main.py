@@ -207,7 +207,7 @@ def format_number(value, decimals=0, thousands_sep=',', decimal_sep='.'):
 @app.route('/', methods=['GET', 'POST'])
 def index():
  
-    return render_template('index.html')
+    return render_template('index.html', is_logged_in=current_user.is_authenticated)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():

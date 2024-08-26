@@ -40,7 +40,11 @@
             <h1 class="display-4">Welcome to Crypto Finance Analytics</h1>
             <p class="lead">Your average-trader solution for cryptocurrency pricing, liquidity, and volume analysis</p>
             <a href="/dex_search" class="btn btn-light btn-lg">Explore Features</a>
-            <a href="/login" class="btn btn-light btn-lg">Login</a>
+                {% if is_logged_in %}
+                    <a class="btn btn-light btn-lg" href="{{ url_for('logout') }}">Logout</a>
+                {% else %}
+                    <a class="btn btn-light btn-lg" href="{{ url_for('login') }}">Login</a>
+                {% endif %}
         </div>
     </section>
 
