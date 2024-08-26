@@ -1,23 +1,5 @@
 import subprocess
 import sys
-import matplotlib.pyplot as plt
-import io
-import base64
-import numpy as np
-import squarify
-import pandas as pd
-from flask_cors import CORS
-import requests
-import plotly.graph_objs as go
-import plotly.io as pio
-import math
-from flask import Flask, render_template, request, jsonify, send_file, send_from_directory
-from dexscreener import DexscreenerClient
-from jinja2 import Environment
-from markupsafe import Markup
-from html import escape
-import matplotlib
-matplotlib.use('Agg')  # Use non-interactive backend for server-side plotting
 
 # INSTALL
 def install(package):
@@ -35,6 +17,12 @@ required_packages = [
     'flask_cors', 
     'requests',
     'jinja2',
+    'flask-cors',
+    'flask_sqlalchemy',
+    'flask_login',
+    'werkzeug',
+    'flask_migrate',
+    'markupsafe'
 ]
 
 # CHECK AND INSTALL
@@ -44,9 +32,55 @@ for package in required_packages:
     except ImportError:
         install(package)
 
+from flask import Flask, render_template, redirect, url_for, request, flash, jsonify, send_file, send_from_directory
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_migrate import Migrate
+from datetime import datetime
+import time
+import requests
+from dexscreener import DexscreenerClient
+import matplotlib.pyplot as plt
+import io
+import base64
+import numpy as np
+import squarify
+import pandas as pd
+from flask_cors import CORS
+import plotly.graph_objs as go
+import plotly.io as pio
+import math
+from jinja2 import Environment
+from markupsafe import Markup
+from html import escape
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend for server-side plotting
+from models import db, User, Purchase  # Ensure Purchase is imported
+
+
 #RUN FLASK
 app = Flask(__name__)
 client = DexscreenerClient()
+app.config['SECRET_KEY'] = 'your_secret_key'  # Replace with your secret key
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'  # Database URI
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db.init_app(app)
+migrate = Migrate(app, db)
+
+# Setup Flask-Login
+login_manager = LoginManager()
+login_manager.login_view = 'login'
+login_manager.init_app(app)
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+# Initialize the database tables directly
+with app.app_context():
+    db.create_all()
 
 # HELPER FUNCTIONS
 def get_price_change_style(price_change):
@@ -177,10 +211,238 @@ def index():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
- 
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        user = User.query.filter_by(username=username).first()
+        if user and check_password_hash(user.password, password):
+            login_user(user)
+            flash('Logged in successfully.')
+            return redirect(url_for('userProfile'))
+        else:
+            flash('Invalid username or password')
     return render_template('login.html')
 
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form['username']
+        email = request.form['email']
+        password = request.form['password']
+        full_name = request.form['full_name']
+
+        # Check if the username or email already exists
+        if User.query.filter_by(username=username).first():
+            flash('Username already exists.')
+            return redirect(url_for('register'))
+        if User.query.filter_by(email=email).first():
+            flash('Email already exists.')
+            return redirect(url_for('register'))
+
+        # Create a new user with hashed password
+        hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
+        new_user = User(username=username, email=email, password=hashed_password, full_name=full_name)
+
+        db.session.add(new_user)
+        db.session.commit()
+
+        flash('Registration successful. Please log in.')
+        return redirect(url_for('login'))
+
+    return render_template('register.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('You have been logged out.')
+    return redirect(url_for('login'))
+
+@app.route('/userProfile')
+@login_required
+def userProfile():
+    return render_template('userProfile.html', name=current_user.username, full_name=current_user.full_name)
+
+@app.route('/add_purchase', methods=['POST'])
+@login_required
+def add_purchase():
+    asset_name = request.form.get('asset_name')
+    quantity = request.form.get('quantity')
+    purchase_price = request.form.get('purchase_price')
+    purchase_date = request.form.get('purchase_date')
+
+    if not all([asset_name, quantity, purchase_price, purchase_date]):
+        flash('All fields are required.')
+        return redirect(url_for('home'))
+
+    try:
+        quantity = float(quantity)
+        purchase_price = float(purchase_price)
+        purchase_date = datetime.strptime(purchase_date, '%Y-%m-%d')
+    except ValueError:
+        flash('Invalid input values.')
+        return redirect(url_for('home'))
+
+    new_purchase = Purchase(
+        user_id=current_user.id,
+        asset_name=asset_name,
+        quantity=quantity,
+        purchase_price=purchase_price,
+        purchase_date=purchase_date
+    )
+
+    db.session.add(new_purchase)
+    db.session.commit()
+
+    flash('Purchase added successfully.')
+    return redirect(url_for('home'))
+
+
+@app.route('/delete_purchase/<int:purchase_id>', methods=['POST'])
+@login_required
+def delete_purchase(purchase_id):
+    purchase = Purchase.query.get(purchase_id)
+    if purchase and purchase.user_id == current_user.id:
+        db.session.delete(purchase)
+        db.session.commit()
+        flash('Purchase deleted successfully.')
+    else:
+        flash('Purchase not found or unauthorized.')
+
+    return redirect(url_for('home'))
+
+
+@app.route('/edit_purchase/<int:purchase_id>', methods=['GET', 'POST'])
+@login_required
+def edit_purchase(purchase_id):
+    purchase = Purchase.query.get(purchase_id)
+    if purchase and purchase.user_id == current_user.id:
+        if request.method == 'POST':
+            # Update the purchase details
+            purchase.asset_name = request.form['asset_name']
+            purchase.quantity = float(request.form['quantity'])
+            purchase.purchase_price = float(request.form['purchase_price'])
+            purchase.purchase_date = datetime.strptime(request.form['purchase_date'], '%Y-%m-%d')
+
+            db.session.commit()
+            flash('Purchase updated successfully.')
+            return redirect(url_for('home'))
+
+        return render_template('edit_purchase.html', purchase=purchase)
+    else:
+        flash('Purchase not found or unauthorized.')
+        return redirect(url_for('home'))
+
+# Global variable to track the time of the last API request
+last_request_time = 0
+request_delay = 7  # seconds
+
+def rate_limit():
+    global last_request_time
+    current_time = time.time()
+    if current_time - last_request_time < request_delay:
+        time.sleep(request_delay - (current_time - last_request_time))
+    last_request_time = time.time()
+    return None
+
+def fetch_current_price(asset_name):
+    print('Fetching current price...')
+    tokenName_format = asset_name.lower()
+    rate_limit()
+    responseCurrentPrice = requests.get(f'https://api.coincap.io/v2/assets/{tokenName_format}')
+    if responseCurrentPrice.status_code == 200:
+        try:
+            priceFloat = float(responseCurrentPrice.json()['data']['priceUsd'])
+            return {'price': round(priceFloat, 2),'source': 'coincap', 'pairAddress': 'None', 'name': tokenName_format, 'pair_url': 'None'}
+        except (KeyError, ValueError):
+            print('Error parsing price data.')
+            return None
+    else:
+        # tokenLowerCase = tokenName_format.lower()
+        searchTicker = tokenName_format.lower()
+        print('searchTicker', searchTicker)
+        rate_limit()
+        search = client.search_pairs(searchTicker + '/USDT')
+        # search = client.search_pairs(tokenLowerCase)
+        for TokenPair in search:
+            return {'price': float(TokenPair.price_usd), 'source': 'Dexscreener', 'pairAddress': TokenPair.pair_address, 'name': TokenPair.base_token.name, 'pair_url': TokenPair.url}
+
+def fetch_historical_price(asset_name, start_timestamp, end_timestamp):
+    print('Fetching historical price...')
+    rate_limit()
+    responseHistoricalPrice = requests.get(f'https://api.coincap.io/v2/assets/{asset_name}/history?interval=d1&start={start_timestamp}&end={end_timestamp}')
+    if responseHistoricalPrice.status_code == 200:
+        try:
+            data = responseHistoricalPrice.json()['data']
+            print('historical price data', data)
+            return data
+        except KeyError:
+            print('Error parsing historical price data.')
+            return None
+    else:
+        print(f'Error fetching historical price: {responseHistoricalPrice.status_code}')
+        return None
+
+
+def date_to_timestamp(date_str):
+    # Parse the date string to a datetime object
+    dt = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
+
+    # Convert the datetime object to a timestamp in seconds
+    timestamp_seconds = int(time.mktime(dt.timetuple()))
+
+    # Convert the timestamp to milliseconds
+    timestamp_milliseconds = timestamp_seconds * 1000
+
+    return timestamp_milliseconds
+
+@app.route('/user_prices/<int:purchase_id>', methods=['GET'])
+@login_required
+def user_prices(purchase_id):
+    print('Getting prices...')
+    purchase = Purchase.query.get(purchase_id)
+    if not purchase:
+        return {'error': 'Purchase not found'}, 404
+
+    tokenPriceFetch = fetch_current_price(purchase.asset_name)
+    tokenPrice = tokenPriceFetch['price']
+    pairAddress = tokenPriceFetch['pairAddress']
+    source = tokenPriceFetch['source']
+    name = tokenPriceFetch['name']
+    pair_url = tokenPriceFetch['pair_url']
+    purchasePrice = purchase.purchase_price
+    quantity = purchase.quantity
+    profit = round(float(tokenPrice - purchasePrice), 2)
+    profitPercentage = round(float(((tokenPrice - purchasePrice) / purchasePrice) * 100), 2)
+    purchaseCost = round(float(purchasePrice * quantity), 2)
+    print('cost', purchaseCost)
+    # print(profit, profitPercentage)
+    if tokenPrice is None:
+        return {'error': 'Could not fetch asset price'}, 500
+    
+
+    # Update the purchase model's pair_address and source fields
+    purchase.pair_address = pairAddress if pairAddress else 'None'
+    purchase.source = source
+    purchase.pair_url = pair_url
+
+    db.session.commit()
+
+    return {
+        'purchase_id': purchase_id,
+        'tokenPrice': tokenPrice,
+        'purchasePrice': purchasePrice,
+        'profit': profit,
+        'profitPercentage': profitPercentage,
+        'purchaseCost': purchaseCost,
+        'source': source, 
+        'name': name,
+        'quantity': quantity
+    }
+
+
 @app.route('/dex_search', methods=['GET', 'POST'])
+@login_required
 def dex_search():
     # Get the user input for ticker and perform the search
     searchTicker = request.args.get('user_input', 'SOL').lower()    
@@ -228,7 +490,7 @@ def dex_search():
 
     sorted_pool = sorted(pool_data, key=lambda x: x['volume_24h'], reverse=True)
     # Pass the data to the template
-    return render_template('dex_search.html', pool_data=sorted_pool, user_input=searchTicker, chart_div=chart_div)
+    return render_template('dex_search.html', pool_data=sorted_pool, user_input=searchTicker, chart_div=chart_div, is_logged_in=current_user.is_authenticated)
 
 
 # arb helper function
@@ -260,6 +522,7 @@ def myFunc(e):
 
 
 @app.route('/arb', methods=['GET', 'POST'])
+@login_required
 def arb():
     # Get the user input for ticker and perform the search
     searchTicker = request.args.get('user_input', 'SOL').lower()
@@ -381,7 +644,7 @@ def arb():
     sorted_opportunities = sorted(arbitrage_opportunities, key=lambda x: x['int_profit'], reverse=True)
 
     # Pass the data to the template
-    return render_template('arb.html', search=search, user_input=searchTicker, arbitrage_opportunities=sorted_opportunities)
+    return render_template('arb.html', search=search, user_input=searchTicker, arbitrage_opportunities=sorted_opportunities, is_logged_in=current_user.is_authenticated)
 
 
 
@@ -392,9 +655,10 @@ def trending():
     searchTicker = request.args.get('user_input', 'SOL').lower()
     search = client.search_pairs(searchTicker)
     
-    return render_template('trending.html', search=search, user_input=searchTicker)
+    return render_template('trending.html', search=search, user_input=searchTicker, is_logged_in=current_user.is_authenticated)
 
 @app.route('/raydium', methods=['GET', 'POST'])
+@login_required
 def raydium():
     url = "https://api.raydium.io/v2/ammV3/ammPools"
 
@@ -415,14 +679,15 @@ def raydium():
             # print(pool_data)
             amm_pools.append(pool_data)
 
-        return render_template('raydium.html', pool_data=amm_pools)
+        return render_template('raydium.html', pool_data=amm_pools, is_logged_in=current_user.is_authenticated)
 
     except requests.exceptions.RequestException as e:
         print("Error fetching data:", e)
-        return render_template('raydium.html', amm_pools=[])
+        return render_template('raydium.html', amm_pools=[], is_logged_in=current_user.is_authenticated)
 
 
 @app.route('/summary')
+@login_required
 def summary():
     searchTicker = request.args.get('user_input', 'SOL').lower()
     data = [(f"{pair.pair_address[-5:]}({pair.chain_id})", pair.liquidity.usd) for pair in client.search_pairs(searchTicker)]
@@ -439,16 +704,17 @@ def summary():
 
     formatted_summary = {key: f"${value:,.2f}" if key != 'Total Networks' else value for key, value in summary.items()}
 
-    return render_template('summary.html', summary=formatted_summary, user_input=searchTicker)
+    return render_template('summary.html', summary=formatted_summary, user_input=searchTicker, is_logged_in=current_user.is_authenticated)
 
 
 @app.route('/base')
 def base():
     searchTicker = request.args.get('user_input', 'SOL').lower()
-    return render_template('base.html', user_input=searchTicker)
+    return render_template('base.html', user_input=searchTicker, is_logged_in=current_user.is_authenticated)
 
 
 @app.route('/token_summary')
+@login_required
 def token_summary():
     searchTicker = request.args.get('user_input', 'SOL').lower()
     search = client.search_pairs(searchTicker)
@@ -485,7 +751,7 @@ def token_summary():
         # SQL Input if wanted
         # insert_sql = "INSERT INTO token_pairs (chain_id, pair_address, liquidity_usd, quote_token_symbol, price_native, base_token_symbol, price_usd, volume_m5, m5_change, h1_change, h6_change, h24_change, volume_h1, volume_h6, volume_h24, m5_change_style, h1_change_style, h6_change_style, h24_change_style) VALUES " + ", ".join(tokens) + ";"
 
-    return render_template('token_summary.html', tokens=tokens, user_input=searchTicker)
+    return render_template('token_summary.html', tokens=tokens, user_input=searchTicker, is_logged_in=current_user.is_authenticated)
 
 import re
 
@@ -494,6 +760,7 @@ app.config['STATIC_FOLDER'] = 'static'
 
 
 @app.route('/process-data', methods=['POST'])
+@login_required
 def process_data():
     print('process data awake')
     try:
@@ -574,7 +841,8 @@ def charts():
                                pie_liquidity_img=None,
                                tree_volume_img=None,
                                pie_volume_img=None,
-                               user_input=searchTicker)
+                               user_input=searchTicker,
+                               is_logged_in=current_user.is_authenticated)
 
     liquidityTicker = [(f"{pair.pair_address[-5:]}({pair.chain_id})", pair.liquidity.usd) for pair in search]
     volumeTicker = [(f"{pair.pair_address[-5:]}({pair.chain_id})", pair.volume.h24) for pair in search]
@@ -589,7 +857,8 @@ def charts():
                            pie_liquidity_img=pie_liquidity_img,
                            tree_volume_img=tree_volume_img,
                            pie_volume_img=pie_volume_img,
-                           user_input=searchTicker)
+                           user_input=searchTicker,
+                           is_logged_in=current_user.is_authenticated)
 
 
 

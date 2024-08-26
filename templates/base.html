@@ -42,14 +42,21 @@
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('raydium') }}">Raydium AMM</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('userProfile') }}">User Profile</a>
+                </li>
             </ul>
             <form action="{{ request.path }}" method="get" class="form-inline ml-auto">
                 <input class="form-control mr-sm-2" type="text" name="user_input" value="{{ request.args.get('user_input', 'SOL') }}" placeholder="Search...">
                 <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
                 <!-- Bootstrap login button -->
-                <a class="btn btn-primary ml-2" href="{{ url_for('login') }}">Login</a>
-
-                <button class="btn btn-primary ml-2" id="loginButton">Connect</button>
+                <div class="ml-auto">
+                    {% if is_logged_in %}
+                        <a class="btn btn-primary ml-2" href="{{ url_for('logout') }}">Logout</a>
+                    {% else %}
+                        <a class="btn btn-primary ml-2" href="{{ url_for('login') }}">Login</a>
+                    {% endif %}
+                </div>
             </form>
         </div>
     </nav>
