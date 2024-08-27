@@ -20,9 +20,14 @@
         .card-header {
             background-color: #1f1f1f;
             border-bottom: none;
-            color: #f3ba2f;
+            color: #5488a8;
         }
-
+        .card-body {
+            color: white;
+        }
+        .mb-4 {
+            color: white;
+        }
         .table-container {
             overflow-x: auto;
         }
@@ -67,7 +72,7 @@
         .card-title {
             font-weight: 600;
             font-size: 1.25rem;
-            color: #f3ba2f;
+            color: #5488a8;
             background: #1f1f1f;
         }
 
@@ -83,12 +88,12 @@
         }
 
         .card-link {
-            color: #f3ba2f;
+            color: #5488a8;
             text-decoration: none;
         }
 
         .card-link:hover {
-            color: #ffdc4d;
+            color: #5488a8;
             text-decoration: underline;
         }
     </style>
@@ -107,6 +112,7 @@
                         document.getElementById(`purchase-cost-${purchaseId}`).textContent = `$${data.purchaseCost}`;
                         document.getElementById(`price-source-${purchaseId}`).textContent = `${data.source}`;
                         document.getElementById(`search-name-${purchaseId}`).textContent = `${data.name}`;
+                        document.getElementById(`token-pair-${purchaseId}`).textContent = `${data.tokenPair}`;
 
                         // Update totals with new cost
                         updateTotals(data.profit, data.profitPercentage, data.purchaseCost, data.quantity);
@@ -196,10 +202,10 @@
                     <div class="table-card">
                         <table class="table table-striped table-bordered" id="my-table">
                             <thead>
-                                <tr>
-                                    <th scope="col">#</th>
+                                <tr>                                    
+                                    <th scope="col">Search</th>
                                     <th scope="col">Asset Name</th>
-                                    <th scope="col">Asset Ticker</th>
+                                    <th scope="col">Pricing Ticker</th>
                                     <th scope="col">Address</th>
                                     <th scope="col">Purchase Date</th>
                                     <th scope="col">Quantity</th>
@@ -214,10 +220,10 @@
                             </thead>
                             <tbody>
                                 {% for purchase in current_user.purchases %}
-                                <tr class="purchase-row" data-purchase-id="{{ purchase.id }}">
-                                    <th scope="row">{{ loop.index }}</th>
+                                <tr class="purchase-row" data-purchase-id="{{ purchase.id }}">                                    
                                     <td class="table-td">{{ purchase.asset_name }}</td>
                                     <td id="search-name-{{ purchase.id }}">Loading...</td>
+                                    <td id="token-pair-{{ purchase.id }}">Loading...</td>
                                     <td id="pair-address" class="table-td">
                                         <a id="pair-link" href="{{purchase.pair_url}}">{{ purchase.pair_address }}</a>
                                     </td>                                    
