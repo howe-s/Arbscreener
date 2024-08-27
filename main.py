@@ -416,48 +416,46 @@ def date_to_timestamp(date_str):
 @app.route('/user_prices/<int:purchase_id>', methods=['GET'])
 @login_required
 def user_prices(purchase_id):
-    print('Getting prices...')
+    print('Getting prices...')  
+      
+    # Helper function to calculate profit and percentages
+    def calculate_profit_and_percentages(token_price, purchase_price, quantity):
+        profit = round(float(token_price - purchase_price), 2)
+        profit_percentage = round(float(((token_price - purchase_price) / purchase_price) * 100), 2)
+        purchase_cost = round(float(purchase_price * quantity), 2)
+        return profit, profit_percentage, purchase_cost
+
     purchase = Purchase.query.get(purchase_id)
     if not purchase:
         return {'error': 'Purchase not found'}, 404
-    test = purchase.quote_address
-    print("search this", test)
-    tokenPriceFetch = fetch_current_price(purchase.quote_address)
-    tokenPrice = tokenPriceFetch['price']
-    pairAddress = tokenPriceFetch['pairAddress']
-    source = tokenPriceFetch['source']
-    name = tokenPriceFetch['name']
-    pair_url = tokenPriceFetch['pair_url']
-    tokenPair = tokenPriceFetch['tokenPair']
-    purchasePrice = purchase.purchase_price
-    quantity = purchase.quantity
-    profit = round(float(tokenPrice - purchasePrice), 2)
-    profitPercentage = round(float(((tokenPrice - purchasePrice) / purchasePrice) * 100), 2)
-    purchaseCost = round(float(purchasePrice * quantity), 2)
-    print('cost', purchaseCost)
-    # print(profit, profitPercentage)
-    if tokenPrice is None:
+    # GET tokenPrice data through helper function with User db saved quote_address
+    token_price_data = fetch_current_price(purchase.quote_address)
+    token_price = token_price_data['price']
+    if token_price is None:
         return {'error': 'Could not fetch asset price'}, 500
+    # passing new token_price data through helper function
+    profit, profit_percentage, purchase_cost = calculate_profit_and_percentages(
+        token_price, purchase.purchase_price, purchase.quantity
+    )
     
-
-    # Update the purchase model's pair_address and source fields
-    purchase.pair_address = pairAddress if pairAddress else 'None'
-    purchase.source = source
-    purchase.pair_url = pair_url
-
+    # Update the purchase model's (database's) pair_address and source fields
+    purchase.pair_address = token_price_data['pairAddress'] or 'None'
+    purchase.source = token_price_data['source']
+    purchase.pair_url = token_price_data['pair_url']
+    
     db.session.commit()
 
     return {
         'purchase_id': purchase_id,
-        'tokenPrice': tokenPrice,
-        'purchasePrice': purchasePrice,
+        'tokenPrice': token_price,
+        'purchasePrice': purchase.purchase_price,
         'profit': profit,
-        'profitPercentage': profitPercentage,
-        'purchaseCost': purchaseCost,
-        'source': source, 
-        'name': name,
-        'quantity': quantity,
-        'tokenPair': tokenPair
+        'profitPercentage': profit_percentage,
+        'purchaseCost': purchase_cost,
+        'source': token_price_data['source'],
+        'name': token_price_data['name'],
+        'quantity': purchase.quantity,
+        'tokenPair': token_price_data['tokenPair']
     }
 
 
