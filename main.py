@@ -262,19 +262,26 @@ def logout():
 @login_required
 def userProfile():
     searchTicker = request.args.get('user_input', 'WBTC').lower()
-    search = client.search_pairs(searchTicker)
-    
-    token_pairs = process_token_pairs(search)
+    # search = client.search_pairs(searchTicker)    
+    # token_pairs = process_token_pairs(search)
     # DEFAULT ARB PAGE VALUES
     slippage_pair1 = 0.03  # 1% slippage
     slippage_pair2 = 0.03 # 1% slippage
     fee_percentage = 0.001  # 0.3% trading fee
     initial_investment = 1000  # Example initial investment
 
+    # Fetch all baseToken_address associated with the logged-in user's purchases
+    user_purchases = Purchase.query.filter_by(user_id=current_user.id).all()
+    baseToken_addresses = ", ".join([purchase.baseToken_address for purchase in user_purchases])
+    print(baseToken_addresses)
+    search = client.search_pairs(baseToken_addresses)    
+    token_pairs = process_token_pairs(search)
+    
+
     arbitrage_opportunities = find_arbitrage_opportunities(
         token_pairs, slippage_pair1, slippage_pair2, fee_percentage, initial_investment
     )
-
+    print('THIS IS ARB', arbitrage_opportunities)
     sorted_opportunities = sorted(arbitrage_opportunities, key=lambda x: x['int_profit'], reverse=True)
     return render_template('userProfile.html', user_input=searchTicker, name=current_user.username, full_name=current_user.full_name, is_logged_in=current_user.is_authenticated, arbitrage_opportunities=sorted_opportunities, search=search)
 
@@ -285,8 +292,8 @@ def add_purchase():
     quantity = request.form.get('quantity')
     purchase_price = request.form.get('purchase_price')
     purchase_date = request.form.get('purchase_date')
-    quote_address = request.form.get('quote_address')
-    if not all([asset_name, quantity, purchase_price, purchase_date]):
+    baseToken_address = request.form.get('baseToken_address')
+    if not all([asset_name, quantity, purchase_price, purchase_date, baseToken_address]):
         flash('All fields are required.')
         return redirect(url_for('userProfile'))
 
@@ -304,7 +311,7 @@ def add_purchase():
         quantity=quantity,
         purchase_price=purchase_price,
         purchase_date=purchase_date,
-        quote_address=quote_address
+        baseToken_address=baseToken_address
     )
 
     db.session.add(new_purchase)
@@ -429,7 +436,7 @@ def user_prices(purchase_id):
     if not purchase:
         return {'error': 'Purchase not found'}, 404
     # GET tokenPrice data through helper function with User db saved quote_address
-    token_price_data = fetch_current_price(purchase.quote_address)
+    token_price_data = fetch_current_price(purchase.baseToken_address)
     token_price = token_price_data['price']
     if token_price is None:
         return {'error': 'Could not fetch asset price'}, 500
@@ -444,6 +451,19 @@ def user_prices(purchase_id):
     purchase.pair_url = token_price_data['pair_url']
     
     db.session.commit()
+
+    # token_pairs = purchase.quote_address
+
+    #     # DEFAULT ARB PAGE VALUES
+    # slippage_pair1 = 0.03  # 1% slippage
+    # slippage_pair2 = 0.03 # 1% slippage
+    # fee_percentage = 0.001  # 0.3% trading fee
+    # initial_investment = purchase.quantity  # Example initial investment
+
+    # arbitrage_opportunities = find_arbitrage_opportunities(
+    #     token_pairs, slippage_pair1, slippage_pair2, fee_percentage, initial_investment
+    # )
+    # print('User Arb', arbitrage_opportunities)
 
     return {
         'purchase_id': purchase_id,
@@ -561,6 +581,7 @@ def process_token_pairs(search):
     return token_pairs
 
 def find_arbitrage_opportunities(token_pairs, slippage_pair1, slippage_pair2, fee_percentage, initial_investment):
+    print('finding arb..')
     arbitrage_opportunities = []
     for i, pair1 in enumerate(token_pairs):
         for pair2 in token_pairs[i + 1:]:
