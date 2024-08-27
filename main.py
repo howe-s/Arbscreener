@@ -258,9 +258,9 @@ def logout():
     flash('You have been logged out.')
     return redirect(url_for('login'))
 
-@app.route('/userProfile')
-@login_required
-def userProfile():
+# @app.route('/userProfile')
+# @login_required
+# def userProfile():
     searchTicker = request.args.get('user_input', 'WBTC').lower()
     # search = client.search_pairs(searchTicker)    
     # token_pairs = process_token_pairs(search)
@@ -277,13 +277,46 @@ def userProfile():
     search = client.search_pairs(baseToken_addresses)    
     token_pairs = process_token_pairs(search)
     
-
     arbitrage_opportunities = find_arbitrage_opportunities(
         token_pairs, slippage_pair1, slippage_pair2, fee_percentage, initial_investment
     )
     print('THIS IS ARB', arbitrage_opportunities)
     sorted_opportunities = sorted(arbitrage_opportunities, key=lambda x: x['int_profit'], reverse=True)
     return render_template('userProfile.html', user_input=searchTicker, name=current_user.username, full_name=current_user.full_name, is_logged_in=current_user.is_authenticated, arbitrage_opportunities=sorted_opportunities, search=search)
+
+@app.route('/userProfile')
+@login_required
+def userProfile():
+    searchTicker = request.args.get('user_input', 'WBTC').lower()
+
+    # DEFAULT ARB PAGE VALUES
+    slippage_pair1 = 0.03
+    slippage_pair2 = 0.03
+    fee_percentage = 0.001
+    initial_investment = 1000
+
+    # Fetch all baseToken_address associated with the logged-in user's purchases
+    user_purchases = Purchase.query.filter_by(user_id=current_user.id).all()
+    baseToken_addresses = [purchase.baseToken_address for purchase in user_purchases]
+    print('Base token addresses:', baseToken_addresses)
+
+    # Accumulate arbitrage opportunities for all base token addresses
+    all_arbitrage_opportunities = []
+    for address in baseToken_addresses:
+        search = client.search_pairs(address)
+        token_pairs = process_token_pairs(search)
+
+        # Find arbitrage opportunities for this set of token pairs
+        arbitrage_opportunities = find_arbitrage_opportunities(
+            token_pairs, slippage_pair1, slippage_pair2, fee_percentage, initial_investment
+        )
+        all_arbitrage_opportunities.extend(arbitrage_opportunities)
+
+    print('All arbitrage opportunities:', all_arbitrage_opportunities)
+
+    sorted_opportunities = sorted(all_arbitrage_opportunities, key=lambda x: x['int_profit'], reverse=True)
+    return render_template('userProfile.html', user_input=searchTicker, name=current_user.username, full_name=current_user.full_name, is_logged_in=current_user.is_authenticated, arbitrage_opportunities=sorted_opportunities, search=search)
+
 
 @app.route('/add_purchase', methods=['POST'])
 @login_required
