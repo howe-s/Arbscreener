@@ -17,6 +17,7 @@ class Purchase(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     asset_name = db.Column(db.String(100), nullable=False)
+    quote_address = db.Column(db.String(100)) 
     quantity = db.Column(db.Float, nullable=False)
     purchase_price = db.Column(db.Float, nullable=False)
     purchase_date = db.Column(db.Date, nullable=False)
