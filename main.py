@@ -285,7 +285,7 @@ def add_purchase():
     quantity = request.form.get('quantity')
     purchase_price = request.form.get('purchase_price')
     purchase_date = request.form.get('purchase_date')
-
+    quote_address = request.form.get('quote_address')
     if not all([asset_name, quantity, purchase_price, purchase_date]):
         flash('All fields are required.')
         return redirect(url_for('userProfile'))
@@ -297,13 +297,14 @@ def add_purchase():
     except ValueError:
         flash('Invalid input values.')
         return redirect(url_for('userProfile'))
-
+    
     new_purchase = Purchase(
         user_id=current_user.id,
         asset_name=asset_name,
         quantity=quantity,
         purchase_price=purchase_price,
-        purchase_date=purchase_date
+        purchase_date=purchase_date,
+        quote_address=quote_address
     )
 
     db.session.add(new_purchase)
@@ -375,7 +376,7 @@ def fetch_current_price(asset_name):
     # else:
     # tokenLowerCase = tokenName_format.lower()
     searchTicker = tokenName_format.lower()
-    print('searchTicker', searchTicker)
+    # print('searchTicker', searchTicker)
     rate_limit()
     search = client.search_pairs(searchTicker)
     # search = client.search_pairs(tokenLowerCase)
@@ -419,8 +420,9 @@ def user_prices(purchase_id):
     purchase = Purchase.query.get(purchase_id)
     if not purchase:
         return {'error': 'Purchase not found'}, 404
-
-    tokenPriceFetch = fetch_current_price(purchase.asset_name)
+    test = purchase.quote_address
+    print("search this", test)
+    tokenPriceFetch = fetch_current_price(purchase.quote_address)
     tokenPrice = tokenPriceFetch['price']
     pairAddress = tokenPriceFetch['pairAddress']
     source = tokenPriceFetch['source']
