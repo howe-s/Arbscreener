@@ -7,10 +7,20 @@
     <style>
         body {
             padding-top: 20px;
+            background-color: #272727;
         }
 
         .card {
             margin-bottom: 20px;
+            background-color: #1f1f1f;
+            border-radius: 10px;
+            border-color: #272727;
+        }
+
+        .card-header {
+            background-color: #1f1f1f;
+            border-bottom: none;
+            color: #f3ba2f;
         }
 
         .table-container {
@@ -23,8 +33,13 @@
 
         th, td {
             text-align: center;
-            /* overflow-wrap: break-word; */
-            overflow-wrap: normal;
+            color: #e0e0e0;
+            background-color: #1f1f1f;
+        }
+
+        .table th {
+            background-color: #2a2a2a;
+            font-weight: 400;
         }
 
         .btn-sm {
@@ -36,15 +51,45 @@
                 overflow-x: auto;
             }
         }
+
         .table-td {
             overflow: hidden;
             white-space: nowrap;
             text-overflow: ellipsis;
         }
+
         #my-table {
             border-collapse: collapse;
             width: 100%;
             table-layout: fixed;
+        }
+
+        .card-title {
+            font-weight: 600;
+            font-size: 1.25rem;
+            color: #f3ba2f;
+            background: #1f1f1f;
+        }
+
+        .table-hover tbody tr:hover td,
+        .table-hover tbody tr:hover th {
+            background-color: #e0e0e0;
+            color: #1f1f1f;
+        }
+
+        .card-text {
+            font-size: 0.9rem;
+            color: #e0e0e0;
+        }
+
+        .card-link {
+            color: #f3ba2f;
+            text-decoration: none;
+        }
+
+        .card-link:hover {
+            color: #ffdc4d;
+            text-decoration: underline;
         }
     </style>
     <script>
@@ -108,9 +153,6 @@
             purchaseIds.forEach(id => fetchPrice(id));
         });
     </script>
-</head>
-
-<body>
     <div class="container-fluid">
         <h1 class="mb-4">Welcome, {{ name }}!</h1>
             <div class="add-purchases">
@@ -220,12 +262,5 @@
 
         <a href="{{ url_for('logout') }}" class="btn btn-secondary mt-3">Logout</a>
     </div>
-
-    <!-- Bootstrap JS and dependencies -->
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-</body>
-
 </html>
 {% endblock %}

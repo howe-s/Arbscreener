@@ -19,25 +19,25 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav">
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('index', user_input=request.args.get('user_input', 'SOL')) }}">Home</a>
+                    <a class="nav-link" href="{{ url_for('index') }}">Home</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('dex_search', user_input=request.args.get('user_input', 'SOL')) }}">Search</a>
+                    <a class="nav-link" href="{{ url_for('dex_search', user_input=request.args.get('user_input', 'WBTC')) }}">Search</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('summary', user_input=request.args.get('user_input', 'SOL')) }}">Summary</a>
+                    <a class="nav-link" href="{{ url_for('summary', user_input=request.args.get('user_input', 'WBTC')) }}">Summary</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('token_summary', user_input=request.args.get('user_input', 'SOL')) }}">Token Table</a>
+                    <a class="nav-link" href="{{ url_for('token_summary', user_input=request.args.get('user_input', 'WBTC')) }}">Token Table</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('charts', user_input=request.args.get('user_input', 'SOL')) }}">Charts</a>
+                    <a class="nav-link" href="{{ url_for('charts', user_input=request.args.get('user_input', 'WBTC')) }}">Charts</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('trending', user_input=request.args.get('user_input', 'SOL')) }}">Trending</a>
+                    <a class="nav-link" href="{{ url_for('trending', user_input=request.args.get('user_input', 'WBTC')) }}">Trending</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('arb', user_input=request.args.get('user_input', 'SOL')) }}">Arb</a>
+                    <a class="nav-link" href="{{ url_for('arb', user_input=request.args.get('user_input', 'WBTC')) }}">Arb</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('raydium') }}">Raydium AMM</a>
@@ -47,7 +47,7 @@
                 </li>
             </ul>
             <form action="{{ request.path }}" method="get" class="form-inline ml-auto">
-                <input class="form-control mr-sm-2" type="text" name="user_input" value="{{ request.args.get('user_input', 'SOL') }}" placeholder="Search...">
+                <input class="form-control mr-sm-2" type="text" name="user_input" value="{{ request.args.get('user_input', 'WBTC') }}" placeholder="Search...">
                 <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
                 <!-- Bootstrap login button -->
                 <div class="ml-auto">
@@ -63,10 +63,9 @@
     <div id="content">
         {% block content %}{% endblock %}
     </div>
-
     <!-- Bootstrap JS and dependencies -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="https://unpkg.com/sortabletable@latest/dist/sortabletable.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

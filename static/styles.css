@@ -1,71 +1,88 @@
-.custom-container mt-4{
-  margin-left: none;
-  margin-right: none;
-}
-
-.table-container mt-4 {
-  width: auto;
-  height: auto;
-}
-
 body {
-  background-color: #F5F5F5; /* Light Gray */
-  color: #333333; /* Dark Gray */
-  font-family: Arial, sans-serif;
-}
-
-.container {
-  background-color: #FFFFFF; /* White background for the container */
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  background-color: #222222; /* Slightly lighter background */
 }
 
 .card {
-  border: 1px solid #E0E0E0; /* Light Gray border */
-  background-color: #FFFFFF; /* White background for the card */
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  background-color: #252525; /* Slightly lighter card background */
+}
+
+.card-header {
+  background-color: #252525;
+}
+
+.table-container {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+}
+
+th, td {
+  text-align: center;
+  color: #e0e0e0;
+  background-color: #252525;
+}
+
+.table th {
+  background-color: #2a2a2a;
+  font-weight: 400;
+}
+
+.btn-sm {
+  font-size: 0.875rem;
+}
+
+@media (max-width: 768px) {
+  .table-container {
+      overflow-x: auto;
+  }
+}
+
+.table-td {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+#my-table {
+  border-collapse: collapse;
+  width: 100%;
+  table-layout: fixed;
 }
 
 .card-title {
-  color: #222222; /* Dark Gray */
-  background-color: #F0F0F0; /* Light Gray */
-  padding: 10px;
-  border-radius: 4px;
+  font-weight: 600;
+  font-size: 1.25rem;
+  color: #f3ba2f;
+  background: #252525; /* Slightly lighter background */
 }
 
-.card-subtitle {
-  color: #666666; /* Gray */
+.table-hover tbody tr:hover td,
+.table-hover tbody tr:hover th {
+  background-color: #e0e0e0;
+  color: #1f1f1f;
 }
 
 .card-text {
-  margin-bottom: 10px;
-  color: #333333; /* Dark Gray */
+  font-size: 0.9rem;
+  color: #e0e0e0;
 }
 
 .card-link {
-  color: #007BFF; /* Blue */
+  color: #f3ba2f;
   text-decoration: none;
 }
 
 .card-link:hover {
+  color: #ffdc4d;
   text-decoration: underline;
 }
 
-hr {
-  border-color: #E0E0E0; /* Light Gray */
-  margin: 20px 0;
+#content{
+  margin-top: 65px;
 }
 
-.custom-container {
-  padding-top: 60px; /* or however tall your navbar is */
-}
-
-.address {
-  text-wrap: auto;
-}
-
-#content {
-  padding-top: 60px;
+#chart-summary {
+  color: white;
 }

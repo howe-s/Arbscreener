@@ -261,7 +261,8 @@ def logout():
 @app.route('/userProfile')
 @login_required
 def userProfile():
-    return render_template('userProfile.html', name=current_user.username, full_name=current_user.full_name)
+    searchTicker = request.args.get('user_input', 'WBTC').lower()
+    return render_template('userProfile.html', user_input=searchTicker, name=current_user.username, full_name=current_user.full_name, is_logged_in=current_user.is_authenticated)
 
 @app.route('/add_purchase', methods=['POST'])
 @login_required
@@ -273,7 +274,7 @@ def add_purchase():
 
     if not all([asset_name, quantity, purchase_price, purchase_date]):
         flash('All fields are required.')
-        return redirect(url_for('home'))
+        return redirect(url_for('userProfile'))
 
     try:
         quantity = float(quantity)
@@ -281,7 +282,7 @@ def add_purchase():
         purchase_date = datetime.strptime(purchase_date, '%Y-%m-%d')
     except ValueError:
         flash('Invalid input values.')
-        return redirect(url_for('home'))
+        return redirect(url_for('userProfile'))
 
     new_purchase = Purchase(
         user_id=current_user.id,
@@ -295,7 +296,7 @@ def add_purchase():
     db.session.commit()
 
     flash('Purchase added successfully.')
-    return redirect(url_for('home'))
+    return redirect(url_for('userProfile'))
 
 
 @app.route('/delete_purchase/<int:purchase_id>', methods=['POST'])
@@ -309,7 +310,7 @@ def delete_purchase(purchase_id):
     else:
         flash('Purchase not found or unauthorized.')
 
-    return redirect(url_for('home'))
+    return redirect(url_for('userProfile'))
 
 
 @app.route('/edit_purchase/<int:purchase_id>', methods=['GET', 'POST'])
@@ -326,12 +327,12 @@ def edit_purchase(purchase_id):
 
             db.session.commit()
             flash('Purchase updated successfully.')
-            return redirect(url_for('home'))
+            return redirect(url_for('userProfile'))
 
         return render_template('edit_purchase.html', purchase=purchase)
     else:
         flash('Purchase not found or unauthorized.')
-        return redirect(url_for('home'))
+        return redirect(url_for('userProfile'))
 
 # Global variable to track the time of the last API request
 last_request_time = 0
@@ -445,7 +446,7 @@ def user_prices(purchase_id):
 @login_required
 def dex_search():
     # Get the user input for ticker and perform the search
-    searchTicker = request.args.get('user_input', 'SOL').lower()    
+    searchTicker = request.args.get('user_input', 'WBTC').lower()    
     search = client.search_pairs(searchTicker)
     # searchTicker = request.args.get('user_input', '0x2170Ed0880ac9A755fd29B2688956BD959F933F8').lower()    
     # search = client.get_token_pairs(searchTicker)
@@ -525,7 +526,7 @@ def myFunc(e):
 @login_required
 def arb():
     # Get the user input for ticker and perform the search
-    searchTicker = request.args.get('user_input', 'SOL').lower()
+    searchTicker = request.args.get('user_input', 'WBTC').lower()
     search = client.search_pairs(searchTicker)
     
     # Extract data for processing
@@ -652,7 +653,7 @@ def arb():
 @app.route('/trending', methods=['GET', 'POST'])
 def trending():
     #Passing the initial data
-    searchTicker = request.args.get('user_input', 'SOL').lower()
+    searchTicker = request.args.get('user_input', 'WBTC').lower()
     search = client.search_pairs(searchTicker)
     
     return render_template('trending.html', search=search, user_input=searchTicker, is_logged_in=current_user.is_authenticated)
@@ -689,7 +690,7 @@ def raydium():
 @app.route('/summary')
 @login_required
 def summary():
-    searchTicker = request.args.get('user_input', 'SOL').lower()
+    searchTicker = request.args.get('user_input', 'WBTC').lower()
     data = [(f"{pair.pair_address[-5:]}({pair.chain_id})", pair.liquidity.usd) for pair in client.search_pairs(searchTicker)]
     df = pd.DataFrame(data, columns=['Network', 'Liquidity'])
 
@@ -709,14 +710,14 @@ def summary():
 
 @app.route('/base')
 def base():
-    searchTicker = request.args.get('user_input', 'SOL').lower()
+    searchTicker = request.args.get('user_input', 'WBTC').lower()
     return render_template('base.html', user_input=searchTicker, is_logged_in=current_user.is_authenticated)
 
 
 @app.route('/token_summary')
 @login_required
 def token_summary():
-    searchTicker = request.args.get('user_input', 'SOL').lower()
+    searchTicker = request.args.get('user_input', 'WBTC').lower()
     search = client.search_pairs(searchTicker)
 
     tokens = []
@@ -768,7 +769,7 @@ def process_data():
         token_pair_address = data.get('tokenPairAddress')
         # base_token = data.get('cardTitle')
         
-        base_token = request.args.get('user_input', 'SOL').lower()
+        base_token = request.args.get('user_input', 'WBTC').lower()
         print(base_token)
 
         if not token_pair_address:
@@ -832,7 +833,7 @@ def process_data():
 
 @app.route('/charts')
 def charts():
-    searchTicker = request.args.get('user_input', 'SOL').lower()
+    searchTicker = request.args.get('user_input', 'WBTC').lower()
     search = client.search_pairs(searchTicker)
 
     if not search:
