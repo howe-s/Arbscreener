@@ -11,6 +11,11 @@
         <input type="text" name="asset_name" id="asset_name" value="{{ purchase.asset_name }}" required>
         <br>
 
+        <div class="form-group">
+            <label for="baseToken_address">Token Address:</label>
+            <input name="baseToken_address" id="baseToken_address" value="{{ purchase.baseToken_address }}" required>
+        </div>
+
         <label for="quantity">Quantity:</label>
         <input type="number" step="0.01" name="quantity" id="quantity" value="{{ purchase.quantity }}" required>
         <br>

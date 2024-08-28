@@ -646,9 +646,9 @@ def find_arbitrage_opportunities(token_pairs, slippage_pair1, slippage_pair2, fe
                     
                     base_liquidity = min(pair1['liquidity_base'], pair2['liquidity_base'])
                     profit_sort_format = f"{profit:,.2f}"
-                    profit_int = int(profit)
+                    int_profit = int(profit)
                     
-                    if profit_int > 0:
+                    if int_profit > 0:
                         nativePrice_ratio = pair2['price_native']/ pair1['price_native']
                         nativePrice_ratio_round = f"{round(nativePrice_ratio, 4)}"
                         pair1_price_round = f"{round(pair1['price_usd'], 8)}"
@@ -680,7 +680,7 @@ def find_arbitrage_opportunities(token_pairs, slippage_pair1, slippage_pair2, fe
                             'price_diff': f"${price_diff:,.2f}",
                             'liquidity_diff': f"${liquidity_diff:,.2f}",
                             'profit': f"${profit:,.2f}",
-                            'int_profit': profit_int,
+                            'int_profit': int_profit,
                             'potential_profit': f"${base_liquidity * price_diff:,.2f}",
                             'pair1_chain_id': pair1['chain_id'],
                             'pair1_dex_id': pair1['dex_id'], 
