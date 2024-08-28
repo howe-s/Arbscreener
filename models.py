@@ -23,6 +23,7 @@ class Purchase(db.Model):
     purchase_date = db.Column(db.Date, nullable=False)
     pair_address = db.Column(db.String(100))  # Existing field
     pair_url = db.Column(db.String(200))
+    baseToken_url = db.Column(db.String(200))
     source = db.Column(db.String(50))  # New field for data source
 
     # Remove the explicit user relationship here to avoid conflict

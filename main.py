@@ -308,23 +308,47 @@ def userProfile():
     user_purchases = Purchase.query.filter_by(user_id=current_user.id).all()
     baseToken_addresses = [purchase.baseToken_address for purchase in user_purchases]
     print('Base token addresses:', baseToken_addresses)
-
+    
     # Accumulate arbitrage opportunities for all base token addresses
     all_arbitrage_opportunities = []
+    search_result = None
+
     for address in baseToken_addresses:
         search = client.search_pairs(address)
-        token_pairs = process_token_pairs(search)
+        if search:
+            search_result = search
+            token_pairs = process_token_pairs(search)
 
-        # Find arbitrage opportunities for this set of token pairs
-        arbitrage_opportunities = find_arbitrage_opportunities(
-            token_pairs, slippage_pair1, slippage_pair2, fee_percentage, initial_investment
-        )
-        all_arbitrage_opportunities.extend(arbitrage_opportunities)
+            # Find arbitrage opportunities for this set of token pairs
+            arbitrage_opportunities = find_arbitrage_opportunities(
+                token_pairs, slippage_pair1, slippage_pair2, fee_percentage, initial_investment
+            )
+            all_arbitrage_opportunities.extend(arbitrage_opportunities)
 
-    # print('All arbitrage opportunities:', all_arbitrage_opportunities)
-
+    # Sort opportunities after the loop
     sorted_opportunities = sorted(all_arbitrage_opportunities, key=lambda x: x['int_profit'], reverse=True)
-    return render_template('userProfile.html', user_input=searchTicker, name=current_user.username, full_name=current_user.full_name, is_logged_in=current_user.is_authenticated, arbitrage_opportunities=sorted_opportunities, search=search)
+
+    # Return based on whether search results were found
+    if search_result:
+        return render_template(
+            'userProfile.html',
+            user_input=searchTicker,
+            name=current_user.username,
+            full_name=current_user.full_name,
+            is_logged_in=current_user.is_authenticated,
+            arbitrage_opportunities=sorted_opportunities,
+            search=search_result
+        )
+    else:
+        return render_template(
+            'userProfile.html',
+            user_input=searchTicker,
+            name=current_user.username,
+            full_name=current_user.full_name,
+            is_logged_in=current_user.is_authenticated,
+            arbitrage_opportunities=sorted_opportunities
+        )
+
 
 
 @app.route('/add_purchase', methods=['POST'])
@@ -431,7 +455,15 @@ def fetch_current_price(asset_name):
     # search = client.search_pairs(tokenLowerCase)
     for TokenPair in search:
         token_Pair = TokenPair.base_token.name + '/' + TokenPair.quote_token.name
-        return {'price': float(TokenPair.price_usd), 'source': 'Dexscreener', 'pairAddress': TokenPair.pair_address, 'name': TokenPair.base_token.name, 'pair_url': TokenPair.url, 'tokenPair': token_Pair}
+        return {
+            'price': float(TokenPair.price_usd),
+              'source': 'Dexscreener', 
+              'pairAddress': TokenPair.pair_address, 
+              'name': TokenPair.base_token.name, 
+              'pair_url': TokenPair.url, 
+              'tokenPair': token_Pair,
+              'baseToken_url': f'https://dexscreener.com/{TokenPair.chain_id}/{TokenPair.base_token.address}'
+              }
 
 def fetch_historical_price(asset_name, start_timestamp, end_timestamp):
     print('Fetching historical price...')
@@ -491,6 +523,7 @@ def user_prices(purchase_id):
     purchase.pair_address = token_price_data['pairAddress'] or 'None'
     purchase.source = token_price_data['source']
     purchase.pair_url = token_price_data['pair_url']
+    purchase.baseToken_url = token_price_data['baseToken_url']
     
     db.session.commit()
 
