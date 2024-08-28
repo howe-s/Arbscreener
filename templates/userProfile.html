@@ -270,6 +270,8 @@
                                     <td>-</td>
                                     <td>-</td>
                                     <td>-</td>
+                                    <td>-</td>
+                                    <td>-</td>
                                     <td id="total-quantity">0</td>
                                     <td>-</td>
                                     <td id="total-cost">$0.00</td>
@@ -278,14 +280,13 @@
                                     <td id="total-profit">$0.00</td>
                                     <td id="total-profit-percentage">0%</td>
                                     <td>-</td>
+                                    <td>-</td>
                                 </tr>
                             </tfoot>
                         </table>
                     </div>
                 </div>
-            </div>      
-
-        <a href="{{ url_for('logout') }}" class="btn btn-secondary mt-3">Logout</a>
+            </div> 
     </div>
     <div class="container-fluid">
         <div class="row" style="justify-content: center;">
@@ -373,7 +374,9 @@
                     </tr>
                   </tbody>
                 </table>
-                
+                {% for profit in opportunity.user_arb_profits %}
+                <li>{{ profit.asset_name }}, User Arbitrage Profit: {{ profit.userArb_profit }}</li>
+                {% endfor %}
                 <div class="mt-2">
                   <p class="card-text">
                     <strong>Price Difference:</strong> {{ opportunity.price_diff }}

@@ -267,32 +267,6 @@ def logout():
     flash('You have been logged out.')
     return redirect(url_for('login'))
 
-# @app.route('/userProfile')
-# @login_required
-# def userProfile():
-    searchTicker = request.args.get('user_input', 'WBTC').lower()
-    # search = client.search_pairs(searchTicker)    
-    # token_pairs = process_token_pairs(search)
-    # DEFAULT ARB PAGE VALUES
-    slippage_pair1 = 0.03  # 1% slippage
-    slippage_pair2 = 0.03 # 1% slippage
-    fee_percentage = 0.001  # 0.3% trading fee
-    initial_investment = 1000  # Example initial investment
-
-    # Fetch all baseToken_address associated with the logged-in user's purchases
-    user_purchases = Purchase.query.filter_by(user_id=current_user.id).all()
-    baseToken_addresses = ", ".join([purchase.baseToken_address for purchase in user_purchases])
-    print(baseToken_addresses)
-    search = client.search_pairs(baseToken_addresses)    
-    token_pairs = process_token_pairs(search)
-    
-    arbitrage_opportunities = find_arbitrage_opportunities(
-        token_pairs, slippage_pair1, slippage_pair2, fee_percentage, initial_investment
-    )
-    print('THIS IS ARB', arbitrage_opportunities)
-    sorted_opportunities = sorted(arbitrage_opportunities, key=lambda x: x['int_profit'], reverse=True)
-    return render_template('userProfile.html', user_input=searchTicker, name=current_user.username, full_name=current_user.full_name, is_logged_in=current_user.is_authenticated, arbitrage_opportunities=sorted_opportunities, search=search)
-
 @app.route('/userProfile')
 @login_required
 def userProfile():
@@ -321,13 +295,21 @@ def userProfile():
 
             # Find arbitrage opportunities for this set of token pairs
             arbitrage_opportunities = find_arbitrage_opportunities(
-                token_pairs, slippage_pair1, slippage_pair2, fee_percentage, initial_investment
+                token_pairs, slippage_pair1, slippage_pair2, fee_percentage, initial_investment, user_purchases
             )
+
             all_arbitrage_opportunities.extend(arbitrage_opportunities)
 
-    # Sort opportunities after the loop
-    sorted_opportunities = sorted(all_arbitrage_opportunities, key=lambda x: x['int_profit'], reverse=True)
+            ##### YOU STOPPED HERE ##############
+            # for arb in all_arbitrage_opportunities:
+            #     nativePrice_difference = arb['nativePrice_difference']
+            #     userArb_profit = nativePrice_difference * user_purchases.quantity
+            #     print(userArb_profit)
+            ############################################################
 
+    # Sort opportunities after the loop
+    sorted_opportunities = sorted(all_arbitrage_opportunities, key=lambda x: x['int_profit'], reverse=True)    
+   
     # Return based on whether search results were found
     if search_result:
         return render_template(
@@ -437,20 +419,7 @@ def rate_limit():
 
 def fetch_current_price(asset_name):
     print('Fetching current price...')
-    tokenName_format = asset_name.lower()
-    # rate_limit()
-    # responseCurrentPrice = requests.get(f'https://api.coincap.io/v2/assets/{tokenName_format}')
-    # if responseCurrentPrice.status_code == 200:
-    #     try:
-    #         priceFloat = float(responseCurrentPrice.json()['data']['priceUsd'])
-    #         return {'price': round(priceFloat, 2),'source': 'coincap', 'pairAddress': 'None', 'name': tokenName_format, 'pair_url': 'None'}
-    #     except (KeyError, ValueError):
-    #         print('Error parsing price data.')
-    #         return None
-    # else:
-    # tokenLowerCase = tokenName_format.lower()
-    searchTicker = tokenName_format.lower()
-    # print('searchTicker', searchTicker)
+    searchTicker = asset_name.lower()
     rate_limit()
     search = client.search_pairs(searchTicker)
     # search = client.search_pairs(tokenLowerCase)
@@ -529,18 +498,6 @@ def user_prices(purchase_id):
     
     db.session.commit()
 
-    # token_pairs = purchase.quote_address
-
-    #     # DEFAULT ARB PAGE VALUES
-    # slippage_pair1 = 0.03  # 1% slippage
-    # slippage_pair2 = 0.03 # 1% slippage
-    # fee_percentage = 0.001  # 0.3% trading fee
-    # initial_investment = purchase.quantity  # Example initial investment
-
-    # arbitrage_opportunities = find_arbitrage_opportunities(
-    #     token_pairs, slippage_pair1, slippage_pair2, fee_percentage, initial_investment
-    # )
-    # print('User Arb', arbitrage_opportunities)
     currentValue = token_price * purchase.quantity
     return {
         'purchase_id': purchase_id,
@@ -564,8 +521,6 @@ def dex_search():
     # Get the user input for ticker and perform the search
     searchTicker = request.args.get('user_input', 'WBTC').lower()    
     search = client.search_pairs(searchTicker)
-    # searchTicker = request.args.get('user_input', '0x2170Ed0880ac9A755fd29B2688956BD959F933F8').lower()    
-    # search = client.get_token_pairs(searchTicker)
     
     pool_data = []
  
@@ -659,7 +614,7 @@ def process_token_pairs(search):
         })
     return token_pairs
 
-def find_arbitrage_opportunities(token_pairs, slippage_pair1, slippage_pair2, fee_percentage, initial_investment):
+def find_arbitrage_opportunities(token_pairs, slippage_pair1, slippage_pair2, fee_percentage, initial_investment, user_purchases):
     print('finding arb..')
     arbitrage_opportunities = []
     for i, pair1 in enumerate(token_pairs):
@@ -691,7 +646,21 @@ def find_arbitrage_opportunities(token_pairs, slippage_pair1, slippage_pair2, fe
                         pair2_price_round = f"{round(pair2['price_usd'], 8)}"
                         pair1_priceNative_round = f"{round(pair1['price_native'], 8)}"
                         pair2_priceNative_round = f"{round(pair2['price_native'], 8)}"
+                        nativePrice_difference = pair2['price_native'] - pair1['price_native']
+                        print(nativePrice_difference)
+
+                                                # Calculate userArb_profit for each purchase and store it
+                        user_arb_profits = []
+                        for purchase in user_purchases:
+                            if purchase.baseToken_address == pair1['baseToken_address']:
+                                userArb_profit = nativePrice_difference * purchase.quantity
+                                user_arb_profits.append({
+                                    'purchase_id': purchase.id,
+                                    'userArb_profit': f"${userArb_profit:,.2f}",
+                                    'asset_name': purchase.asset_name
+                                })
                         
+
                         arbitrage_opportunities.append({
                             'pair1': pair1['pair'],
                             'pair1_price': pair1['price_usd'],
@@ -727,7 +696,9 @@ def find_arbitrage_opportunities(token_pairs, slippage_pair1, slippage_pair2, fe
                             'pair1_priceNative_round': pair1_priceNative_round,
                             'pair2_priceNative_round': pair2_priceNative_round,
                             'nativePrice_ratio': nativePrice_ratio,
-                            'nativePrice_ratio_round': nativePrice_ratio_round
+                            'nativePrice_ratio_round': nativePrice_ratio_round,
+                            'nativePrice_difference': nativePrice_difference,
+                            'user_arb_profits': user_arb_profits
                         })
     return arbitrage_opportunities
 
@@ -747,9 +718,8 @@ def arb():
     arbitrage_opportunities = find_arbitrage_opportunities(
         token_pairs, slippage_pair1, slippage_pair2, fee_percentage, initial_investment
     )
-
+    
     sorted_opportunities = sorted(arbitrage_opportunities, key=lambda x: x['int_profit'], reverse=True)
-
     return render_template('arb.html', search=search, user_input=searchTicker, arbitrage_opportunities=sorted_opportunities, is_logged_in=current_user.is_authenticated)
 
 
