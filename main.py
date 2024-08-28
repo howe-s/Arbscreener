@@ -409,6 +409,7 @@ def edit_purchase(purchase_id):
         if request.method == 'POST':
             # Update the purchase details
             purchase.asset_name = request.form['asset_name']
+            purchase.baseToken_address = request.form['baseToken_address']
             purchase.quantity = float(request.form['quantity'])
             purchase.purchase_price = float(request.form['purchase_price'])
             purchase.purchase_date = datetime.strptime(request.form['purchase_date'], '%Y-%m-%d')
@@ -462,7 +463,8 @@ def fetch_current_price(asset_name):
               'name': TokenPair.base_token.name, 
               'pair_url': TokenPair.url, 
               'tokenPair': token_Pair,
-              'baseToken_url': f'https://dexscreener.com/{TokenPair.chain_id}/{TokenPair.base_token.address}'
+              'baseToken_url': f'https://dexscreener.com/{TokenPair.chain_id}/{TokenPair.base_token.address}',
+              'chain_id': TokenPair.chain_id
               }
 
 def fetch_historical_price(asset_name, start_timestamp, end_timestamp):
@@ -551,10 +553,11 @@ def user_prices(purchase_id):
         'name': token_price_data['name'],
         'quantity': purchase.quantity,
         'tokenPair': token_price_data['tokenPair'],
-        'currentValue': currentValue 
+        'currentValue': currentValue,
+        'chain_id': token_price_data['chain_id']
     }
 
-
+#This route loads the data on dex_search and renders the page 
 @app.route('/dex_search', methods=['GET', 'POST'])
 @login_required
 def dex_search():

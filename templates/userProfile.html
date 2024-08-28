@@ -115,6 +115,7 @@
                         document.getElementById(`search-name-${purchaseId}`).textContent = `${data.name}`;
                         document.getElementById(`token-pair-${purchaseId}`).textContent = `${data.tokenPair}`;
                         document.getElementById(`current-value-${purchaseId}`).textContent = `${data.currentValue}`;
+                        document.getElementById(`chain-id-${purchaseId}`).textContent = `${data.chain_id}`;
 
                         // Update totals with new cost
                         updateTotals(data.profit, data.profitPercentage, data.purchaseCost, data.quantity, data.currentValue);
@@ -216,6 +217,7 @@
                                     <th scope="col">Search</th>
                                     <th scope="col">Asset Name</th>
                                     <th scope="col">Asset Address</th>
+                                    <th scope="col">Chain ID</th>
                                     <th scope="col">Pricing Ticker</th>                                    
                                     <th scope="col">Pricing Address</th>
                                     <th scope="col">Purchase Date</th>
@@ -236,8 +238,9 @@
                                     <td class="table-td">{{ purchase.asset_name }}</td>                                    
                                     <td id="search-name-{{ purchase.id }}">Loading...</td>
                                     <td id="baseToken-address" class="table-td">
-                                        <!-- <a id="baseToken-link" href="{{purchase.baseToken_address_url}}">{{ purchase.baseToken_address_url }}</a> -->
+                                        <a id="baseToken-link" href="{{purchase.baseToken_url}}">{{ purchase.baseToken_address}}</a>
                                     </td>  
+                                    <td id="chain-id-{{ purchase.id }}">Loading...</td>
                                     <td id="token-pair-{{ purchase.id }}">Loading...</td>
                                     <td id="pair-address" class="table-td">
                                         <a id="pair-link" href="{{purchase.pair_url}}">{{ purchase.pair_address }}</a>
