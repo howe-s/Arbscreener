@@ -113,9 +113,10 @@
                         document.getElementById(`price-source-${purchaseId}`).textContent = `${data.source}`;
                         document.getElementById(`search-name-${purchaseId}`).textContent = `${data.name}`;
                         document.getElementById(`token-pair-${purchaseId}`).textContent = `${data.tokenPair}`;
+                        document.getElementById(`current-value-${purchaseId}`).textContent = `${data.currentValue}`;
 
                         // Update totals with new cost
-                        updateTotals(data.profit, data.profitPercentage, data.purchaseCost, data.quantity);
+                        updateTotals(data.profit, data.profitPercentage, data.purchaseCost, data.quantity, data.currentValue);
                     } else {
                         document.getElementById(`current-price-${purchaseId}`).textContent = 'Price not available';
                     }
@@ -127,29 +128,34 @@
             }
         }
 
-        function updateTotals(profit, profitPercentage, purchaseCost, quantity) {
+        function updateTotals(profit, profitPercentage, purchaseCost, quantity, currentValue) {
             const totalQuantity = document.getElementById('total-quantity');
             const totalProfit = document.getElementById('total-profit');
             const totalProfitPercentage = document.getElementById('total-profit-percentage');
             const totalCost = document.getElementById('total-cost');
+            const totalValue = document.getElementById('total-value');
 
             // Parse current totals and add new values
             let currentTotalQuantity = parseFloat(totalQuantity.textContent) || 0;
             let currentTotalProfit = parseFloat(totalProfit.textContent.replace('$', '')) || 0;
-            let currentTotalProfitPercentage = parseFloat(totalProfitPercentage.textContent.replace('%', '')) || 0;
+            // let currentTotalProfitPercentage = parseFloat(totalProfitPercentage.textContent.replace('%', '')) || 0;
             let currentTotalCost = parseFloat(totalCost.textContent.replace('$', '')) || 0;
+            let currentTotalValue = parseFloat(totalValue.textContent.replace('$', '')) || 0;
 
             // Update totals
             currentTotalQuantity += 1; // Assuming quantity is always 1 for now due to variance
             currentTotalProfit += profit;
-            currentTotalProfitPercentage += profitPercentage;
+            // currentTotalProfitPercentage += profitPercentage;
             currentTotalCost += purchaseCost;
-
+            currentTotalValue += currentValue;
+            currentTotalProfitPercentage = ((currentTotalValue - currentTotalCost) / currentTotalCost) * 100;
+            console.log('% passing', currentTotalProfitPercentage)
             // Update HTML
             totalQuantity.textContent = currentTotalQuantity;
             totalProfit.textContent = `$${currentTotalProfit.toFixed(2)}`;
             totalProfitPercentage.textContent = `${currentTotalProfitPercentage.toFixed(2)}%`;
             totalCost.textContent = `$${currentTotalCost.toFixed(2)}`;
+            totalValue.textContent = `$${currentTotalValue.toFixed(2)}`;
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -217,9 +223,10 @@
                                     <th scope="col">Purchase Price</th>
                                     <th scope="col">Cost</th>
                                     <th scope="col">Current Price</th>
-                                    <th scope="col">Source</th>
+                                    <th scope="col">Current Value</th>                                    
                                     <th scope="col">Profit</th>
                                     <th scope="col">%</th>
+                                    <th scope="col">Source</th>
                                     <th scope="col">Actions</th>
                                 </tr>
                             </thead>
@@ -237,9 +244,10 @@
                                     <td>${{ purchase.purchase_price }}</td>
                                     <td id="purchase-cost-{{ purchase.id }}">Loading...</td>
                                     <td id="current-price-{{ purchase.id }}">Loading...</td>
-                                    <td id="price-source-{{ purchase.id }}">Loading...</td>
+                                    <td id="current-value-{{ purchase.id }}">Loading...</td>
                                     <td id="profit-{{ purchase.id }}">Loading...</td>
                                     <td id="profit-percentage-{{ purchase.id }}">Loading...</td>
+                                    <td id="price-source-{{ purchase.id }}">Loading...</td>
                                     <td>
                                         <form method="post" action="{{ url_for('delete_purchase', purchase_id=purchase.id) }}" style="display:inline;">
                                             <button type="submit" class="btn btn-danger btn-sm">X</button>
@@ -260,7 +268,7 @@
                                     <td>-</td>
                                     <td id="total-cost">$0.00</td>
                                     <td>-</td>
-                                    <td>-</td>
+                                    <td id="total-value">$0.00</td>
                                     <td id="total-profit">$0.00</td>
                                     <td id="total-profit-percentage">0%</td>
                                     <td>-</td>

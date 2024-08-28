@@ -83,6 +83,15 @@ with app.app_context():
     db.create_all()
 
 # HELPER FUNCTIONS
+def runTime(func):
+    def wrapper():
+        timeOne = time.time()
+        func()
+        timeTwo = time.time()-timeOne
+        print(f'{func.__name__} ran in '\
+              f'{timeTwo} seconds')
+    return wrapper
+
 def get_price_change_style(price_change):
     if price_change > 0:
         return "color: green;"
@@ -312,7 +321,7 @@ def userProfile():
         )
         all_arbitrage_opportunities.extend(arbitrage_opportunities)
 
-    print('All arbitrage opportunities:', all_arbitrage_opportunities)
+    # print('All arbitrage opportunities:', all_arbitrage_opportunities)
 
     sorted_opportunities = sorted(all_arbitrage_opportunities, key=lambda x: x['int_profit'], reverse=True)
     return render_template('userProfile.html', user_input=searchTicker, name=current_user.username, full_name=current_user.full_name, is_logged_in=current_user.is_authenticated, arbitrage_opportunities=sorted_opportunities, search=search)
@@ -431,7 +440,7 @@ def fetch_historical_price(asset_name, start_timestamp, end_timestamp):
     if responseHistoricalPrice.status_code == 200:
         try:
             data = responseHistoricalPrice.json()['data']
-            print('historical price data', data)
+            # print('historical price data', data)
             return data
         except KeyError:
             print('Error parsing historical price data.')
@@ -497,7 +506,7 @@ def user_prices(purchase_id):
     #     token_pairs, slippage_pair1, slippage_pair2, fee_percentage, initial_investment
     # )
     # print('User Arb', arbitrage_opportunities)
-
+    currentValue = token_price * purchase.quantity
     return {
         'purchase_id': purchase_id,
         'tokenPrice': token_price,
@@ -508,7 +517,8 @@ def user_prices(purchase_id):
         'source': token_price_data['source'],
         'name': token_price_data['name'],
         'quantity': purchase.quantity,
-        'tokenPair': token_price_data['tokenPair']
+        'tokenPair': token_price_data['tokenPair'],
+        'currentValue': currentValue 
     }
 
 
