@@ -276,7 +276,7 @@ def userProfile():
     slippage_pair1 = 0.03
     slippage_pair2 = 0.03
     fee_percentage = 0.001
-    initial_investment = 1000
+    initial_investment = 2.0
 
     # Fetch all baseToken_address associated with the logged-in user's purchases
     user_purchases = Purchase.query.filter_by(user_id=current_user.id).all()
@@ -619,11 +619,13 @@ def find_arbitrage_opportunities(token_pairs, slippage_pair1, slippage_pair2, fe
     arbitrage_opportunities = []
     for i, pair1 in enumerate(token_pairs):
         for pair2 in token_pairs[i + 1:]:
-            if (pair1['baseToken_address'] == pair2['baseToken_address'] and
-                pair1['quoteToken_address'] == pair2['quoteToken_address']):
+            if (pair1['baseToken_address'] == pair2['baseToken_address']):
+                # pair1['quoteToken_address'] == pair2['quoteToken_address']):
                 
                 if (pair1['price_native'] < pair2['price_native'] and 
-                    pair1['liquidity_usd'] > pair2['liquidity_usd']):
+                    pair1['liquidity_usd'] > pair2['liquidity_usd'] and 
+                    pair1['liquidity_usd'] > 100000 and 
+                    pair2['liquidity_usd'] > 100000):
 
                     liquidity_diff = pair1['liquidity_usd'] - pair2['liquidity_usd']
                     price_diff = pair2['price_native'] - pair1['price_native']
@@ -634,11 +636,11 @@ def find_arbitrage_opportunities(token_pairs, slippage_pair1, slippage_pair2, fe
                                                         slippage_pair1, 
                                                         slippage_pair2, 
                                                         fee_percentage)
-                    
+                    print("profit", profit)
                     base_liquidity = min(pair1['liquidity_base'], pair2['liquidity_base'])
                     profit_sort_format = f"{profit:,.2f}"
-                    int_profit = int(profit)
-                    
+                    int_profit = int(profit * 10**8) / 10**8
+                    print("integer profit value", int_profit)
                     if int_profit > 0:
                         nativePrice_ratio = pair2['price_native']/ pair1['price_native']
                         nativePrice_ratio_round = f"{round(nativePrice_ratio, 4)}"
@@ -653,10 +655,12 @@ def find_arbitrage_opportunities(token_pairs, slippage_pair1, slippage_pair2, fe
                         user_arb_profits = []
                         for purchase in user_purchases:
                             if purchase.baseToken_address == pair1['baseToken_address']:
-                                userArb_profit = nativePrice_difference * purchase.quantity
+                                ### THIS MATH IS WRONG
+                                userArb_profit = nativePrice_ratio * purchase.quantity 
+                                print('userArb_profit', userArb_profit)
                                 user_arb_profits.append({
                                     'purchase_id': purchase.id,
-                                    'userArb_profit': f"${userArb_profit:,.2f}",
+                                    'userArb_profit': f"{round(userArb_profit, 8)}",
                                     'asset_name': purchase.asset_name
                                 })
                         
@@ -716,7 +720,7 @@ def arb():
     initial_investment = 1000  # Example initial investment
 
     arbitrage_opportunities = find_arbitrage_opportunities(
-        token_pairs, slippage_pair1, slippage_pair2, fee_percentage, initial_investment
+        token_pairs, slippage_pair1, slippage_pair2, fee_percentage, initial_investment, user_purchases
     )
     
     sorted_opportunities = sorted(arbitrage_opportunities, key=lambda x: x['int_profit'], reverse=True)
@@ -790,6 +794,7 @@ def base():
 @app.route('/token_summary')
 @login_required
 def token_summary():
+    print('token_summary route pinged')
     searchTicker = request.args.get('user_input', 'WBTC').lower()
     search = client.search_pairs(searchTicker)
 
@@ -826,6 +831,7 @@ def token_summary():
         # insert_sql = "INSERT INTO token_pairs (chain_id, pair_address, liquidity_usd, quote_token_symbol, price_native, base_token_symbol, price_usd, volume_m5, m5_change, h1_change, h6_change, h24_change, volume_h1, volume_h6, volume_h24, m5_change_style, h1_change_style, h6_change_style, h24_change_style) VALUES " + ", ".join(tokens) + ";"
 
     return render_template('token_summary.html', tokens=tokens, user_input=searchTicker, is_logged_in=current_user.is_authenticated)
+    
 
 import re
 
@@ -918,13 +924,24 @@ def charts():
                                user_input=searchTicker,
                                is_logged_in=current_user.is_authenticated)
 
-    liquidityTicker = [(f"{pair.pair_address[-5:]}({pair.chain_id})", pair.liquidity.usd) for pair in search]
-    volumeTicker = [(f"{pair.pair_address[-5:]}({pair.chain_id})", pair.volume.h24) for pair in search]
+    # Sort liquidityData by pair.liquidity.usd in descending order
+    liquidityData = sorted(
+        [(f"{pair.pair_address[-5:]}({pair.chain_id})", pair.liquidity.usd) for pair in search],
+        key=lambda x: x[1],
+        reverse=True
+    )
 
-    tree_liquidity_img = tree_chart_liquidity(liquidityTicker)
-    pie_liquidity_img = pie_chart_liquidity(liquidityTicker)
-    tree_volume_img = tree_chart_volume(volumeTicker)
-    pie_volume_img = pie_chart_volume(volumeTicker)
+    # Sort volumeData by pair.volume.h24 in descending order
+    volumeData = sorted(
+        [(f"{pair.pair_address[-5:]}({pair.chain_id})", pair.volume.h24) for pair in search],
+        key=lambda x: x[1],
+        reverse=True
+    )
+
+    tree_liquidity_img = tree_chart_liquidity(liquidityData)
+    pie_liquidity_img = pie_chart_liquidity(liquidityData)
+    tree_volume_img = tree_chart_volume(volumeData)
+    pie_volume_img = pie_chart_volume(volumeData)
 
     return render_template('charts.html',
                            tree_liquidity_img=tree_liquidity_img,
