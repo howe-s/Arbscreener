@@ -532,6 +532,7 @@ def dex_search():
 
         # Generate the bar chart
         chart_div = generate_bar_chart(x_data, y_data)
+        
         # print(TokenPair.liquidity)
         pool_data.append({
             'chain_id': TokenPair.chain_id,
