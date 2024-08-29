@@ -54,7 +54,7 @@
 </div>
 <script>
     function updateTokenSummary() {
-        fetch('/token_summary?user_input=WBTC')  // Adjust the query parameter if needed
+        fetch('/token_table?user_input=WBTC')  // Adjust the query parameter if needed
             .then(response => response.text())
             .then(html => {
                 // Parse the response and update the table content

@@ -791,10 +791,10 @@ def base():
     return render_template('base.html', user_input=searchTicker, is_logged_in=current_user.is_authenticated)
 
 
-@app.route('/token_summary')
+@app.route('/token_table')
 @login_required
-def token_summary():
-    print('token_summary route pinged')
+def token_table():
+    print('token_table route pinged')
     searchTicker = request.args.get('user_input', 'WBTC').lower()
     search = client.search_pairs(searchTicker)
 
@@ -830,7 +830,7 @@ def token_summary():
         # SQL Input if wanted
         # insert_sql = "INSERT INTO token_pairs (chain_id, pair_address, liquidity_usd, quote_token_symbol, price_native, base_token_symbol, price_usd, volume_m5, m5_change, h1_change, h6_change, h24_change, volume_h1, volume_h6, volume_h24, m5_change_style, h1_change_style, h6_change_style, h24_change_style) VALUES " + ", ".join(tokens) + ";"
 
-    return render_template('token_summary.html', tokens=tokens, user_input=searchTicker, is_logged_in=current_user.is_authenticated)
+    return render_template('token_table.html', tokens=tokens, user_input=searchTicker, is_logged_in=current_user.is_authenticated)
     
 
 import re

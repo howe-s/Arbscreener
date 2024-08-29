@@ -29,7 +29,7 @@
                     <a class="nav-link" href="{{ url_for('summary', user_input=request.args.get('user_input', 'WBTC')) }}">Summary</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('token_summary', user_input=request.args.get('user_input', 'WBTC')) }}">Token Table</a>
+                    <a class="nav-link" href="{{ url_for('token_table', user_input=request.args.get('user_input', 'WBTC')) }}">Token Table</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('charts', user_input=request.args.get('user_input', 'WBTC')) }}">Charts</a>
