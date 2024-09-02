@@ -1,11 +1,11 @@
 import subprocess
 import sys
 
-# INSTALL
+# Install Packages
 def install(package):
     subprocess.check_call([sys.executable, "-m", "pip", "install", package])
 
-# REQS
+# Required Packages
 required_packages = [
     'Flask',
     'matplotlib',
@@ -25,7 +25,7 @@ required_packages = [
     'markupsafe'
 ]
 
-# CHECK AND INSTALL
+# Check if packages installed, if not, install
 for package in required_packages:
     try:
         __import__(package.split('==')[0])
@@ -66,6 +66,7 @@ app.config['SECRET_KEY'] = 'your_secret_key'  # Replace with your secret key
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'  # Database URI
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+#Initialize DB
 db.init_app(app)
 migrate = Migrate(app, db)
 
@@ -73,7 +74,6 @@ migrate = Migrate(app, db)
 login_manager = LoginManager()
 login_manager.login_view = 'login'
 login_manager.init_app(app)
-
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
@@ -536,6 +536,7 @@ def dex_search():
         # print(TokenPair.liquidity)
         pool_data.append({
             'chain_id': TokenPair.chain_id,
+            'dex_id': TokenPair.dex_id,
             'liquidity': TokenPair.liquidity,
             'liquidity_usd_formatted': f"${TokenPair.liquidity.usd:,.2f}",
             'liquidity_base_formatted': f"{TokenPair.liquidity.base:,.2f}",
@@ -618,15 +619,19 @@ def process_token_pairs(search):
 def find_arbitrage_opportunities(token_pairs, slippage_pair1, slippage_pair2, fee_percentage, initial_investment, user_purchases):
     print('finding arb..')
     arbitrage_opportunities = []
+    #loop through tokenPair list once
     for i, pair1 in enumerate(token_pairs):
+        #loop through twice
         for pair2 in token_pairs[i + 1:]:
+            # Check if baseAsset is same
             if (pair1['baseToken_address'] == pair2['baseToken_address']):
-                # pair1['quoteToken_address'] == pair2['quoteToken_address']):
-                
-                if (pair1['price_native'] < pair2['price_native'] and 
-                    pair1['liquidity_usd'] > pair2['liquidity_usd'] and 
-                    pair1['liquidity_usd'] > 100000 and 
-                    pair2['liquidity_usd'] > 100000):
+                #Check if price discrepency   
+                if ((pair1['price_native'] < pair2['price_native'] or pair2['price_native'] < pair1['price_native']) and 
+                    # Check if pools are the same
+                    (pair1['liquidity_usd'] > pair2['liquidity_usd'] or pair2['liquidity_usd'] > pair1['liquidity_usd']) and 
+                    pair1['liquidity_usd'] > 10000 and 
+                    pair2['liquidity_usd'] > 10000):
+
 
                     liquidity_diff = pair1['liquidity_usd'] - pair2['liquidity_usd']
                     price_diff = pair2['price_native'] - pair1['price_native']
@@ -749,6 +754,7 @@ def raydium():
         amm_pools = []
 
         for pool in data['data']:
+            print(pool)
             pool_data = {
                 "pool_id": pool['id'],
                 "price": pool["price"],  # Uncomment and add relevant fields
