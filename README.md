@@ -91,6 +91,8 @@ This project is a Flask-based web application that integrates with the Dexscreen
 - Plotly
 
 ![image](https://github.com/user-attachments/assets/f6a694ee-0f54-484d-a507-6b8169ef1bef)
+![image](https://github.com/user-attachments/assets/c351f74e-348a-419a-b54c-cbe600400fde)
+
 
 
 
