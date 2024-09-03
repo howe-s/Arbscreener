@@ -1,8 +1,18 @@
 Flask
+flask_sqlalchemy
+flask_login
+flask_migrate
+flask_wtf
+flask_cors
 matplotlib
-numpy==1.26.4 #Version specific
+numpy==1.26.4
 pandas
 squarify
 dexscreener
 plotly
-flask_cors
+requests
+jinja2
+werkzeug
+markupsafe
+
+
