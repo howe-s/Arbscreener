@@ -80,26 +80,6 @@ This project is a Flask-based web application that integrates with the Dexscreen
     http://127.0.0.1:5000/
     ```
 
-## Usage
-
-- **Homepage:** Displays token pair cards with basic information like chain ID, liquidity, price, and volume.
-- **Click a Card:** Opens a detailed summary with more information and an interactive chart for the selected token pair.
-- **Charts Page:** Provides visual insights into the liquidity and volume data of token pairs.
-
-## Customization
-
-### API Integration
-
-The application integrates with the Dexscreener API using the `dexscreener` Python package. You can customize the token pairs displayed by modifying the `searchTicker` parameter in the `index()` function in `app.py`.
-
-### Styling
-
-The application uses custom CSS for styling. You can modify `style.css` located in the `static` directory to change the look and feel of the application.
-
-### Chart Visualization
-
-The charts are generated using Matplotlib and Squarify. You can modify the functions `tree_chart_liquidity`, `pie_chart_liquidity`, `tree_chart_volume`, and `pie_chart_volume` in `app.py` to customize the chart appearance.
-
 ## Dependencies
 
 - Flask
@@ -109,10 +89,6 @@ The charts are generated using Matplotlib and Squarify. You can modify the funct
 - Squarify
 - Dexscreener
 - Plotly
-
-## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
 ![image](https://github.com/user-attachments/assets/f6a694ee-0f54-484d-a507-6b8169ef1bef)
 
