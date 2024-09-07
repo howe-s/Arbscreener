@@ -320,7 +320,7 @@ def find_arbitrage_opportunities(token_pairs, slippage_pair1, slippage_pair2, fe
                         })
     return arbitrage_opportunities
 
-# Global variable to track the time of the last API request
+# Global variable for API rate limit
 last_request_time = 0
 request_delay = 7  # seconds
 
@@ -754,7 +754,7 @@ def base():
 @login_required
 def token_table():
     print('token_table route pinged')
-    searchTicker = request.args.get('user_input', 'WBTC').lower()
+    searchTicker = request.args.get('user_input', 'WBTC').lower()    
     search = client.search_pairs(searchTicker)
 
     tokens = []

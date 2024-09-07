@@ -3,50 +3,7 @@
 {% block title %}Home - Dexscreener{% endblock %}
 
 {% block content %}
-<style>
-/* General container styling */
-.container.dark-background {
-    background-color: #1c1c1c;
-    padding: 20px;
-    border-radius: 8px;
-}
-
-/* Summary Div styling */
-.summary-div {
-    background-color: #2c2c2c;
-    padding: 20px;
-    border-radius: 8px;
-}
-
-/* Card styling */
-.card {
-    background-color: #2c2c2c;
-    border: none;
-    border-radius: 8px;
-    margin-bottom: 20px;
-}
-
-.card-body {
-    color: #e0e0e0;
-}
-
-.card-title {
-    color: #f0f0f0;
-}
-
-/* Table styling */
-.table-dark {
-    background-color: #2c2c2c;
-    color: #e0e0e0;
-}
-
-.table-dark th, .table-dark td {
-    border-color: #444;
-}
-.table {
-  color: white;
-}
-</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='dex_search.css') }}">
 <script>
   document.addEventListener('DOMContentLoaded', () => {
       const cards = document.querySelectorAll('.card');

@@ -1,0 +1,91 @@
+body {
+    padding-top: 20px;
+    background-color: #272727;
+}
+
+.card {
+    margin-bottom: 20px;
+    background-color: #1f1f1f;
+    border-radius: 10px;
+    border-color: #272727;
+}
+
+.card-header {
+    background-color: #1f1f1f;
+    border-bottom: none;
+    color: #5488a8;
+}
+.card-body {
+    color: white;
+}
+.mb-4 {
+    color: white;
+}
+.table-container {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+}
+
+th, td {
+    text-align: center;
+    color: #e0e0e0;
+    background-color: #1f1f1f;
+}
+
+.table th {
+    background-color: #2a2a2a;
+    font-weight: 400;
+}
+
+.btn-sm {
+    font-size: 0.875rem;
+}
+
+@media (max-width: 768px) {
+    .table-container {
+        overflow-x: auto;
+    }
+}
+
+.table-td {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+#my-table {
+    border-collapse: collapse;
+    width: 100%;
+    table-layout: fixed;
+}
+
+.card-title {
+    font-weight: 600;
+    font-size: 1.25rem;
+    color: #5488a8;
+    background: #1f1f1f;
+}
+
+.table-hover tbody tr:hover td,
+.table-hover tbody tr:hover th {
+    background-color: #e0e0e0;
+    color: #1f1f1f;
+}
+
+.card-text {
+    font-size: 0.9rem;
+    color: #e0e0e0;
+}
+
+.card-link {
+    color: #5488a8;
+    text-decoration: none;
+}
+
+.card-link:hover {
+    color: #5488a8;
+    text-decoration: underline;
+}
