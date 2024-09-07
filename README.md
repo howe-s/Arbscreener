@@ -31,7 +31,7 @@ This project is a Flask-based web application that integrates with the Dexscreen
 
 ### Documentation files
     project-root/
-    ├── main.py              # Main Flask application file
+    ├── app.py              # Main Flask application file
     ├── templates/           # HTML templates for the application
     │   ├── base.html        # Base template for consistent layout
     │   ├── index.html       # Main page displaying token pair cards
@@ -92,6 +92,8 @@ This project is a Flask-based web application that integrates with the Dexscreen
 
 ![image](https://github.com/user-attachments/assets/f6a694ee-0f54-484d-a507-6b8169ef1bef)
 ![image](https://github.com/user-attachments/assets/c351f74e-348a-419a-b54c-cbe600400fde)
+![image](https://github.com/user-attachments/assets/9ddf6dff-bbac-4f05-a319-745760eabe81)
+
 
 
 
