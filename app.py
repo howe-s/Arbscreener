@@ -25,6 +25,11 @@ from html import escape
 import matplotlib
 matplotlib.use('Agg')  # Use non-interactive backend for server-side plotting
 from models import db, User, Purchase  # Ensure Purchase is imported
+from utils.timing_utils import runTime
+from utils.price_utils import get_price_change_style, format_price_change
+from utils.chart_utils import tree_chart_liquidity, pie_chart_liquidity, tree_chart_volume, pie_chart_volume, generate_bar_chart 
+from utils.arbitrage_utils import calculate_arbitrage_profit, find_arbitrage_opportunities, process_token_pairs
+from utils.api_utils import rate_limit, fetch_current_price
 
 
 #RUN FLASK
@@ -51,306 +56,8 @@ def load_user(user_id):
 with app.app_context():
     db.create_all()
 
-# HELPER FUNCTIONS
-def runTime(func):
-    def wrapper():
-        timeOne = time.time()
-        func()
-        timeTwo = time.time()-timeOne
-        print(f'{func.__name__} ran in '\
-              f'{timeTwo} seconds')
-    return wrapper
 
-def get_price_change_style(price_change):
-    if price_change > 0:
-        return "color: green;"
-    elif price_change < 0:
-        return "color: red;"
-    else:
-        return "color: gray;"
-
-def format_price_change(price_change):
-    return f"{price_change:.2f}%"
-
-def combine_others(data, threshold=0.05):
-    total = sum(value for _, value in data)
-    result = []
-    other_sum = 0
-    for label, value in data:
-        if value / total >= threshold:
-            result.append((label, value))
-        else:
-            other_sum += value
-    if other_sum > 0:
-        result.append(("Others", other_sum))
-    return result
-
-def tree_chart_liquidity(data):
-    data = combine_others(data)
-    labels = [f"{label}\n${value:,.0f}" for label, value in data]
-    sizes = [value for _, value in data]
-
-    plt.figure(figsize=(8, 6))
-    squarify.plot(sizes=sizes, label=labels, alpha=0.8)
-    plt.axis('off')
-
-    buf = io.BytesIO()
-    plt.savefig(buf, format='png')
-    buf.seek(0)
-    img = base64.b64encode(buf.getvalue()).decode('utf-8')
-    buf.close()
-
-    return img
-
-def pie_chart_liquidity(data):
-    data = combine_others(data)
-    labels = [f"{label} (${value:,.0f})" for label, value in data]
-    sizes = [value for _, value in data]
-
-    plt.figure(figsize=(8, 6))
-    plt.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=140)
-    plt.axis('equal')
-
-    buf = io.BytesIO()
-    plt.savefig(buf, format='png')
-    buf.seek(0)
-    img = base64.b64encode(buf.getvalue()).decode('utf-8')
-    buf.close()
-
-    return img
-
-def tree_chart_volume(data):
-    data = combine_others(data)
-    labels = [f"{label}\n${value:,.0f}" for label, value in data]
-    sizes = [value for _, value in data]
-
-    plt.figure(figsize=(8, 6))
-    squarify.plot(sizes=sizes, label=labels, alpha=0.8)
-    plt.axis('off')
-
-    buf = io.BytesIO()
-    plt.savefig(buf, format='png')
-    buf.seek(0)
-    img = base64.b64encode(buf.getvalue()).decode('utf-8')
-    buf.close()
-
-    return img
-
-def pie_chart_volume(data):
-    data = combine_others(data)
-    labels = [f"{label} (${value:,.0f})" for label, value in data]
-    sizes = [value for _, value in data]
-
-    plt.figure(figsize=(8, 6))
-    plt.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=140)
-    plt.axis('equal')
-
-    buf = io.BytesIO()
-    plt.savefig(buf, format='png')
-    buf.seek(0)
-    img = base64.b64encode(buf.getvalue()).decode('utf-8')
-    buf.close()
-
-    return img
-
-def generate_bar_chart(x_data, y_data, title="Volume Chart", x_label="Time Frame", y_label="Volume"):
-    # Construct data
-    data = [
-        go.Bar(
-            x=x_data,
-            y=y_data
-        )
-    ]
-
-    # Define the layout
-    layout = go.Layout(
-        title=title,
-        xaxis=dict(title=x_label),
-        yaxis=dict(title=y_label)
-    )
-
-    # Create figure
-    fig = go.Figure(data=data, layout=layout)
-
-    # Convert to HTML div string
-    chart_div = pio.to_html(fig, full_html=False)
-
-    return chart_div
-
-def format_number(value, decimals=0, thousands_sep=',', decimal_sep='.'):
-    formatted_value = f"{value:,.{decimals}f}"
-    return Markup(escape(formatted_value))
-
-def calculate_arbitrage_profit(initial_investment, price_pair1, price_pair2, slippage_pair1, slippage_pair2, fee_percentage):
-    # Convert initial investment to units of the first pair
-    amount_pair1 = initial_investment / price_pair1
-    
-    # Apply slippage for the first pair
-    adjusted_amount_pair1 = amount_pair1 * (1 - slippage_pair1)
-    
-    # Convert the adjusted amount to the value in the second pair
-    value_pair2 = adjusted_amount_pair1 * price_pair2
-    
-    # Apply slippage for the second pair
-    final_amount_pair2 = value_pair2 * (1 - slippage_pair2)
-    
-    # Calculate the fees (assuming fee percentage is for both trades)
-    fees = initial_investment * fee_percentage * 2  # Two trades
-    
-    # Calculate profit
-    profit = final_amount_pair2 - initial_investment - fees
-    # print('profit?', profit)
-    
-    return profit
-
-def process_token_pairs(search):
-    token_pairs = []
-    for TokenPair in search:
-        token_pairs.append({
-            'pair': TokenPair.base_token.name + '/' + TokenPair.quote_token.name,
-            'pool_address': TokenPair.pair_address,
-            'pool_url': TokenPair.url,
-            'price_usd': TokenPair.price_usd,
-            'price_native': TokenPair.price_native,
-            'liquidity_usd': TokenPair.liquidity.usd,
-            'liquidity_base': TokenPair.liquidity.base,
-            'liquidity_quote': TokenPair.liquidity.quote,
-            'baseToken_address': TokenPair.base_token.address,
-            'quoteToken_address': TokenPair.quote_token.address,
-            'chain_id': TokenPair.chain_id,
-            'dex_id': TokenPair.dex_id,
-            'baseToken_name': TokenPair.base_token.name,
-            'quoteToken_Name': TokenPair.quote_token.name
-        })
-    return token_pairs
-
-def find_arbitrage_opportunities(token_pairs, slippage_pair1, slippage_pair2, fee_percentage, initial_investment, user_purchases):
-    print('finding arb..')
-    arbitrage_opportunities = []
-    #loop through tokenPair list once
-    for i, pair1 in enumerate(token_pairs):
-        #loop through twice
-        for pair2 in token_pairs[i + 1:]:
-            # Check if baseAsset is same
-            if (pair1['baseToken_address'] == pair2['baseToken_address']):
-                #Check if price discrepency   
-                if ((pair1['price_native'] < pair2['price_native'] or pair2['price_native'] < pair1['price_native']) and 
-                    # Check if pools are the same
-                    (pair1['liquidity_usd'] > pair2['liquidity_usd'] or pair2['liquidity_usd'] > pair1['liquidity_usd']) and 
-                    pair1['liquidity_usd'] > 10000 and 
-                    pair2['liquidity_usd'] > 10000):
-
-
-                    liquidity_diff = pair1['liquidity_usd'] - pair2['liquidity_usd']
-                    price_diff = pair2['price_native'] - pair1['price_native']
-                    
-                    profit = calculate_arbitrage_profit(initial_investment, 
-                                                        pair1['price_native'], 
-                                                        pair2['price_native'], 
-                                                        slippage_pair1, 
-                                                        slippage_pair2, 
-                                                        fee_percentage)
-                    print("profit", profit)
-                    base_liquidity = min(pair1['liquidity_base'], pair2['liquidity_base'])
-                    profit_sort_format = f"{profit:,.2f}"
-                    int_profit = int(profit * 10**8) / 10**8
-                    print("integer profit value", int_profit)
-                    if int_profit > 0:
-                        nativePrice_ratio = pair2['price_native']/ pair1['price_native']
-                        nativePrice_ratio_round = f"{round(nativePrice_ratio, 4)}"
-                        pair1_price_round = f"{round(pair1['price_usd'], 8)}"
-                        pair2_price_round = f"{round(pair2['price_usd'], 8)}"
-                        pair1_priceNative_round = f"{round(pair1['price_native'], 8)}"
-                        pair2_priceNative_round = f"{round(pair2['price_native'], 8)}"
-                        nativePrice_difference = pair2['price_native'] - pair1['price_native']
-                        print(nativePrice_difference)
-
-                                                # Calculate userArb_profit for each purchase and store it
-                        user_arb_profits = []
-                        for purchase in user_purchases:
-                            if purchase.baseToken_address == pair1['baseToken_address']:
-                                ### THIS MATH IS WRONG
-                                userArb_profit = nativePrice_ratio * purchase.quantity 
-                                print('userArb_profit', userArb_profit)
-                                user_arb_profits.append({
-                                    'purchase_id': purchase.id,
-                                    'userArb_profit': f"{round(userArb_profit, 8)}",
-                                    'asset_name': purchase.asset_name
-                                })
-                        
-
-                        arbitrage_opportunities.append({
-                            'pair1': pair1['pair'],
-                            'pair1_price': pair1['price_usd'],
-                            'pair1_price_round': pair1_price_round,
-                            'pair1_liquidity': f"${pair1['liquidity_usd']:,.2f}",
-                            'pair1_liquidity_base': f"{pair1['liquidity_base']:,.2f}",
-                            'pair1_liquidity_quote': f"{pair1['liquidity_quote']:,.2f}",
-                            'pool_pair1_address': pair1['pool_address'],
-                            'pair1_baseToken_address': pair1['baseToken_address'],
-                            'pair1_quoteToken_address': pair1['quoteToken_address'],
-                            'pool_pair1_url': pair1['pool_url'],
-                            'pair2': pair2['pair'],
-                            'pair2_price': pair2['price_usd'],
-                            'pair2_price_round': pair2_price_round,
-                            'pair2_liquidity': f"${pair2['liquidity_usd']:,.2f}",
-                            'pair2_liquidity_base': f"{pair2['liquidity_base']:,.2f}",
-                            'pair2_liquidity_quote': f"{pair2['liquidity_quote']:,.2f}",
-                            'pool_pair2_address': pair2['pool_address'],  
-                            'pair2_baseToken_address': pair2['baseToken_address'],
-                            'pair2_quoteToken_address': pair2['quoteToken_address'],
-                            'pool_pair2_url': pair2['pool_url'],
-                            'price_diff': f"${price_diff:,.2f}",
-                            'liquidity_diff': f"${liquidity_diff:,.2f}",
-                            'profit': f"${profit:,.2f}",
-                            'int_profit': int_profit,
-                            'potential_profit': f"${base_liquidity * price_diff:,.2f}",
-                            'pair1_chain_id': pair1['chain_id'],
-                            'pair1_dex_id': pair1['dex_id'], 
-                            'pair2_chain_id': pair2['chain_id'],
-                            'pair2_dex_id': pair2['dex_id'],
-                            'pair1_priceNative': pair1['price_native'],
-                            'pair2_priceNative': pair2['price_native'],
-                            'pair1_priceNative_round': pair1_priceNative_round,
-                            'pair2_priceNative_round': pair2_priceNative_round,
-                            'nativePrice_ratio': nativePrice_ratio,
-                            'nativePrice_ratio_round': nativePrice_ratio_round,
-                            'nativePrice_difference': nativePrice_difference,
-                            'user_arb_profits': user_arb_profits
-                        })
-    return arbitrage_opportunities
-
-# Global variable for API rate limit
-last_request_time = 0
-request_delay = 7  # seconds
-
-def rate_limit():
-    global last_request_time
-    current_time = time.time()
-    if current_time - last_request_time < request_delay:
-        time.sleep(request_delay - (current_time - last_request_time))
-    last_request_time = time.time()
-    return None
-
-def fetch_current_price(asset_name):
-    print('Fetching current price...')
-    searchTicker = asset_name.lower()
-    rate_limit()
-    search = client.search_pairs(searchTicker)
-    # search = client.search_pairs(tokenLowerCase)
-    for TokenPair in search:
-        token_Pair = TokenPair.base_token.name + '/' + TokenPair.quote_token.name
-        return {
-            'price': float(TokenPair.price_usd),
-              'source': 'Dexscreener', 
-              'pairAddress': TokenPair.pair_address, 
-              'name': TokenPair.base_token.name, 
-              'pair_url': TokenPair.url, 
-              'tokenPair': token_Pair,
-              'baseToken_url': f'https://dexscreener.com/{TokenPair.chain_id}/{TokenPair.base_token.address}',
-              'chain_id': TokenPair.chain_id
-              }
-
+## stopped
 def fetch_historical_price(asset_name, start_timestamp, end_timestamp):
     print('Fetching historical price...')
     rate_limit()
@@ -367,17 +74,17 @@ def fetch_historical_price(asset_name, start_timestamp, end_timestamp):
         print(f'Error fetching historical price: {responseHistoricalPrice.status_code}')
         return None
 
-def date_to_timestamp(date_str):
-    # Parse the date string to a datetime object
-    dt = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
+# def date_to_timestamp(date_str):
+#     # Parse the date string to a datetime object
+#     dt = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
 
-    # Convert the datetime object to a timestamp in seconds
-    timestamp_seconds = int(time.mktime(dt.timetuple()))
+#     # Convert the datetime object to a timestamp in seconds
+#     timestamp_seconds = int(time.mktime(dt.timetuple()))
 
-    # Convert the timestamp to milliseconds
-    timestamp_milliseconds = timestamp_seconds * 1000
+#     # Convert the timestamp to milliseconds
+#     timestamp_milliseconds = timestamp_seconds * 1000
 
-    return timestamp_milliseconds
+#     return timestamp_milliseconds
 
 #APPLICATION ROUTES
 @app.route('/', methods=['GET', 'POST'])
