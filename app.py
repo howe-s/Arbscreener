@@ -1,34 +1,18 @@
-import subprocess
-import sys
+
 from flask import Flask, render_template, redirect, url_for, request, flash, jsonify, send_file, send_from_directory
-from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_migrate import Migrate
 from datetime import datetime
-import time
 import requests
 from dexscreener import DexscreenerClient
-import matplotlib.pyplot as plt
-import io
-import base64
-import numpy as np
-import squarify
 import pandas as pd
-from flask_cors import CORS
-import plotly.graph_objs as go
-import plotly.io as pio
-import math
-from jinja2 import Environment
-from markupsafe import Markup
-from html import escape
 import matplotlib
 matplotlib.use('Agg')  # Use non-interactive backend for server-side plotting
-from models import db, User, Purchase  # Ensure Purchase is imported
-from utils.timing_utils import runTime
-from utils.price_utils import get_price_change_style, format_price_change
+from utils.models import db, User, Purchase  # Ensure Purchase is imported
+from utils.price_utils import get_price_change_style
 from utils.chart_utils import tree_chart_liquidity, pie_chart_liquidity, tree_chart_volume, pie_chart_volume, generate_bar_chart 
-from utils.arbitrage_utils import calculate_arbitrage_profit, find_arbitrage_opportunities, process_token_pairs
+from utils.arbitrage_utils import find_arbitrage_opportunities, process_token_pairs
 from utils.api_utils import rate_limit, fetch_current_price
 
 

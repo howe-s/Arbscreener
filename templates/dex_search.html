@@ -42,10 +42,6 @@
   
             summaryDiv.innerHTML = `
                 <div id="chart-summary"> 
-                    <p>${base_token} / ${quote_token}</p> 
-                    <p>Chain: ${chain_id}</p> 
-                    <p>Dex: ${dex_id}</p>
-                    <p>URL: <a href="${pair_URL}">${pair_URL}</a></p>
                     <div id="chart"></div>
                 </div>
             `;
@@ -74,10 +70,10 @@
   <!-- Summary Div -->
   <div class="interactive-chart-container">
       
-      <div class="d-none d-md-block" id="summary-div">        
+      <!-- <div class="d-none d-md-block" id="summary-div">        
         {{ chart_div | safe }}
           <!-- Summary content will be dynamically inserted here -->
-      </div>
+      </div> -->
   </div>
   <!-- Card Container -->
   <div class="row">
@@ -97,15 +93,15 @@
                 </tr>
                 <tr>
                   <td><strong></strong>{{ data['liquidity_usd_formatted']}}</p></td>
-                  <td><strong>{{ data['base_token'] }}:</strong> {{ data['liquidity_base_formatted']}}</p></td>
-                  <td><strong>{{ data['quote_token'] }}:</strong> {{ data['liquidity_quote_formatted']}}</p></td>
+                  <td>{{ data['liquidity_base_formatted']}} <strong>{{ data['base_token'] }}</strong> </p></td>
+                  <td>{{ data['liquidity_quote_formatted']}} <strong>{{ data['quote_token'] }}</strong> </p></td>
                 </tr>
               </tbody>
             </table>
             <table class="table table-striped">
               <tbody>
                 <tr>
-                  <th>5m</th>
+                  <th>Volume (5m)</th>
                   <th>1h</th>
                   <th>6h</th>
                   <th>24h</th>
