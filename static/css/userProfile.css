@@ -3,11 +3,25 @@ body {
     background-color: #272727;
 }
 
+.user-purchases {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.add-purchases{
+    width: 30vw;    
+    position: flex;
+}
+
+
+
 .card {
     margin-bottom: 20px;
     background-color: #1f1f1f;
     border-radius: 10px;
     border-color: #272727;
+    padding: 10px;    
 }
 
 .card-header {
@@ -16,7 +30,7 @@ body {
     color: #5488a8;
 }
 .card-body {
-    color: white;
+    color: white;    
 }
 .mb-4 {
     color: white;
