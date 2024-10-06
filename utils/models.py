@@ -25,6 +25,7 @@ class Purchase(db.Model):
     pair_url = db.Column(db.String(200))
     baseToken_url = db.Column(db.String(200))
     source = db.Column(db.String(50))  # New field for data source
+    # tokenPair = db.Column(db.String(50))
 
     # Remove the explicit user relationship here to avoid conflict
     # user = db.relationship('User', backref=db.backref('purchases', lazy=True))

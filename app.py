@@ -275,7 +275,7 @@ def user_prices(purchase_id):
     if not purchase:
         return {'error': 'Purchase not found'}, 404
     # GET tokenPrice data through helper function with User db saved quote_address
-    token_price_data = fetch_current_price(purchase.baseToken_address)
+    token_price_data = fetch_current_price(purchase.baseToken_address)    
     token_price = token_price_data['price']
     if token_price is None:
         return {'error': 'Could not fetch asset price'}, 500
@@ -289,6 +289,7 @@ def user_prices(purchase_id):
     purchase.source = token_price_data['source']
     purchase.pair_url = token_price_data['pair_url']
     purchase.baseToken_url = token_price_data['baseToken_url']
+    purchase.tokenPair = token_price_data['tokenPair']
     
     db.session.commit()
 

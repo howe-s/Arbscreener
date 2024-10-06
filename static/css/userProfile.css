@@ -1,6 +1,7 @@
 body {
     padding-top: 20px;
     background-color: #272727;
+    max-width: 100%;
 }
 
 .user-purchases {
