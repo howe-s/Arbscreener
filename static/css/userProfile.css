@@ -35,6 +35,10 @@ body {
 .mb-4 {
     color: white;
 }
+
+.table-card {
+    padding: 10px;
+}
 .table-container {
     overflow-x: auto;
 }
@@ -73,7 +77,11 @@ th, td {
 #my-table {
     border-collapse: collapse;
     width: 100%;
-    table-layout: fixed;
+    table-layout: auto;
+}
+
+#baseToken-address, #pair-address {
+    max-width: 200px;
 }
 
 .card-title {
