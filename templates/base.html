@@ -29,7 +29,7 @@
                     <a class="nav-link" href="{{ url_for('summary', user_input=request.args.get('user_input', 'WBTC')) }}">Summary</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('token_table', user_input=request.args.get('user_input', 'WBTC')) }}">Token Table</a>
+                    <a class="nav-link" href="{{ url_for('token_table', user_input=request.args.get('user_input')) }}">Token Table</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('charts', user_input=request.args.get('user_input', 'WBTC')) }}">Charts</a>
@@ -48,7 +48,7 @@
                 </li>
             </ul>
             <form action="{{ request.path }}" method="get" class="form-inline ml-auto">
-                <input class="form-control mr-sm-2" type="text" name="user_input" value="{{ request.args.get('user_input', 'WBTC') }}" placeholder="Search...">
+                <input class="form-control mr-sm-2" type="text" name="user_input" value="{{ request.args.get('user_input') }}" placeholder="Search...">
                 <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
                 <!-- Bootstrap login button -->
                 <div class="ml-auto">

@@ -133,37 +133,54 @@ def userProfile():
     # DEFAULT ARB PAGE VALUES
     slippage_pair1 = 0.03
     slippage_pair2 = 0.03
+    slippage_pair3 = 0.03
     fee_percentage = 0.001
-    initial_investment = 2.0 #Placeholder value, unused for now
+    initial_investment = 2.0  # Placeholder value, unused for now
 
     # Fetch all baseToken_address associated with the logged-in user's purchases
     user_purchases = Purchase.query.filter_by(user_id=current_user.id).all()
     baseToken_addresses = [purchase.baseToken_address for purchase in user_purchases]
-    print('Base token addresses:', baseToken_addresses)
-    
+
     # Accumulate arbitrage opportunities for all base token addresses
     all_arbitrage_opportunities = []
     search_result = None
 
+    # Perform a single search for all relevant pairs
+    all_token_pairs = []
     for address in baseToken_addresses:
         search = client.search_pairs(address)
         if search:
             search_result = search
             token_pairs = process_token_pairs(search)
+            all_token_pairs.extend(token_pairs)
 
-            # Find arbitrage opportunities for this set of token pairs
-            arbitrage_opportunities = find_arbitrage_opportunities(
-                token_pairs, slippage_pair1, slippage_pair2, fee_percentage, initial_investment, user_purchases
-            )
+    # Find arbitrage opportunities for this set of token pairs once
+    arbitrage_opportunities = find_arbitrage_opportunities(
+        all_token_pairs, slippage_pair1, slippage_pair2, fee_percentage, initial_investment, user_purchases
+    )
 
-            all_arbitrage_opportunities.extend(arbitrage_opportunities)
+    # Filter out opportunities where there are only two unique addresses
+    filtered_opportunities = []
+    for opportunity in arbitrage_opportunities:
+        addresses = set([
+            opportunity['pair1_baseToken_address'], 
+            opportunity['pair1_quoteToken_address'],
+            opportunity['pair2_baseToken_address'], 
+            opportunity['pair2_quoteToken_address']
+        ])
+        if len(addresses) > 2:
+            filtered_opportunities.append(opportunity)
 
-            ##### STOPPED HERE ##############
-            # for arb in all_arbitrage_opportunities:
-            #     nativePrice_difference = arb['nativePrice_difference']
-            #     userArb_profit = nativePrice_difference * user_purchases.quantity
-            #     print(userArb_profit)
-            ############################################################
+    # Print or process the filtered opportunities
+    for opportunity in filtered_opportunities:
+        print(f"Opportunity for {opportunity['pair1_baseToken_address']}:")
+        print(f"Pair 1 - Base: {opportunity['pair1_baseToken_address']}")
+        print(f"Pair 1 - Quote: {opportunity['pair1_quoteToken_address']}")
+        print(f"Pair 2 - Base: {opportunity['pair2_baseToken_address']}")
+        print(f"Pair 2 - Quote: {opportunity['pair2_quoteToken_address']}")
+        print("---")
+
+    all_arbitrage_opportunities.extend(arbitrage_opportunities)
 
     # Sort opportunities after the loop
     sorted_opportunities = sorted(all_arbitrage_opportunities, key=lambda x: x['int_profit'], reverse=True)    
@@ -359,7 +376,7 @@ def dex_search():
     sorted_pool = sorted(pool_data, key=lambda x: x['volume_24h'], reverse=True)
     # Pass the data to the template
     return render_template('dex_search.html', pool_data=sorted_pool, user_input=searchTicker, chart_div=chart_div, is_logged_in=current_user.is_authenticated)
-
+#not used ?
 @app.route('/arb', methods=['GET', 'POST'])
 @login_required
 def arb():
@@ -374,7 +391,7 @@ def arb():
     initial_investment = 1000  # Example initial investment
 
     arbitrage_opportunities = find_arbitrage_opportunities(
-        token_pairs, slippage_pair1, slippage_pair2, fee_percentage, initial_investment, user_purchases
+        token_pairs, slippage_pair1, slippage_pair2, fee_percentage, initial_investment
     )
     
     sorted_opportunities = sorted(arbitrage_opportunities, key=lambda x: x['int_profit'], reverse=True)
@@ -401,7 +418,7 @@ def raydium():
         amm_pools = []
 
         for pool in data['data']:
-            print(pool)
+            # print(pool)
             pool_data = {
                 "pool_id": pool['id'],
                 "price": pool["price"],  # Uncomment and add relevant fields
@@ -446,8 +463,12 @@ def base():
 @login_required
 def token_table():
     print('token_table route pinged')
-    searchTicker = request.args.get('user_input', 'WBTC').lower()    
+    searchTicker = request.args.get('user_input', 'WBTC').lower()    # this is causing the defaulting back to WBTC **************!!!
     search = client.search_pairs(searchTicker)
+
+    # searchTicker = request.args.get('user_input', '').lower()
+    # search = client.search_pairs(searchTicker)
+
 
     tokens = []
     for TokenPair in search:
@@ -493,7 +514,7 @@ def process_data():
         # base_token = data.get('cardTitle')
         
         base_token = request.args.get('user_input', 'WBTC').lower()
-        print(base_token)
+        # print(base_token)
 
         if not token_pair_address:
             return jsonify({"message": "Missing tokenPairAddress"}), 400
@@ -557,7 +578,7 @@ def process_data():
 @app.route('/charts')
 @login_required
 def charts():
-    searchTicker = request.args.get('user_input', 'WBTC').lower()
+    searchTicker = request.args.get('user_input', 'WBTC').lower() 
     search = client.search_pairs(searchTicker)
 
     if not search:

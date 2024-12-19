@@ -57,24 +57,38 @@
     </table>
 </div>
 <script>
+    let currentUserInput = ""; // Variable to store the current user input
+
     function updateTokenSummary() {
-        fetch('/token_table?user_input=WBTC')  // Adjust the query parameter if needed
-            .then(response => response.text())
+        // Use the stored user input
+        fetch(`/token_table?user_input=${encodeURIComponent(currentUserInput)}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.text();
+            })
             .then(html => {
-                // Parse the response and update the table content
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(html, 'text/html');
                 const newTableBody = doc.querySelector('#token-summary-container').innerHTML;
                 document.querySelector('#token-summary-container').innerHTML = newTableBody;
-                console.log('prices updated')
+                console.log('Prices updated');
             })
             .catch(error => console.error('Error updating token summary:', error));
     }
 
-    // Update the table every 5 seconds (5000 milliseconds)
+    // Function to set the user input dynamically
+    function setUserInput(newInput) {
+        currentUserInput = newInput; // Update the stored user input
+        updateTokenSummary(); // Optionally fetch data immediately after changing input
+    }
+
+    // Set an interval to update the token summary every 5 seconds
     setInterval(updateTokenSummary, 5000);
-    
-    // Fetch data immediately on page load
+
+    // Initial fetch
     updateTokenSummary();
+
 </script>
 {% endblock %}
