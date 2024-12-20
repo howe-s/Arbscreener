@@ -14,7 +14,7 @@ from utils.price_utils import get_price_change_style
 from utils.chart_utils import tree_chart_liquidity, pie_chart_liquidity, tree_chart_volume, pie_chart_volume, generate_bar_chart 
 from utils.arbitrage_utils import find_arbitrage_opportunities, process_token_pairs
 from utils.api_utils import rate_limit, fetch_current_price
-
+from collections import Counter
 
 #RUN FLASK
 app = Flask(__name__)
@@ -158,27 +158,66 @@ def userProfile():
     arbitrage_opportunities = find_arbitrage_opportunities(
         all_token_pairs, slippage_pair1, slippage_pair2, fee_percentage, initial_investment, user_purchases
     )
-
+    # print(arbitrage_opportunities)
     # Filter out opportunities where there are only two unique addresses
-    filtered_opportunities = []
+    quote_pairs = []
+    pair_chains = []  # Initialize as an empty list
+
     for opportunity in arbitrage_opportunities:
-        addresses = set([
-            opportunity['pair1_baseToken_address'], 
+        # Create a list of all addresses
+        addresses = [
+            opportunity['pair1_baseToken_address'],
             opportunity['pair1_quoteToken_address'],
-            opportunity['pair2_baseToken_address'], 
+            opportunity['pair2_baseToken_address'],
             opportunity['pair2_quoteToken_address']
-        ])
-        if len(addresses) > 2:
-            filtered_opportunities.append(opportunity)
+        ]
+        
+        # single blockchain arbing enabled
+        if opportunity['pair1_chain_id'] == opportunity['pair2_chain_id']:
+            # Count occurrences of each address
+            counter = Counter(addresses)
+            
+            # Identify the repeated item
+            repeated_item = next(item for item, count in counter.items() if count > 1)
+            
+            # Filter out the repeated item to get unique ones
+            unique_items = tuple(item for item in addresses if item != repeated_item)
+            quote_pairs.append(unique_items)  # Use append instead of add for lists
+            pair_chains.append(opportunity['pair1_chain_id'])
+
+    # Now, zip the quote_pairs with pair_chains
+    combined_data = list(zip(quote_pairs, pair_chains))
+    for item in combined_data:
+        address1, address2, chain_id = item[0][0], item[0][1], item[1]
+
+        print(f"({address1}, {chain_id})")
+        print(f"{address2}")
+
+    # print(combined_data)
+    # for quote in quote_pairs:
+        # print(quote) # stopped here
+    
+        #
+        # addresses = set([
+        #     opportunity['pair1_baseToken_address'], 
+        #     opportunity['pair1_quoteToken_address'],
+        #     opportunity['pair2_baseToken_address'], 
+        #     opportunity['pair2_quoteToken_address']
+        # ])
+        # if len(addresses) > 2:
+        #     filtered_opportunities.append(opportunity)
+            
+    # STOPPED HERE ##########################################
+    # print('TESTING PRINT', arbitrage_opportunities)
 
     # Print or process the filtered opportunities
-    for opportunity in filtered_opportunities:
-        print(f"Opportunity for {opportunity['pair1_baseToken_address']}:")
-        print(f"Pair 1 - Base: {opportunity['pair1_baseToken_address']}")
-        print(f"Pair 1 - Quote: {opportunity['pair1_quoteToken_address']}")
-        print(f"Pair 2 - Base: {opportunity['pair2_baseToken_address']}")
-        print(f"Pair 2 - Quote: {opportunity['pair2_quoteToken_address']}")
-        print("---")
+    # for opportunity in filtered_opportunities:
+    #     # print(f"Opportunity for {opportunity['pair1_baseToken_address']}:")
+    #     # print(f"Pair 1 - Base: {opportunity['pair1_baseToken_address']}")
+    #     # print(f"Pair 1 - Quote: {opportunity['pair1_quoteToken_address']}")
+    #     # print(f"Pair 2 - Base: {opportunity['pair2_baseToken_address']}")
+    #     # print(f"Pair 2 - Quote: {opportunity['pair2_quoteToken_address']}")
+    #     print("---")
 
     all_arbitrage_opportunities.extend(arbitrage_opportunities)
 
