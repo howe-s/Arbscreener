@@ -159,13 +159,12 @@ def userProfile():
     arbitrage_opportunities = find_arbitrage_opportunities(
         all_token_pairs, slippage_pair1, slippage_pair2, fee_percentage, initial_investment, user_purchases
     )
-    # print(arbitrage_opportunities)
+
     # Filter out opportunities where there are only two unique addresses
     quote_pairs = []
-    pair_chains = []  # Initialize as an empty list
+    pair_chains = []
 
     for opportunity in arbitrage_opportunities:
-        # Create a list of all addresses
         addresses = [
             opportunity['pair1_baseToken_address'],
             opportunity['pair1_quoteToken_address'],
@@ -175,102 +174,84 @@ def userProfile():
         
         # single blockchain arbing enabled
         if opportunity['pair1_chain_id'] == opportunity['pair2_chain_id']:
-            # Count occurrences of each address
             counter = Counter(addresses)
-            
-            # Identify the repeated item
             repeated_item = next(item for item, count in counter.items() if count > 1)
-            
-            # Filter out the repeated item to get unique ones
             unique_items = tuple(item for item in addresses if item != repeated_item)
-            quote_pairs.append(unique_items)  # Use append instead of add for lists
+            quote_pairs.append(unique_items)
             pair_chains.append(opportunity['pair1_chain_id'])
 
     # Use a dictionary to keep track of searches we've already performed
     seen_searches = defaultdict(bool)
-
+    matching_pairs = []
     combined_data = list(zip(quote_pairs, pair_chains))
 
     for item in combined_data:
         address1, address2, chain_id = item[0][0], item[0][1], item[1]
 
-        # Check if we've already done this search
         search_key = f"{chain_id}_{address1}"
         if not seen_searches[search_key]:
-            # Mark this search as done
             seen_searches[search_key] = True
-            # print(chain_id)
+            
             # Perform the search
             search = client.get_token_pairs(address1)
- 
-            # print('searched', search)
-        # Check if address2 is in the search results
-        for pair in search:
-            if pair.quote_token.address == address2 or pair.base_token.address == address2:
-                print("Found match for address2:", address2)
-                print(pair)  # Print the full data for the matching pair
-                break  # Exit the loop once we've found a match to avoid unnecessary iterations
-            
-            # Wait for 3 seconds before next search, if it's not the last item
-            if item != combined_data[-1]:  # Check if it's not the last item in the list
-                print('quick nap')
+
+            # Check if address2 is in the search results
+            match_found = False
+            for pair in search:
+                if pair.quote_token.address == address2 or pair.base_token.address == address2:
+                    match_found = True
+                    matching_pairs.append(pair)
+            if not match_found:
+                print(f"{address2} not found in any pair for {address1}")
+
+            # Delay between searches if it's not the last item
+            if item != combined_data[-1]:
+                print('next item')
                 time.sleep(3)
-        else:
-            # If this search has already been performed, just print the addresses without searching again
-            print(f"({address1}, {chain_id}) - Already searched")
-            print(f"{address2}")
 
-    # print(combined_data)
-    # for quote in quote_pairs:
-        # print(quote) # stopped here
+    # Associate matching_pairs with opportunities
+    opportunities_with_pairs = []
+    for opportunity in arbitrage_opportunities:
+        new_opportunity = opportunity.copy()  # Copy to avoid modifying original data
+        new_opportunity['matching_pairs'] = []
+        
+        for matching_pair in matching_pairs:
+            if (matching_pair.base_token.address in [opportunity['pair1_baseToken_address'], opportunity['pair1_quoteToken_address']] or 
+                matching_pair.quote_token.address in [opportunity['pair1_baseToken_address'], opportunity['pair1_quoteToken_address']] or 
+                matching_pair.base_token.address in [opportunity['pair2_baseToken_address'], opportunity['pair2_quoteToken_address']] or 
+                matching_pair.quote_token.address in [opportunity['pair2_baseToken_address'], opportunity['pair2_quoteToken_address']]):
+                
+                new_opportunity['matching_pairs'].append(matching_pair)
+
+        opportunities_with_pairs.append(new_opportunity)  # Append every opportunity
+
+    # Print results for verification
+    print("Total combined opportunities and pairs:", len(opportunities_with_pairs))
+    if opportunities_with_pairs:
+        print("Sample combined opportunity with matching pairs:")
+        sample_combined = opportunities_with_pairs[0]
+        print("Opportunity:")
+        print(f"  Pair1: {sample_combined['pair1']}, Pair2: {sample_combined['pair2']}")
+        print("Matching pairs for this opportunity:")
+        for pair in sample_combined['matching_pairs']:
+            print(f"  - {pair.pair_address}")
+            ## FORMAT THIS TO PASS TO FRONT END
     
-        #
-        # addresses = set([
-        #     opportunity['pair1_baseToken_address'], 
-        #     opportunity['pair1_quoteToken_address'],
-        #     opportunity['pair2_baseToken_address'], 
-        #     opportunity['pair2_quoteToken_address']
-        # ])
-        # if len(addresses) > 2:
-        #     filtered_opportunities.append(opportunity)
-            
-    # STOPPED HERE ##########################################
-    # print('TESTING PRINT', arbitrage_opportunities)
-
-    # Print or process the filtered opportunities
-    # for opportunity in filtered_opportunities:
-    #     # print(f"Opportunity for {opportunity['pair1_baseToken_address']}:")
-    #     # print(f"Pair 1 - Base: {opportunity['pair1_baseToken_address']}")
-    #     # print(f"Pair 1 - Quote: {opportunity['pair1_quoteToken_address']}")
-    #     # print(f"Pair 2 - Base: {opportunity['pair2_baseToken_address']}")
-    #     # print(f"Pair 2 - Quote: {opportunity['pair2_quoteToken_address']}")
-    #     print("---")
-
-    all_arbitrage_opportunities.extend(arbitrage_opportunities)
+    print("Total matching pairs:", len(matching_pairs))
 
     # Sort opportunities after the loop
-    sorted_opportunities = sorted(all_arbitrage_opportunities, key=lambda x: x['int_profit'], reverse=True)    
+    sorted_opportunities = sorted(opportunities_with_pairs, key=lambda x: x['int_profit'], reverse=True)    
    
     # Return based on whether search results were found
-    if search_result:
-        return render_template(
-            'userProfile.html',
-            user_input=searchTicker,
-            name=current_user.username,
-            full_name=current_user.full_name,
-            is_logged_in=current_user.is_authenticated,
-            arbitrage_opportunities=sorted_opportunities,
-            search=search_result
-        )
-    else:
-        return render_template(
-            'userProfile.html',
-            user_input=searchTicker,
-            name=current_user.username,
-            full_name=current_user.full_name,
-            is_logged_in=current_user.is_authenticated,
-            arbitrage_opportunities=sorted_opportunities
-        )
+    return render_template(
+        'userProfile.html',
+        user_input=searchTicker,
+        name=current_user.username,
+        full_name=current_user.full_name,
+        is_logged_in=current_user.is_authenticated,
+        arbitrage_opportunities=sorted_opportunities,
+        search=search_result if search_result else None
+    )
 
 @app.route('/add_purchase', methods=['POST'])
 @login_required
