@@ -14,7 +14,8 @@ from utils.price_utils import get_price_change_style
 from utils.chart_utils import tree_chart_liquidity, pie_chart_liquidity, tree_chart_volume, pie_chart_volume, generate_bar_chart 
 from utils.arbitrage_utils import find_arbitrage_opportunities, process_token_pairs
 from utils.api_utils import rate_limit, fetch_current_price
-from collections import Counter
+from collections import Counter, defaultdict
+import time
 
 #RUN FLASK
 app = Flask(__name__)
@@ -185,13 +186,39 @@ def userProfile():
             quote_pairs.append(unique_items)  # Use append instead of add for lists
             pair_chains.append(opportunity['pair1_chain_id'])
 
-    # Now, zip the quote_pairs with pair_chains
+    # Use a dictionary to keep track of searches we've already performed
+    seen_searches = defaultdict(bool)
+
     combined_data = list(zip(quote_pairs, pair_chains))
+
     for item in combined_data:
         address1, address2, chain_id = item[0][0], item[0][1], item[1]
 
-        print(f"({address1}, {chain_id})")
-        print(f"{address2}")
+        # Check if we've already done this search
+        search_key = f"{chain_id}_{address1}"
+        if not seen_searches[search_key]:
+            # Mark this search as done
+            seen_searches[search_key] = True
+            # print(chain_id)
+            # Perform the search
+            search = client.get_token_pairs(address1)
+ 
+            # print('searched', search)
+        # Check if address2 is in the search results
+        for pair in search:
+            if pair.quote_token.address == address2 or pair.base_token.address == address2:
+                print("Found match for address2:", address2)
+                print(pair)  # Print the full data for the matching pair
+                break  # Exit the loop once we've found a match to avoid unnecessary iterations
+            
+            # Wait for 3 seconds before next search, if it's not the last item
+            if item != combined_data[-1]:  # Check if it's not the last item in the list
+                print('quick nap')
+                time.sleep(3)
+        else:
+            # If this search has already been performed, just print the addresses without searching again
+            print(f"({address1}, {chain_id}) - Already searched")
+            print(f"{address2}")
 
     # print(combined_data)
     # for quote in quote_pairs:
