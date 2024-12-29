@@ -1,41 +1,9 @@
 from collections import Counter, defaultdict
-from utils.arbitrage_utils import find_arbitrage_opportunities, process_token_pairs
 from utils.models import Purchase
 from dexscreener import DexscreenerClient
 import time
-from functools import wraps
 
 client = DexscreenerClient()
-
-def rate_limited(max_per_second):
-    """
-    Decorator for rate limiting function calls.
-    """
-    min_interval = 1.0 / float(max_per_second)
-    
-    def decorator(func):
-        last_time_called = [0.0]
-        
-        @wraps(func)
-        def rate_limited_function(*args, **kargs):
-            elapsed = time.time() - last_time_called[0]
-            left_to_wait = min_interval - elapsed
-            if left_to_wait > 0:
-                time.sleep(left_to_wait)
-            ret = func(*args, **kargs)
-            last_time_called[0] = time.time()
-            return ret
-        return rate_limited_function
-    return decorator
-
-@rate_limited(1/3)  # 1 request per 3 seconds
-def search_pairs_rate_limited(contract):
-    """
-    Search for pairs with rate limiting.
-    """
-    return client.search_pairs(contract)
-
-
 
 def calculate_arbitrage_profit(initial_investment, price_pair1, price_pair2, slippage_pair1, slippage_pair2, fee_percentage, liquidity_pair1, liquidity_pair2):
     # Convert initial investment to amount in pair1
@@ -67,9 +35,7 @@ def process_token_pairs(search):
 
     token_pairs = []
     for TokenPair in search:
-        # print(TokenPair)
     
-        
         liquidity = TokenPair.liquidity if TokenPair.liquidity is not None else {}
         
         token_pairs.append({
@@ -117,7 +83,6 @@ def find_arbitrage_opportunities(token_pairs, slippage_pair1, slippage_pair2, fe
                                                             pair1['liquidity_base'],
                                                             pair2['liquidity_base'])
                         
-                        # print("profit with two pairs", profit)
                         int_profit = int(profit * 10**8) / 10**8
                         
                         opportunity = {
@@ -159,96 +124,7 @@ def find_arbitrage_opportunities(token_pairs, slippage_pair1, slippage_pair2, fe
                         
                         arbitrage_opportunities.append(opportunity)
 
-    return arbitrage_opportunities # First two contracts
-
-def find_third_contract_data(unique_pair_addresses, arbitrage_opportunities):
-    """
-    Find third contract data for each unique pair address with rate limiting,
-    then combine it with existing arbitrage opportunities.
-    """
-
-    def safe_get(obj, attr, default=None):
-        """Helper function to safely access an attribute or return a default value."""
-        try:
-            return getattr(obj, attr, default) if obj is not None else default
-        except AttributeError:
-            return default
-
-    third_pair = []
-    for contract in unique_pair_addresses:
-        print("find_third_contract_data", contract)
-        search = search_pairs_rate_limited(contract)
-        
-        # Assuming 'search' is a list containing one or more TokenPair objects
-        if search:  # Check if search returned any results
-            for pair in search:  # Loop through all TokenPair objects if there are multiple
-                third_pair.append({
-                    'pair': f"{safe_get(pair.base_token, 'name', 'N/A')}/{safe_get(pair.quote_token, 'name', 'N/A')}",
-                    'pool_address': safe_get(pair, 'pair_address', 'N/A'),
-                    'pool_url': safe_get(pair, 'url', 'N/A'),
-                    'price_usd': safe_get(pair, 'price_usd', 0.0),
-                    'price_native': safe_get(pair, 'price_native', 0.0),
-                    'liquidity_usd': safe_get(pair.liquidity, 'usd', 0.0),
-                    'liquidity_base': safe_get(pair.liquidity, 'base', 0.0),
-                    'liquidity_quote': safe_get(pair.liquidity, 'quote', 0.0),
-                    'baseToken_address': safe_get(pair.base_token, 'address', 'N/A'),
-                    'quoteToken_address': safe_get(pair.quote_token, 'address', 'N/A'),
-                    'chain_id': safe_get(pair, 'chain_id', 'N/A'),
-                    'dex_id': safe_get(pair, 'dex_id', 'N/A'),
-                    'baseToken_name': safe_get(pair.base_token, 'name', 'N/A'),
-                    'quoteToken_Name': safe_get(pair.quote_token, 'name', 'N/A')
-                })
-
-    # Here we integrate the matching logic directly
-
-    # Create an index for quick lookup from third_pair
-    third_pair_index = {pair['baseToken_address']: pair for pair in third_pair}
-    third_pair_index.update({pair['quoteToken_address']: pair for pair in third_pair})
-
-    combined_opportunities = []
-
-    for opportunity in arbitrage_opportunities:
-        matched_pair = None
-
-        # Check each address against the third_pair index
-        addresses_to_check = [
-            opportunity['pair1_baseToken_address'],
-            opportunity['pair1_quoteToken_address'],
-            opportunity['pair2_baseToken_address'],
-            opportunity['pair2_quoteToken_address']
-        ]
-
-        for address in addresses_to_check:
-            if address in third_pair_index:
-                matched_pair = third_pair_index[address]
-                break  # Assuming you want to match only one third pair per opportunity
-
-        # Create a new combined opportunity object
-        combined_opportunity = opportunity.copy()
-
-        if matched_pair:
-            combined_opportunity.update({
-                'pair3': matched_pair['pair'],
-                'pair3_price': matched_pair['price_usd'],
-                'pair3_price_round': f"{round(matched_pair['price_usd'], 8)}",
-                'pair3_liquidity': f"${matched_pair['liquidity_usd']:,.2f}",
-                'pair3_liquidity_base': f"{matched_pair['liquidity_base']:,.2f}",
-                'pair3_liquidity_quote': f"{matched_pair['liquidity_quote']:,.2f}",
-                'pool_pair3_address': matched_pair['pool_address'],
-                'pair3_baseToken_address': matched_pair['baseToken_address'],
-                'pair3_quoteToken_address': matched_pair['quoteToken_address'],
-                'pool_pair3_url': matched_pair['pool_url'],
-                'pair3_chain_id': matched_pair['chain_id'],
-                'pair3_dex_id': matched_pair['dex_id'],
-                'pair3_priceNative': matched_pair['price_native'],
-                'pair3_priceNative_round': f"{round(matched_pair['price_native'], 8)}"
-            })
-
-        combined_opportunities.append(combined_opportunity)
-    
-    print('~~~~~~~~~~~~COMBINED OPPORTUNITIES~~~~~~~~')
-    print(combined_opportunities)
-    return combined_opportunities
+    return arbitrage_opportunities
 
 def get_user_purchases(user_id):
     """
@@ -258,12 +134,12 @@ def get_user_purchases(user_id):
 
 def gather_token_pairs_from_purchases(purchases):
     """
-    Gather all token pairs from the user's purchase history with rate limiting.
+    Gather all token pairs from the user's purchase history.
     """
     baseToken_addresses = [purchase.baseToken_address for purchase in purchases]
     all_token_pairs = []
     for address in baseToken_addresses:
-        search = search_pairs_rate_limited(address)
+        search = client.search_pairs(address)
         if search:
             all_token_pairs.extend(process_token_pairs(search))
     return all_token_pairs
@@ -299,7 +175,8 @@ def filter_and_process_opportunities(opportunities):
 
 def match_pairs_with_opportunities(opportunities, quote_pairs, pair_chains):
     """
-    Match the arbitrage opportunities with corresponding token pairs from the Dexscreener data.
+    Match the arbitrage opportunities with corresponding token pairs from the Dexscreener data,
+    ensuring only opportunities with three matched contracts are returned.
     """
     seen_searches = defaultdict(bool)
     matching_pairs = []
@@ -321,10 +198,15 @@ def match_pairs_with_opportunities(opportunities, quote_pairs, pair_chains):
     opportunities_with_pairs = []
     for opportunity in opportunities:
         new_opportunity = opportunity.copy()
-        new_opportunity['matching_pairs'] = [pair for pair in matching_pairs if 
+        matched_pairs = [pair for pair in matching_pairs if 
             pair.base_token.address in [opportunity['pair1_baseToken_address'], opportunity['pair1_quoteToken_address'], opportunity['pair2_baseToken_address'], opportunity['pair2_quoteToken_address']] or
             pair.quote_token.address in [opportunity['pair1_baseToken_address'], opportunity['pair1_quoteToken_address'], opportunity['pair2_baseToken_address'], opportunity['pair2_quoteToken_address']]
         ]
-        opportunities_with_pairs.append(new_opportunity)
+        
+        # Ensure only opportunities with at least three unique contracts are included
+        unique_contracts = set([pair.pair_address for pair in matched_pairs])
+        if len(unique_contracts) >= 3:
+            new_opportunity['matching_pairs'] = list(matched_pairs)
+            opportunities_with_pairs.append(new_opportunity)
 
     return opportunities_with_pairs

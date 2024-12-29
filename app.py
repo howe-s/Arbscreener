@@ -33,17 +33,27 @@ from utils.chart_utils import (
     pie_chart_volume,
     generate_bar_chart
 )
-from utils.arbitrage_utils import find_arbitrage_opportunities, process_token_pairs
 from utils.api_utils import rate_limit, fetch_current_price
 from collections import Counter, defaultdict
 import time
 from flask_caching import Cache
+# from utils.arbitrage_utils import find_arbitrage_opportunities, process_token_pairs
+# from utils.user_profile_utils import (
+#     get_user_purchases,
+#     gather_token_pairs_from_purchases,
+#     find_arbitrage_opportunities_for_user,
+#     filter_and_process_opportunities,
+#     match_pairs_with_opportunities,
+#     find_third_contract_data
+# )
 from utils.user_profile_utils import (
     get_user_purchases,
     gather_token_pairs_from_purchases,
     find_arbitrage_opportunities_for_user,
     filter_and_process_opportunities,
-    match_pairs_with_opportunities
+    match_pairs_with_opportunities,
+    find_third_contract_data,
+    find_arbitrage_opportunities, process_token_pairs
 )
 
 # RUN FLASK
@@ -155,26 +165,34 @@ def userProfile():
     
     # Default values
     slippage_pair1, slippage_pair2, fee_percentage, initial_investment = 0.03, 0.03, 0.001, 2.0
-
+    # USER_PROFILE_UTILS.PY
     token_pairs = gather_token_pairs_from_purchases(user_purchases)
     arbitrage_opportunities = find_arbitrage_opportunities_for_user(token_pairs, user_purchases, slippage_pair1, slippage_pair2, fee_percentage, initial_investment)
     
     quote_pairs, pair_chains = filter_and_process_opportunities(arbitrage_opportunities)
     opportunities_with_pairs = match_pairs_with_opportunities(arbitrage_opportunities, quote_pairs, pair_chains)
+  
 
     # Sort opportunities by profit
-    sorted_opportunities = sorted(opportunities_with_pairs, key=lambda x: x['int_profit'], reverse=True)
+    # sorted_opportunities = sorted(opportunities_with_pairs, key=lambda x: x['int_profit'], reverse=True)
 
     # Debugging print statements
     print("Total combined opportunities and pairs:", len(opportunities_with_pairs))
     if opportunities_with_pairs:
         sample_combined = opportunities_with_pairs[0]
-        print("Opportunity:")
-        print(f"  Pair1: {sample_combined['pair1']}, Pair2: {sample_combined['pair2']}")
-        print("Matching pairs for this opportunity:")
-        for pair in sample_combined['matching_pairs']:
-            print(f"  - {pair.pair_address}")
-    print("Total matching pairs:", len(set(p.pair_address for o in opportunities_with_pairs for p in o['matching_pairs'])))
+        # print("Opportunity:")
+        # print(f"  Pair1: {sample_combined['pair1']}, Pair2: {sample_combined['pair2']}")
+        
+        # Collect all unique pair addresses
+        all_pair_addresses = list(set(p.pair_address for o in opportunities_with_pairs for p in o['matching_pairs']))
+
+        # Instead of printing, store addresses in an array
+        unique_pair_addresses = sorted(all_pair_addresses)
+
+    # print("Total unique matching pairs:", len(unique_pair_addresses))
+
+    all_three_contracts = find_third_contract_data(unique_pair_addresses, arbitrage_opportunities)
+    sorted_opportunities = sorted(all_three_contracts, key=lambda x: x['int_profit'], reverse=True)
 
     return render_template(
         'userProfile.html',

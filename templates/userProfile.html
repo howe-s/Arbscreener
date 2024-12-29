@@ -211,7 +211,10 @@
                   <tr>
                     <th scope="col" style="width: 20%;">Detail</th>
                     <th scope="col" style="width: 20%;">{{ opportunity.pair1 }}</th>
-                    <th scope="col" style="width: 40%;">{{ opportunity.pair2 }}</th>
+                    <th scope="col" style="width: 20%;">{{ opportunity.pair2 }}</th>
+                    {% if 'pair3' in opportunity %}
+                    <th scope="col" style="width: 40%;">{{ opportunity.pair3 }}</th>
+                    {% endif %}
                   </tr>
                 </thead>
                 <tbody>
@@ -219,51 +222,81 @@
                     <th scope="row">Price</th>
                     <td>{{ opportunity.pair1_price_round }}</td>
                     <td>{{ opportunity.pair2_price_round }}</td>
+                    {% if 'pair3' in opportunity %}
+                    <td>{{ opportunity.pair3_price_round }}</td>
+                    {% endif %}
                   </tr>
                   <tr>
                     <th scope="row">Price Native</th>
                     <td>{{ opportunity.pair1_priceNative_round }}</td>
                     <td>{{ opportunity.pair2_priceNative_round }}</td>
+                    {% if 'pair3' in opportunity %}
+                    <td>{{ opportunity.pair3_priceNative_round }}</td>
+                    {% endif %}
                   </tr>
                   <tr>
                     <th scope="row">Liquidity</th>
                     <td>{{ opportunity.pair1_liquidity }}</td>
                     <td>{{ opportunity.pair2_liquidity }}</td>
+                    {% if 'pair3' in opportunity %}
+                    <td>{{ opportunity.pair3_liquidity }}</td>
+                    {% endif %}
                   </tr>
                   <tr>
                     <th scope="row">Base Liquidity</th>
                     <td>{{ opportunity.pair1_liquidity_base }}</td>
                     <td>{{ opportunity.pair2_liquidity_base }}</td>
+                    {% if 'pair3' in opportunity %}
+                    <td>{{ opportunity.pair3_liquidity_base }}</td>
+                    {% endif %}
                   </tr>
                   <tr>
                     <th scope="row">Quote Liquidity</th>
                     <td>{{ opportunity.pair1_liquidity_quote }}</td>
                     <td>{{ opportunity.pair2_liquidity_quote }}</td>
+                    {% if 'pair3' in opportunity %}
+                    <td>{{ opportunity.pair3_liquidity_quote }}</td>
+                    {% endif %}
                   </tr>
                   <tr>
                     <th scope="row">Chain ID</th>
                     <td>{{ opportunity.pair1_chain_id }}</td>
                     <td>{{ opportunity.pair2_chain_id }}</td>
+                    {% if 'pair3' in opportunity %}
+                    <td>{{ opportunity.pair3_chain_id }}</td>
+                    {% endif %}
                   </tr>
                   <tr>
                     <th scope="row">Dex ID</th>
                     <td>{{ opportunity.pair1_dex_id }}</td>
                     <td>{{ opportunity.pair2_dex_id }}</td>
+                    {% if 'pair3' in opportunity %}
+                    <td>{{ opportunity.pair3_dex_id }}</td>
+                    {% endif %}
                   </tr>
                   <tr>
                     <th scope="row">Base Token Address</th>
                     <td class="table-td">{{ opportunity.pair1_baseToken_address }}</td>
                     <td class="table-td">{{ opportunity.pair2_baseToken_address }}</td>
+                    {% if 'pair3' in opportunity %}
+                    <td class="table-td">{{ opportunity.pair3_baseToken_address }}</td>
+                    {% endif %}
                   </tr>
                   <tr>
                     <th scope="row">Quote Token Address</th>
                     <td class="table-td">{{ opportunity.pair1_quoteToken_address }}</td>
                     <td class="table-td">{{ opportunity.pair2_quoteToken_address }}</td>
+                    {% if 'pair3' in opportunity %}
+                    <td class="table-td">{{ opportunity.pair3_quoteToken_address }}</td>
+                    {% endif %}
                   </tr>
                   <tr>
                     <th scope="row">Address</th>
                     <td class="table-td">{{ opportunity.pool_pair1_address }}</td>
                     <td class="table-td">{{ opportunity.pool_pair2_address }}</td>
+                    {% if 'pair3' in opportunity %}
+                    <td class="table-td">{{ opportunity.pool_pair3_address }}</td>
+                    {% endif %}
                   </tr>
                   <tr>
                     <th scope="row">URL</th>
@@ -277,94 +310,21 @@
                         {{ opportunity.pool_pair2_url | truncate(30, True) }}
                       </a>
                     </td>
+                    {% if 'pair3' in opportunity %}
+                    <td>
+                      <a href="{{ opportunity.pool_pair3_url }}" target="_blank" class="card-link" title="{{ opportunity.pool_pair3_url }}">
+                        {{ opportunity.pool_pair3_url | truncate(30, True) }}
+                      </a>
+                    </td>
+                    {% endif %}
                   </tr>
                 </tbody>
               </table>
-                <!-- {% for profit in opportunity.user_arb_profits %}
-                <li>{{ profit.asset_name }}, User Arbitrage Profit: {{ profit.userArb_profit }}</li>
-                {% endfor %}
-                <div class="mt-2">
-                  <p class="card-text">
-                    <strong>Price Difference:</strong> {{ opportunity.price_diff }}
-                  </p>
-                  <p class="card-text">
-                    <strong>Liquidity Difference:</strong> {{ opportunity.liquidity_diff }}
-                  </p>
-                  <p class="card-text">
-                    <strong>Profit - (Fees + Slippage):</strong> {{ opportunity.profit }}
-                  </p>
-                  <p class="card-text">
-                    <strong>Ratio</strong> {{ opportunity.nativePrice_ratio_round }}
-                  </p>
-                </div> -->
-              </div>
             </div>
           </div>
-          {% endfor %}
         </div>
+        {% endfor %}
       </div>
-      <!-- <div class="container mt-5">
-        <div class="row d-flex flex-wrap">
-          {% for opportunity in arbitrage_opportunities %}
-          <div class="col-md-6 mb-4">
-            <div class="card shadow-sm">
-              <div class="card-header text-left">
-                <h5 class="card-title mb-0">Arbitrage Opportunity</h5>
-              </div>
-              <div class="card-body p-3">
-                <div class="row">
-                  <div class="col-6">
-                    <p><strong>Pair 1</strong></p>
-                    <ul class="list-unstyled">
-                      <li>Price: {{ opportunity.pair1_price_round }}</li>
-                      <li>Price Native: {{ opportunity.pair1_priceNative_round }}</li>
-                      <li>Liquidity: {{ opportunity.pair1_liquidity }}</li>
-                      <li>Base Liquidity: {{ opportunity.pair1_liquidity_base }}</li>
-                      <li>Quote Liquidity: {{ opportunity.pair1_liquidity_quote }}</li>
-                      <li>Chain ID: {{ opportunity.pair1_chain_id }}</li>
-                      <li>Dex ID: {{ opportunity.pair1_dex_id }}</li>
-                      <li>Base Token Address: {{ opportunity.pair1_baseToken_address }}</li>
-                      <li>Quote Token Address: {{ opportunity.pair1_quoteToken_address }}</li>
-                      <li>Address: {{ opportunity.pool_pair1_address }}</li>
-                      <li>URL: <a href="{{ opportunity.pool_pair1_url }}" target="_blank">{{ opportunity.pool_pair1_url | truncate(30, True) }}</a></li>
-                    </ul>
-                  </div>
-                  <div class="col-6">
-                    <p><strong>Pair 2</strong></p>
-                    <ul class="list-unstyled">
-                      <li>Price: {{ opportunity.pair2_price_round }}</li>
-                      <li>Price Native: {{ opportunity.pair2_priceNative_round }}</li>
-                      <li>Liquidity: {{ opportunity.pair2_liquidity }}</li>
-                      <li>Base Liquidity: {{ opportunity.pair2_liquidity_base }}</li>
-                      <li>Quote Liquidity: {{ opportunity.pair2_liquidity_quote }}</li>
-                      <li>Chain ID: {{ opportunity.pair2_chain_id }}</li>
-                      <li>Dex ID: {{ opportunity.pair2_dex_id }}</li>
-                      <li>Base Token Address: {{ opportunity.pair2_baseToken_address }}</li>
-                      <li>Quote Token Address: {{ opportunity.pair2_quoteToken_address }}</li>
-                      <li>Address: {{ opportunity.pool_pair2_address }}</li>
-                      <li>URL: <a href="{{ opportunity.pool_pair2_url }}" target="_blank">{{ opportunity.pool_pair2_url | truncate(30, True) }}</a></li>
-                    </ul>
-                  </div>
-                </div>
-                <div class="mt-2">
-                  <p class="card-text">
-                    <strong>Price Difference:</strong> {{ opportunity.price_diff }}
-                  </p>
-                  <p class="card-text">
-                    <strong>Liquidity Difference:</strong> {{ opportunity.liquidity_diff }}
-                  </p>
-                  <p class="card-text">
-                    <strong>Profit - (Fees + Slippage):</strong> {{ opportunity.profit }}
-                  </p>
-                  <p class="card-text">
-                    <strong>Ratio</strong> {{ opportunity.nativePrice_ratio_round }}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-          {% endfor %}
-        </div>
-      </div> -->
+    </div>
 </html>
 {% endblock %}
