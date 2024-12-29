@@ -1,5 +1,7 @@
-1. Caching (starting)
-2. Reduce API usage
-3. Store known pairs into SQL to reduce run time?
-4. Improve login security
-5. Make third contract find modular
+1. Caching (starting) ## DONE
+2. Reduce API usage ## DONE
+3. Make third contract find modular ## DONE
+5. Identify the right third contract lol
+4. Store known pairs into SQL to reduce run time?
+5. Improve login security
+
