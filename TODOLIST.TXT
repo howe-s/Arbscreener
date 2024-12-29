@@ -1,0 +1,5 @@
+1. Caching (starting)
+2. Reduce API usage
+3. Store known pairs into SQL to reduce run time?
+4. Improve login security
+5. Make third contract find modular

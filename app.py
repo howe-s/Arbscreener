@@ -235,7 +235,9 @@ def userProfile():
         print("Matching pairs for this opportunity:")
         for pair in sample_combined['matching_pairs']:
             print(f"  - {pair.pair_address}")
-            ## FORMAT THIS TO PASS TO FRONT END
+            ## FORMAT THIS TO PASS TO FRONT END # YOU STOPPED HERE 
+
+            
     
     print("Total matching pairs:", len(matching_pairs))
 
