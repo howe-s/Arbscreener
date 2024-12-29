@@ -1,21 +1,6 @@
-from flask import (
-    Flask,
-    render_template,
-    redirect,
-    url_for,
-    request,
-    flash,
-    jsonify,
-    send_file,
-    send_from_directory
-)
-from flask_login import (
-    LoginManager,
-    login_user,
-    login_required,
-    logout_user,
-    current_user
-)
+
+from flask import Flask, render_template, redirect, url_for, request, flash, jsonify, send_file, send_from_directory
+from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_migrate import Migrate
 from datetime import datetime
@@ -26,27 +11,13 @@ import matplotlib
 matplotlib.use('Agg')  # Use non-interactive backend for server-side plotting
 from utils.models import db, User, Purchase  # Ensure Purchase is imported
 from utils.price_utils import get_price_change_style
-from utils.chart_utils import (
-    tree_chart_liquidity,
-    pie_chart_liquidity,
-    tree_chart_volume,
-    pie_chart_volume,
-    generate_bar_chart
-)
+from utils.chart_utils import tree_chart_liquidity, pie_chart_liquidity, tree_chart_volume, pie_chart_volume, generate_bar_chart 
 from utils.arbitrage_utils import find_arbitrage_opportunities, process_token_pairs
 from utils.api_utils import rate_limit, fetch_current_price
 from collections import Counter, defaultdict
 import time
-from flask_caching import Cache
-from utils.user_profile_utils import (
-    get_user_purchases,
-    gather_token_pairs_from_purchases,
-    find_arbitrage_opportunities_for_user,
-    filter_and_process_opportunities,
-    match_pairs_with_opportunities
-)
 
-# RUN FLASK
+#RUN FLASK
 app = Flask(__name__)
 client = DexscreenerClient()
 app.config['SECRET_KEY'] = 'your_secret_key'  # Replace with your secret key
@@ -54,12 +25,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'  # Database URI
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['STATIC_FOLDER'] = 'static'
 
-# Configuration for caching
-app.config['CACHING'] = True
-app.config['CACHE_TYPE'] = 'simple'  # Use 'simple' for in-memory caching, adjust as needed
-cache = Cache(app)
-
-# Initialize DB
+#Initialize DB
 db.init_app(app)
 migrate = Migrate(app, db)
 
@@ -67,7 +33,6 @@ migrate = Migrate(app, db)
 login_manager = LoginManager()
 login_manager.login_view = 'login'
 login_manager.init_app(app)
-
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
@@ -76,7 +41,8 @@ def load_user(user_id):
 with app.app_context():
     db.create_all()
 
-@cache.memoize(timeout=3600)  # Cache for 1 hour
+
+## stopped
 def fetch_historical_price(asset_name, start_timestamp, end_timestamp):
     print('Fetching historical price...')
     rate_limit()
@@ -93,9 +59,22 @@ def fetch_historical_price(asset_name, start_timestamp, end_timestamp):
         print(f'Error fetching historical price: {responseHistoricalPrice.status_code}')
         return None
 
-# APPLICATION ROUTES
+# def date_to_timestamp(date_str):
+#     # Parse the date string to a datetime object
+#     dt = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
+
+#     # Convert the datetime object to a timestamp in seconds
+#     timestamp_seconds = int(time.mktime(dt.timetuple()))
+
+#     # Convert the timestamp to milliseconds
+#     timestamp_milliseconds = timestamp_seconds * 1000
+
+#     return timestamp_milliseconds
+
+#APPLICATION ROUTES
 @app.route('/', methods=['GET', 'POST'])
 def index():
+ 
     return render_template('index.html', is_logged_in=current_user.is_authenticated)
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -151,31 +130,121 @@ def logout():
 @login_required
 def userProfile():
     searchTicker = request.args.get('user_input', 'WBTC').lower()
+
+    # DEFAULT ARB PAGE VALUES
+    slippage_pair1 = 0.03
+    slippage_pair2 = 0.03
+    slippage_pair3 = 0.03
+    fee_percentage = 0.001
+    initial_investment = 2.0  # Placeholder value, unused for now
+
+    # Fetch all baseToken_address associated with the logged-in user's purchases
     user_purchases = Purchase.query.filter_by(user_id=current_user.id).all()
-    
-    # Default values
-    slippage_pair1, slippage_pair2, fee_percentage, initial_investment = 0.03, 0.03, 0.001, 2.0
+    baseToken_addresses = [purchase.baseToken_address for purchase in user_purchases]
 
-    token_pairs = gather_token_pairs_from_purchases(user_purchases)
-    arbitrage_opportunities = find_arbitrage_opportunities_for_user(token_pairs, user_purchases, slippage_pair1, slippage_pair2, fee_percentage, initial_investment)
-    
-    quote_pairs, pair_chains = filter_and_process_opportunities(arbitrage_opportunities)
-    opportunities_with_pairs = match_pairs_with_opportunities(arbitrage_opportunities, quote_pairs, pair_chains)
+    # Accumulate arbitrage opportunities for all base token addresses
+    all_arbitrage_opportunities = []
+    search_result = None
 
-    # Sort opportunities by profit
-    sorted_opportunities = sorted(opportunities_with_pairs, key=lambda x: x['int_profit'], reverse=True)
+    # Perform a single search for all relevant pairs
+    all_token_pairs = []
+    for address in baseToken_addresses:
+        search = client.search_pairs(address)
+        if search:
+            search_result = search
+            token_pairs = process_token_pairs(search)
+            all_token_pairs.extend(token_pairs)
 
-    # Debugging print statements
+    # Find arbitrage opportunities for this set of token pairs once
+    arbitrage_opportunities = find_arbitrage_opportunities(
+        all_token_pairs, slippage_pair1, slippage_pair2, fee_percentage, initial_investment, user_purchases
+    )
+
+    # Filter out opportunities where there are only two unique addresses
+    quote_pairs = []
+    pair_chains = []
+
+    for opportunity in arbitrage_opportunities:
+        addresses = [
+            opportunity['pair1_baseToken_address'],
+            opportunity['pair1_quoteToken_address'],
+            opportunity['pair2_baseToken_address'],
+            opportunity['pair2_quoteToken_address']
+        ]
+        
+        # single blockchain arbing enabled
+        if opportunity['pair1_chain_id'] == opportunity['pair2_chain_id']:
+            counter = Counter(addresses)
+            repeated_item = next(item for item, count in counter.items() if count > 1)
+            unique_items = tuple(item for item in addresses if item != repeated_item)
+            quote_pairs.append(unique_items)
+            pair_chains.append(opportunity['pair1_chain_id'])
+
+    # Use a dictionary to keep track of searches we've already performed
+    seen_searches = defaultdict(bool)
+    matching_pairs = []
+    combined_data = list(zip(quote_pairs, pair_chains))
+
+    for item in combined_data:
+        address1, address2, chain_id = item[0][0], item[0][1], item[1]
+
+        search_key = f"{chain_id}_{address1}"
+        if not seen_searches[search_key]:
+            seen_searches[search_key] = True
+            
+            # Perform the search
+            search = client.get_token_pairs(address1)
+
+            # Check if address2 is in the search results
+            match_found = False
+            for pair in search:
+                if pair.quote_token.address == address2 or pair.base_token.address == address2:
+                    match_found = True
+                    matching_pairs.append(pair)
+            if not match_found:
+                print(f"{address2} not found in any pair for {address1}")
+
+            # Delay between searches if it's not the last item
+            if item != combined_data[-1]:
+                print('next item')
+                time.sleep(3)
+
+    # Associate matching_pairs with opportunities
+    opportunities_with_pairs = []
+    for opportunity in arbitrage_opportunities:
+        new_opportunity = opportunity.copy()  # Copy to avoid modifying original data
+        new_opportunity['matching_pairs'] = []
+        
+        for matching_pair in matching_pairs:
+            if (matching_pair.base_token.address in [opportunity['pair1_baseToken_address'], opportunity['pair1_quoteToken_address']] or 
+                matching_pair.quote_token.address in [opportunity['pair1_baseToken_address'], opportunity['pair1_quoteToken_address']] or 
+                matching_pair.base_token.address in [opportunity['pair2_baseToken_address'], opportunity['pair2_quoteToken_address']] or 
+                matching_pair.quote_token.address in [opportunity['pair2_baseToken_address'], opportunity['pair2_quoteToken_address']]):
+                
+                new_opportunity['matching_pairs'].append(matching_pair)
+
+        opportunities_with_pairs.append(new_opportunity)  # Append every opportunity
+
+    # Print results for verification
     print("Total combined opportunities and pairs:", len(opportunities_with_pairs))
     if opportunities_with_pairs:
+        print("Sample combined opportunity with matching pairs:")
         sample_combined = opportunities_with_pairs[0]
         print("Opportunity:")
         print(f"  Pair1: {sample_combined['pair1']}, Pair2: {sample_combined['pair2']}")
         print("Matching pairs for this opportunity:")
         for pair in sample_combined['matching_pairs']:
             print(f"  - {pair.pair_address}")
-    print("Total matching pairs:", len(set(p.pair_address for o in opportunities_with_pairs for p in o['matching_pairs'])))
+            ## FORMAT THIS TO PASS TO FRONT END # YOU STOPPED HERE 
 
+            
+    
+    print("Total matching pairs:", len(matching_pairs))
+
+    # Sort opportunities after the loop
+    sorted_opportunities = sorted(opportunities_with_pairs, key=lambda x: x['int_profit'], reverse=True)    
+   
+    # Return based on whether search results were found
     return render_template(
         'userProfile.html',
         user_input=searchTicker,
@@ -183,7 +252,7 @@ def userProfile():
         full_name=current_user.full_name,
         is_logged_in=current_user.is_authenticated,
         arbitrage_opportunities=sorted_opportunities,
-        search=token_pairs if token_pairs else None
+        search=search_result if search_result else None
     )
 
 @app.route('/add_purchase', methods=['POST'])
@@ -258,7 +327,6 @@ def edit_purchase(purchase_id):
 
 @app.route('/user_prices/<int:purchase_id>', methods=['GET'])
 @login_required
-@cache.cached(timeout=300)  # Cache for 5 minutes
 def user_prices(purchase_id):
     print('Getting prices...')  
       
@@ -309,7 +377,6 @@ def user_prices(purchase_id):
 
 @app.route('/dex_search', methods=['GET', 'POST'])
 @login_required
-@cache.cached(timeout=600)  # Cache for 10 minutes
 def dex_search():
     # Get the user input for ticker and perform the search
     searchTicker = request.args.get('user_input', 'WBTC').lower()    
@@ -358,10 +425,9 @@ def dex_search():
     sorted_pool = sorted(pool_data, key=lambda x: x['volume_24h'], reverse=True)
     # Pass the data to the template
     return render_template('dex_search.html', pool_data=sorted_pool, user_input=searchTicker, chart_div=chart_div, is_logged_in=current_user.is_authenticated)
-
+#not used ?
 @app.route('/arb', methods=['GET', 'POST'])
 @login_required
-@cache.cached(timeout=300)  # Cache for 5 minutes
 def arb():
     searchTicker = request.args.get('user_input', 'WBTC').lower()
     search = client.search_pairs(searchTicker)
@@ -381,7 +447,6 @@ def arb():
     return render_template('arb.html', search=search, user_input=searchTicker, arbitrage_opportunities=sorted_opportunities, is_logged_in=current_user.is_authenticated)
 
 @app.route('/trending', methods=['GET', 'POST'])
-@cache.cached(timeout=600)  # Cache for 10 minutes
 def trending():
     #Passing the initial data
     searchTicker = request.args.get('user_input', 'WBTC').lower()
@@ -391,7 +456,6 @@ def trending():
 
 @app.route('/raydium', methods=['GET', 'POST'])
 @login_required
-@cache.cached(timeout=1200)  # Cache for 20 minutes
 def raydium():
     url = "https://api.raydium.io/v2/ammV3/ammPools"
 
@@ -403,12 +467,14 @@ def raydium():
         amm_pools = []
 
         for pool in data['data']:
+            # print(pool)
             pool_data = {
                 "pool_id": pool['id'],
                 "price": pool["price"],  # Uncomment and add relevant fields
                 "tvl": pool["tvl"],
                 # Add other relevant information if needed
             }
+            # print(pool_data)
             amm_pools.append(pool_data)
 
         return render_template('raydium.html', pool_data=amm_pools, is_logged_in=current_user.is_authenticated)
@@ -419,7 +485,6 @@ def raydium():
 
 @app.route('/summary')
 @login_required
-@cache.cached(timeout=600)  # Cache for 10 minutes
 def summary():
     searchTicker = request.args.get('user_input', 'WBTC').lower()
     data = [(f"{pair.pair_address[-5:]}({pair.chain_id})", pair.liquidity.usd) for pair in client.search_pairs(searchTicker)]
@@ -439,19 +504,20 @@ def summary():
     return render_template('summary.html', summary=formatted_summary, user_input=searchTicker, is_logged_in=current_user.is_authenticated)
 
 @app.route('/base')
-@login_required
-@cache.cached(timeout=300)  # Cache for 5 minutes
 def base():
     searchTicker = request.args.get('user_input', 'WBTC').lower()
     return render_template('base.html', user_input=searchTicker, is_logged_in=current_user.is_authenticated)
 
 @app.route('/token_table')
 @login_required
-@cache.cached(timeout=600)  # Cache for 10 minutes
 def token_table():
     print('token_table route pinged')
-    searchTicker = request.args.get('user_input', 'WBTC').lower()
+    searchTicker = request.args.get('user_input', 'WBTC').lower()    # this is causing the defaulting back to WBTC **************!!!
     search = client.search_pairs(searchTicker)
+
+    # searchTicker = request.args.get('user_input', '').lower()
+    # search = client.search_pairs(searchTicker)
+
 
     tokens = []
     for TokenPair in search:
@@ -482,6 +548,9 @@ def token_table():
             'h24_change_style': h24_change_style,
         })
 
+        # SQL Input if wanted
+        # insert_sql = "INSERT INTO token_pairs (chain_id, pair_address, liquidity_usd, quote_token_symbol, price_native, base_token_symbol, price_usd, volume_m5, m5_change, h1_change, h6_change, h24_change, volume_h1, volume_h6, volume_h24, m5_change_style, h1_change_style, h6_change_style, h24_change_style) VALUES " + ", ".join(tokens) + ";"
+
     return render_template('token_table.html', tokens=tokens, user_input=searchTicker, is_logged_in=current_user.is_authenticated)
     
 @app.route('/process-data', methods=['POST'])
@@ -491,12 +560,16 @@ def process_data():
     try:
         data = request.get_json()
         token_pair_address = data.get('tokenPairAddress')
+        # base_token = data.get('cardTitle')
+        
         base_token = request.args.get('user_input', 'WBTC').lower()
+        # print(base_token)
 
         if not token_pair_address:
             return jsonify({"message": "Missing tokenPairAddress"}), 400
 
         search = client.search_pairs(token_pair_address)
+        # can add another function here for coingecko?
     
         if isinstance(search, list):            
             for pair in search:
@@ -553,7 +626,6 @@ def process_data():
 
 @app.route('/charts')
 @login_required
-@cache.cached(timeout=1200)  # Cache for 20 minutes
 def charts():
     searchTicker = request.args.get('user_input', 'WBTC').lower() 
     search = client.search_pairs(searchTicker)
@@ -593,6 +665,9 @@ def charts():
                            pie_volume_img=pie_volume_img,
                            user_input=searchTicker,
                            is_logged_in=current_user.is_authenticated)
+
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)
