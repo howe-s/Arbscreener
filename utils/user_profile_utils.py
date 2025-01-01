@@ -42,22 +42,20 @@ def search_pairs_rate_limited(contract):
     """
     return client.search_pairs(contract)
 
-
-
 def calculate_arbitrage_profit(initial_investment, price_pair1, price_pair2, slippage_pair1, slippage_pair2, fee_percentage, liquidity_pair1, liquidity_pair2):
     # Convert initial investment to amount in pair1
     amount_pair1 = initial_investment / price_pair1
     
     # Simplified slippage model
     def apply_slippage(amount, liquidity, slippage):
-        return amount * (1 - slippage * (amount / liquidity))
+        return amount * (1 - slippage * (amount / float(liquidity)))  # Convert liquidity to float to ensure arithmetic operation works
     
     adjusted_amount_pair1 = apply_slippage(amount_pair1, liquidity_pair1, slippage_pair1)
     value_pair2 = adjusted_amount_pair1 * price_pair2
     final_amount_pair2 = apply_slippage(value_pair2, liquidity_pair2, slippage_pair2)
     
     # Calculate fees
-    fees = initial_investment * fee_percentage * 2  # Now considering two trades
+    fees = initial_investment * fee_percentage * 2  # Considering two trades for fees
     
     # Profit calculation
     profit = final_amount_pair2 - initial_investment - fees
@@ -67,9 +65,6 @@ def calculate_arbitrage_profit(initial_investment, price_pair1, price_pair2, sli
 def process_token_pairs(search):
     token_pairs = []
     for TokenPair in search:
-        # print(TokenPair)
-    
-        
         liquidity = TokenPair.liquidity if TokenPair.liquidity is not None else {}
         
         token_pairs.append({
@@ -100,68 +95,69 @@ def find_arbitrage_opportunities(token_pairs, slippage_pair1, slippage_pair2, fe
                 # Check if pairs share a common token
                 if pair1['baseToken_address'] == pair2['baseToken_address'] or pair1['quoteToken_address'] in [pair2['baseToken_address'], pair2['quoteToken_address']]:
                     # Check for price discrepancy and sufficient liquidity for the first two pairs
-                    if (abs(pair2['price_native'] - pair1['price_native']) > 0 and 
-                        pair1['liquidity_usd'] > 10000 and 
-                        pair2['liquidity_usd'] > 10000):
+                    if (abs(float(pair2['price_native']) - float(pair1['price_native'])) > 0 and 
+                        float(pair1['liquidity_usd']) > 10000 and 
+                        float(pair2['liquidity_usd']) > 10000):
 
-                        liquidity_diff = pair1['liquidity_usd'] - pair2['liquidity_usd']
-                        price_diff = pair2['price_native'] - pair1['price_native']
+                        liquidity_diff = float(pair1['liquidity_usd']) - float(pair2['liquidity_usd'])
+                        price_diff = float(pair2['price_native']) - float(pair1['price_native'])
                         
-                        base_liquidity = min(pair1['liquidity_base'], pair2['liquidity_base'])
+                        base_liquidity = min(float(pair1['liquidity_base']), float(pair2['liquidity_base']))
                         profit = calculate_arbitrage_profit(initial_investment, 
-                                                            pair1['price_native'], 
-                                                            pair2['price_native'], 
+                                                            float(pair1['price_native']), 
+                                                            float(pair2['price_native']), 
                                                             slippage_pair1, 
                                                             slippage_pair2, 
                                                             fee_percentage,
-                                                            pair1['liquidity_base'],
-                                                            pair2['liquidity_base'])
+                                                            float(pair1['liquidity_base']),
+                                                            float(pair2['liquidity_base']))
                         
-                        # print("profit with two pairs", profit)
-                        int_profit = int(profit * 10**8) / 10**8
-                        
-                        opportunity = {
-                            'pair1': pair1['pair'],
-                            'pair1_price': pair1['price_usd'],
-                            'pair1_price_round': f"{round(pair1['price_usd'], 8)}",
-                            'pair1_liquidity': f"${pair1['liquidity_usd']:,.2f}",
-                            'pair1_liquidity_base': f"{pair1['liquidity_base']:,.2f}",
-                            'pair1_liquidity_quote': f"{pair1['liquidity_quote']:,.2f}",
-                            'pool_pair1_address': pair1['pool_address'],
-                            'pair1_baseToken_address': pair1['baseToken_address'],
-                            'pair1_quoteToken_address': pair1['quoteToken_address'],
-                            'pool_pair1_url': pair1['pool_url'],
-                            'pair2': pair2['pair'],
-                            'pair2_price': pair2['price_usd'],
-                            'pair2_price_round': f"{round(pair2['price_usd'], 8)}",
-                            'pair2_liquidity': f"${pair2['liquidity_usd']:,.2f}",
-                            'pair2_liquidity_base': f"{pair2['liquidity_base']:,.2f}",
-                            'pair2_liquidity_quote': f"{pair2['liquidity_quote']:,.2f}",
-                            'pool_pair2_address': pair2['pool_address'],  
-                            'pair2_baseToken_address': pair2['baseToken_address'],
-                            'pair2_quoteToken_address': pair2['quoteToken_address'],
-                            'pool_pair2_url': pair2['pool_url'],
-                            'price_diff': f"${price_diff:,.2f}",
-                            'liquidity_diff': f"${liquidity_diff:,.2f}",
-                            'profit': f"${profit:,.2f}",
-                            'int_profit': int_profit,
-                            'potential_profit': f"${base_liquidity * price_diff:,.2f}",
-                            'pair1_chain_id': pair1['chain_id'],
-                            'pair1_dex_id': pair1['dex_id'], 
-                            'pair2_chain_id': pair2['chain_id'],
-                            'pair2_dex_id': pair2['dex_id'],
-                            'pair1_priceNative': pair1['price_native'],
-                            'pair2_priceNative': pair2['price_native'],
-                            'pair1_priceNative_round': f"{round(pair1['price_native'], 8)}",
-                            'pair2_priceNative_round': f"{round(pair2['price_native'], 8)}",
-                            'nativePrice_difference': price_diff,
-                        }
-                        
-                        arbitrage_opportunities.append(opportunity)
+                        # Add this check
+                        if profit > 0:  # Only consider positive profit opportunities
+                            int_profit = int(profit * 10**8) / 10**8
+                            
+                            opportunity = {
+                                'pair1': pair1['pair'],
+                                'pair1_price': pair1['price_usd'],
+                                'pair1_price_round': f"{round(pair1['price_usd'], 8)}",
+                                'pair1_liquidity': f"${pair1['liquidity_usd']:,.2f}",
+                                'pair1_liquidity_base': f"{pair1['liquidity_base']:,.2f}",
+                                'pair1_liquidity_quote': f"{pair1['liquidity_quote']:,.2f}",
+                                'pool_pair1_address': pair1['pool_address'],
+                                'pair1_baseToken_address': pair1['baseToken_address'],
+                                'pair1_quoteToken_address': pair1['quoteToken_address'],
+                                'pool_pair1_url': pair1['pool_url'],
+                                'pair2': pair2['pair'],
+                                'pair2_price': pair2['price_usd'],
+                                'pair2_price_round': f"{round(pair2['price_usd'], 8)}",
+                                'pair2_liquidity': f"${pair2['liquidity_usd']:,.2f}",
+                                'pair2_liquidity_base': f"{pair2['liquidity_base']:,.2f}",
+                                'pair2_liquidity_quote': f"{pair2['liquidity_quote']:,.2f}",
+                                'pool_pair2_address': pair2['pool_address'],  
+                                'pair2_baseToken_address': pair2['baseToken_address'],
+                                'pair2_quoteToken_address': pair2['quoteToken_address'],
+                                'pool_pair2_url': pair2['pool_url'],
+                                'price_diff': f"${price_diff:,.2f}",
+                                'liquidity_diff': f"${liquidity_diff:,.2f}",
+                                'profit': f"${profit:,.2f}",
+                                'int_profit': int_profit,
+                                'potential_profit': f"${base_liquidity * price_diff:,.2f}",
+                                'pair1_chain_id': pair1['chain_id'],
+                                'pair1_dex_id': pair1['dex_id'], 
+                                'pair2_chain_id': pair2['chain_id'],
+                                'pair2_dex_id': pair2['dex_id'],
+                                'pair1_priceNative': pair1['price_native'],
+                                'pair2_priceNative': pair2['price_native'],
+                                'pair1_priceNative_round': f"{round(pair1['price_native'], 8)}",
+                                'pair2_priceNative_round': f"{round(pair2['price_native'], 8)}",
+                                'nativePrice_difference': price_diff,
+                            }
+                            
+                            arbitrage_opportunities.append(opportunity)
 
-    return arbitrage_opportunities # First two contracts
+    return arbitrage_opportunities
 
-def find_third_contract_data(unique_pair_addresses, arbitrage_opportunities):
+def find_third_contract_data(unique_pair_addresses, arbitrage_opportunities, initial_investment, slippage_pair1, slippage_pair2, fee_percentage):
     third_pair_index = {}
     for contract in unique_pair_addresses:
         search = search_pairs_rate_limited(contract)
@@ -182,7 +178,7 @@ def find_third_contract_data(unique_pair_addresses, arbitrage_opportunities):
                 third_pair_index[safe_get(pair, 'pair_address', 'N/A')] = pair_details
 
     combined_opportunities = []
-    seen_opportunities = set()  # To track unique opportunities
+    seen_opportunities = set()
 
     for opportunity in arbitrage_opportunities:
         matched_pair = None
@@ -196,98 +192,74 @@ def find_third_contract_data(unique_pair_addresses, arbitrage_opportunities):
         unique_tokens = [addr for addr, count in counter.items() if count == 1]
 
         if len(unique_tokens) == 2:  # We have two unique tokens from the first and second pairs
-            unique_token1, unique_token2 = sorted(unique_tokens)  # Sort to ensure consistent order
+            unique_token1, unique_token2 = sorted(unique_tokens)  
             for pair_address, pair_data in third_pair_index.items():
                 if (pair_data['baseToken_address'] == unique_token1 and pair_data['quoteToken_address'] == unique_token2) or \
                    (pair_data['baseToken_address'] == unique_token2 and pair_data['quoteToken_address'] == unique_token1):
                     matched_pair = pair_data
                     break
 
-        if matched_pair:  # Only proceed if a third matching pair was found
-            # Define a canonical representation for each opportunity
-            # Here, we sort the token addresses to ensure we're dealing with the same set in a consistent order
-            canonical_addresses = tuple(sorted([
-                opportunity['pair1_baseToken_address'],
-                opportunity['pair1_quoteToken_address'],
-                opportunity['pair2_baseToken_address'],
-                opportunity['pair2_quoteToken_address'],
-                matched_pair['baseToken_address'],
-                matched_pair['quoteToken_address']
-            ]))
-            
-            if canonical_addresses not in seen_opportunities:  # Check if this combination has been seen before
-                seen_opportunities.add(canonical_addresses)
-                combined_opportunity = opportunity.copy()
-                combined_opportunity.update({
-                    'pair3': matched_pair['pair'],
-                    'pair3_price': matched_pair['price_usd'],
-                    'pair3_price_round': f"{round(matched_pair['price_usd'], 8)}",
-                    'pair3_liquidity': f"${safe_get(matched_pair['liquidity'], 'usd', 0.0):,.2f}",
-                    'pair3_liquidity_base': f"{safe_get(matched_pair['liquidity'], 'base', 0.0):,.2f}",
-                    'pair3_liquidity_quote': f"{safe_get(matched_pair['liquidity'], 'quote', 0.0):,.2f}",
-                    'pool_pair3_address': matched_pair['pair_address'],
-                    'pair3_baseToken_address': matched_pair['baseToken_address'],
-                    'pair3_quoteToken_address': matched_pair['quoteToken_address'],
-                    'pool_pair3_url': matched_pair['url'],
-                    'pair3_chain_id': matched_pair['chain_id'],
-                    'pair3_dex_id': matched_pair['dex_id'],
-                    'pair3_priceNative': matched_pair['price_native'],
-                    'pair3_priceNative_round': f"{round(matched_pair['price_native'], 8)}"
-                })
-                combined_opportunities.append(combined_opportunity)
+        if matched_pair:
+            try:
+                # Check if the item is a string before replacing commas
+                def to_float(value):
+                    if isinstance(value, str):
+                        return float(value.replace(',', ''))
+                    return float(value)  # If it's already a float or number, just convert to float
+
+                liquidity_pair1 = to_float(opportunity['pair1_liquidity_base'])
+                liquidity_pair2 = to_float(opportunity['pair2_liquidity_base'])
+                price_pair2 = to_float(opportunity['pair2_priceNative'])
+                price_pair3 = to_float(matched_pair['price_native'])
+                liquidity_pair3 = to_float(safe_get(matched_pair['liquidity'], 'base', '0.0'))
+                
+                # Calculate if adding this third pair makes the overall loop profitable
+                profit_two_pairs = calculate_arbitrage_profit(
+                    initial_investment, 
+                    to_float(opportunity['pair1_priceNative']), 
+                    price_pair2, 
+                    slippage_pair1, slippage_pair2, fee_percentage, 
+                    liquidity_pair1, liquidity_pair2
+                )
+                
+                # Simplified calculation for the third pair's impact
+                third_pair_profit = profit_two_pairs * (price_pair3 / price_pair2) - (initial_investment * fee_percentage)
+                
+                if third_pair_profit > 0:  # Only include if the third pair increases profitability
+                    canonical_addresses = tuple(sorted([
+                        opportunity['pair1_baseToken_address'],
+                        opportunity['pair1_quoteToken_address'],
+                        opportunity['pair2_baseToken_address'],
+                        opportunity['pair2_quoteToken_address'],
+                        matched_pair['baseToken_address'],
+                        matched_pair['quoteToken_address']
+                    ]))
+                    
+                    if canonical_addresses not in seen_opportunities:
+                        seen_opportunities.add(canonical_addresses)
+                        combined_opportunity = opportunity.copy()
+                        combined_opportunity.update({
+                            'pair3': matched_pair['pair'],
+                            'pair3_price': matched_pair['price_usd'],
+                            'pair3_price_round': f"{round(matched_pair['price_usd'], 8)}",
+                            'pair3_liquidity': f"${safe_get(matched_pair['liquidity'], 'usd', 0.0):,.2f}",
+                            'pair3_liquidity_base': f"{safe_get(matched_pair['liquidity'], 'base', 0.0):,.2f}",
+                            'pair3_liquidity_quote': f"{safe_get(matched_pair['liquidity'], 'quote', 0.0):,.2f}",
+                            'pool_pair3_address': matched_pair['pair_address'],
+                            'pair3_baseToken_address': matched_pair['baseToken_address'],
+                            'pair3_quoteToken_address': matched_pair['quoteToken_address'],
+                            'pool_pair3_url': matched_pair['url'],
+                            'pair3_chain_id': matched_pair['chain_id'],
+                            'pair3_dex_id': matched_pair['dex_id'],
+                            'pair3_priceNative': matched_pair['price_native'],
+                            'pair3_priceNative_round': f"{round(matched_pair['price_native'], 8)}"
+                        })
+                        combined_opportunities.append(combined_opportunity)
+            except ValueError as e:
+                print(f"Error converting to float in opportunity: {e}")
+                continue
 
     return combined_opportunities
-
-    # Here we integrate the matching logic directly
-
-    # Create an index for quick lookup from third_pair
-    # third_pair_index = {pair['baseToken_address']: pair for pair in third_pair}
-    # third_pair_index.update({pair['quoteToken_address']: pair for pair in third_pair})
-
-    # combined_opportunities = []
-
-    # for opportunity in arbitrage_opportunities:
-    #     matched_pair = None
-
-    #     # Check each address against the third_pair index
-    #     addresses_to_check = [
-    #         opportunity['pair1_baseToken_address'],
-    #         opportunity['pair1_quoteToken_address'],
-    #         opportunity['pair2_baseToken_address'],
-    #         opportunity['pair2_quoteToken_address']
-    #     ]
-
-    #     for address in addresses_to_check:
-    #         if address in third_pair_index:
-    #             matched_pair = third_pair_index[address]
-    #             break  # Assuming you want to match only one third pair per opportunity
-
-    #     # Create a new combined opportunity object
-    #     combined_opportunity = opportunity.copy()
-
-    #     if matched_pair:
-    #         combined_opportunity.update({
-    #             'pair3': matched_pair['pair'],
-    #             'pair3_price': matched_pair['price_usd'],
-    #             'pair3_price_round': f"{round(matched_pair['price_usd'], 8)}",
-    #             'pair3_liquidity': f"${matched_pair['liquidity_usd']:,.2f}",
-    #             'pair3_liquidity_base': f"{matched_pair['liquidity_base']:,.2f}",
-    #             'pair3_liquidity_quote': f"{matched_pair['liquidity_quote']:,.2f}",
-    #             'pool_pair3_address': matched_pair['pool_address'],
-    #             'pair3_baseToken_address': matched_pair['baseToken_address'],
-    #             'pair3_quoteToken_address': matched_pair['quoteToken_address'],
-    #             'pool_pair3_url': matched_pair['pool_url'],
-    #             'pair3_chain_id': matched_pair['chain_id'],
-    #             'pair3_dex_id': matched_pair['dex_id'],
-    #             'pair3_priceNative': matched_pair['price_native'],
-    #             'pair3_priceNative_round': f"{round(matched_pair['price_native'], 8)}"
-    #         })
-
-    #     combined_opportunities.append(combined_opportunity)
-    
-    # print('~~~~~~~~~~~~COMBINED OPPORTUNITIES~~~~~~~~')
-    # print(combined_opportunities)
-    # return combined_opportunities
 
 def get_user_purchases(user_id):
     """

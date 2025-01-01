@@ -163,11 +163,14 @@ def logout():
 @login_required
 @cache.cached(timeout=3600, key_prefix='user_profile')  # Cache for 1 hour, adjust timeout as needed
 def userProfile():
+    # Initial values
+    initial_investment = 1000  # Example value, adjust as needed
+    slippage_pair1 = 0.005  # Example value
+    slippage_pair2 = 0.005  # Example value
+    fee_percentage = 0.003  # Example value, this is typically 0.3% for many DEXs
+    
     searchTicker = request.args.get('user_input', 'WBTC').lower()
     user_purchases = Purchase.query.filter_by(user_id=current_user.id).all()
-    
-    # Default values
-    slippage_pair1, slippage_pair2, fee_percentage, initial_investment = 0.03, 0.03, 0.001, 2.0
     
     # Cache token_pairs
     token_pairs = cache.get('token_pairs_' + str(current_user.id))
@@ -205,7 +208,8 @@ def userProfile():
         all_pair_addresses = list(set(p.pair_address for o in opportunities_with_pairs for p in o['matching_pairs']))
         unique_pair_addresses = sorted(all_pair_addresses)
 
-    all_three_contracts = find_third_contract_data(unique_pair_addresses, arbitrage_opportunities)
+    # Use the initially defined values here
+    all_three_contracts = find_third_contract_data(unique_pair_addresses, arbitrage_opportunities, initial_investment, slippage_pair1, slippage_pair2, fee_percentage)
     sorted_opportunities = sorted(all_three_contracts, key=lambda x: x['int_profit'], reverse=True)
 
     return render_template(
@@ -587,7 +591,7 @@ def process_data():
 @login_required
 @cache.cached(timeout=1200)  # Cache for 20 minutes
 def charts():
-    searchTicker = request.args.get('user_input', 'WBTC').lower() 
+    searchTicker = request.args.get('user_input').lower() 
     search = client.search_pairs(searchTicker)
 
     if not search:
