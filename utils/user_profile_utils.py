@@ -182,9 +182,10 @@ def find_third_contract_data(unique_pair_addresses, arbitrage_opportunities):
                 third_pair_index[safe_get(pair, 'pair_address', 'N/A')] = pair_details
 
     combined_opportunities = []
+    seen_opportunities = set()  # To track unique opportunities
+
     for opportunity in arbitrage_opportunities:
         matched_pair = None
-        # Get non-repeating tokens from first and second pairs
         addresses = [
             opportunity['pair1_baseToken_address'],
             opportunity['pair1_quoteToken_address'],
@@ -195,7 +196,7 @@ def find_third_contract_data(unique_pair_addresses, arbitrage_opportunities):
         unique_tokens = [addr for addr, count in counter.items() if count == 1]
 
         if len(unique_tokens) == 2:  # We have two unique tokens from the first and second pairs
-            unique_token1, unique_token2 = unique_tokens
+            unique_token1, unique_token2 = sorted(unique_tokens)  # Sort to ensure consistent order
             for pair_address, pair_data in third_pair_index.items():
                 if (pair_data['baseToken_address'] == unique_token1 and pair_data['quoteToken_address'] == unique_token2) or \
                    (pair_data['baseToken_address'] == unique_token2 and pair_data['quoteToken_address'] == unique_token1):
@@ -203,24 +204,37 @@ def find_third_contract_data(unique_pair_addresses, arbitrage_opportunities):
                     break
 
         if matched_pair:  # Only proceed if a third matching pair was found
-            combined_opportunity = opportunity.copy()
-            combined_opportunity.update({
-                'pair3': matched_pair['pair'],
-                'pair3_price': matched_pair['price_usd'],
-                'pair3_price_round': f"{round(matched_pair['price_usd'], 8)}",
-                'pair3_liquidity': f"${safe_get(matched_pair['liquidity'], 'usd', 0.0):,.2f}",
-                'pair3_liquidity_base': f"{safe_get(matched_pair['liquidity'], 'base', 0.0):,.2f}",
-                'pair3_liquidity_quote': f"{safe_get(matched_pair['liquidity'], 'quote', 0.0):,.2f}",
-                'pool_pair3_address': matched_pair['pair_address'],
-                'pair3_baseToken_address': matched_pair['baseToken_address'],
-                'pair3_quoteToken_address': matched_pair['quoteToken_address'],
-                'pool_pair3_url': matched_pair['url'],
-                'pair3_chain_id': matched_pair['chain_id'],
-                'pair3_dex_id': matched_pair['dex_id'],
-                'pair3_priceNative': matched_pair['price_native'],
-                'pair3_priceNative_round': f"{round(matched_pair['price_native'], 8)}"
-            })
-            combined_opportunities.append(combined_opportunity)
+            # Define a canonical representation for each opportunity
+            # Here, we sort the token addresses to ensure we're dealing with the same set in a consistent order
+            canonical_addresses = tuple(sorted([
+                opportunity['pair1_baseToken_address'],
+                opportunity['pair1_quoteToken_address'],
+                opportunity['pair2_baseToken_address'],
+                opportunity['pair2_quoteToken_address'],
+                matched_pair['baseToken_address'],
+                matched_pair['quoteToken_address']
+            ]))
+            
+            if canonical_addresses not in seen_opportunities:  # Check if this combination has been seen before
+                seen_opportunities.add(canonical_addresses)
+                combined_opportunity = opportunity.copy()
+                combined_opportunity.update({
+                    'pair3': matched_pair['pair'],
+                    'pair3_price': matched_pair['price_usd'],
+                    'pair3_price_round': f"{round(matched_pair['price_usd'], 8)}",
+                    'pair3_liquidity': f"${safe_get(matched_pair['liquidity'], 'usd', 0.0):,.2f}",
+                    'pair3_liquidity_base': f"{safe_get(matched_pair['liquidity'], 'base', 0.0):,.2f}",
+                    'pair3_liquidity_quote': f"{safe_get(matched_pair['liquidity'], 'quote', 0.0):,.2f}",
+                    'pool_pair3_address': matched_pair['pair_address'],
+                    'pair3_baseToken_address': matched_pair['baseToken_address'],
+                    'pair3_quoteToken_address': matched_pair['quoteToken_address'],
+                    'pool_pair3_url': matched_pair['url'],
+                    'pair3_chain_id': matched_pair['chain_id'],
+                    'pair3_dex_id': matched_pair['dex_id'],
+                    'pair3_priceNative': matched_pair['price_native'],
+                    'pair3_priceNative_round': f"{round(matched_pair['price_native'], 8)}"
+                })
+                combined_opportunities.append(combined_opportunity)
 
     return combined_opportunities
 

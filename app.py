@@ -16,6 +16,7 @@ from flask_login import (
     logout_user,
     current_user
 )
+from flask_caching import Cache
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_migrate import Migrate
 from datetime import datetime
@@ -58,6 +59,7 @@ from utils.user_profile_utils import (
 
 # RUN FLASK
 app = Flask(__name__)
+cache = Cache(app, config={'CACHE_TYPE': 'simple'})  # Simple cache in memory, for production, consider Redis or Memcached
 client = DexscreenerClient()
 app.config['SECRET_KEY'] = 'your_secret_key'  # Replace with your secret key
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'  # Database URI
@@ -159,37 +161,49 @@ def logout():
 
 @app.route('/userProfile')
 @login_required
+@cache.cached(timeout=3600, key_prefix='user_profile')  # Cache for 1 hour, adjust timeout as needed
 def userProfile():
     searchTicker = request.args.get('user_input', 'WBTC').lower()
     user_purchases = Purchase.query.filter_by(user_id=current_user.id).all()
     
     # Default values
     slippage_pair1, slippage_pair2, fee_percentage, initial_investment = 0.03, 0.03, 0.001, 2.0
-    # USER_PROFILE_UTILS.PY
-    token_pairs = gather_token_pairs_from_purchases(user_purchases)
-    arbitrage_opportunities = find_arbitrage_opportunities_for_user(token_pairs, user_purchases, slippage_pair1, slippage_pair2, fee_percentage, initial_investment)
     
-    quote_pairs, pair_chains = filter_and_process_opportunities(arbitrage_opportunities)
-    opportunities_with_pairs = match_pairs_with_opportunities(arbitrage_opportunities, quote_pairs, pair_chains)
-  
-
-    # Sort opportunities by profit
-    # sorted_opportunities = sorted(opportunities_with_pairs, key=lambda x: x['int_profit'], reverse=True)
-
+    # Cache token_pairs
+    token_pairs = cache.get('token_pairs_' + str(current_user.id))
+    if token_pairs is None:
+        token_pairs = gather_token_pairs_from_purchases(user_purchases)
+        cache.set('token_pairs_' + str(current_user.id), token_pairs, timeout=3600)  # Cache for 1 hour
+    
+    # Cache arbitrage opportunities
+    arbitrage_opportunities_key = 'arbitrage_opportunities_' + str(current_user.id)
+    arbitrage_opportunities = cache.get(arbitrage_opportunities_key)
+    if arbitrage_opportunities is None:
+        arbitrage_opportunities = find_arbitrage_opportunities_for_user(token_pairs, user_purchases, slippage_pair1, slippage_pair2, fee_percentage, initial_investment)
+        cache.set(arbitrage_opportunities_key, arbitrage_opportunities, timeout=3600)  # Cache for 1 hour
+    
+    # Cache quote_pairs and pair_chains
+    quote_pairs_key = 'quote_pairs_' + str(current_user.id)
+    pair_chains_key = 'pair_chains_' + str(current_user.id)
+    quote_pairs, pair_chains = cache.get(quote_pairs_key), cache.get(pair_chains_key)
+    if quote_pairs is None or pair_chains is None:
+        quote_pairs, pair_chains = filter_and_process_opportunities(arbitrage_opportunities)
+        cache.set(quote_pairs_key, quote_pairs, timeout=3600)  # Cache for 1 hour
+        cache.set(pair_chains_key, pair_chains, timeout=3600)  # Cache for 1 hour
+    
+    # Cache opportunities with pairs
+    opportunities_key = 'opportunities_with_pairs_' + str(current_user.id)
+    opportunities_with_pairs = cache.get(opportunities_key)
+    if opportunities_with_pairs is None:
+        opportunities_with_pairs = match_pairs_with_opportunities(arbitrage_opportunities, quote_pairs, pair_chains)
+        cache.set(opportunities_key, opportunities_with_pairs, timeout=3600)  # Cache for 1 hour
+    
     # Debugging print statements
     print("Total combined opportunities and pairs:", len(opportunities_with_pairs))
     if opportunities_with_pairs:
         sample_combined = opportunities_with_pairs[0]
-        # print("Opportunity:")
-        # print(f"  Pair1: {sample_combined['pair1']}, Pair2: {sample_combined['pair2']}")
-        
-        # Collect all unique pair addresses
         all_pair_addresses = list(set(p.pair_address for o in opportunities_with_pairs for p in o['matching_pairs']))
-
-        # Instead of printing, store addresses in an array
         unique_pair_addresses = sorted(all_pair_addresses)
-
-    # print("Total unique matching pairs:", len(unique_pair_addresses))
 
     all_three_contracts = find_third_contract_data(unique_pair_addresses, arbitrage_opportunities)
     sorted_opportunities = sorted(all_three_contracts, key=lambda x: x['int_profit'], reverse=True)
@@ -330,7 +344,7 @@ def user_prices(purchase_id):
 @cache.cached(timeout=600)  # Cache for 10 minutes
 def dex_search():
     # Get the user input for ticker and perform the search
-    searchTicker = request.args.get('user_input', 'WBTC').lower()    
+    searchTicker = request.args.get('user_input').lower()    
     search = client.search_pairs(searchTicker)
     
     pool_data = []
