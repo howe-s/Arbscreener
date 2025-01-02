@@ -2,10 +2,120 @@ body {
   background-color: #222222; 
 }
 
-#content{
+#content {
   margin-top: 65px;
 }
 
 #chart-summary {
   color: white;
+}
+
+/* Navbar Styling */
+.navbar {
+    background-color: #1a1a1a;
+    padding: 0.5rem 1rem;
+}
+
+.navbar-brand {
+    font-size: 1.25rem;
+    font-weight: bold;
+}
+
+/* Nav Links */
+.navbar-nav .nav-link {
+    color: #e0e0e0;
+}
+
+.navbar-nav .nav-link:hover {
+    color: #4a90e2;
+}
+
+/* Form Inline Styling */
+.form-inline {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center; /* Center align items vertically */
+}
+
+.form-inline .form-control {
+    background-color: #333;
+    border: 1px solid #444;
+    color: #e0e0e0;
+    border-radius: 4px 0 0 4px;
+    flex-grow: 1;
+    height: calc(1.5em + 0.75rem + 2px); /* Match the height of buttons */
+    padding: 0.375rem 0.75rem; /* Match the padding of buttons */
+    margin-right: 0; /* Remove right margin */
+}
+
+.form-inline .form-control:focus {
+    background-color: #333;
+    color: #e0e0e0;
+    border-color: #4a90e2;
+    box-shadow: 0 0 0 0.2rem rgba(74, 144, 226, 0.25);
+}
+
+.form-inline .btn-outline-success {
+    background-color: #4a90e2;
+    border: none;
+    color: white;
+    border-radius: 0 4px 4px 0;
+    padding: 0.375rem 0.75rem;
+    height: calc(1.5em + 0.75rem + 2px); /* Match the height of input */
+}
+
+.form-inline .btn-outline-success:hover {
+    background-color: #3a7bd5;
+}
+
+.form-inline .btn-primary {
+    background-color: #e0e0e0;
+    color: #1a1a1a;
+    border: none;
+    padding: 0.375rem 0.75rem;
+    margin-left: 10px;
+    height: calc(1.5em + 0.75rem + 2px); /* Match the height of input */
+}
+
+.form-inline .btn-primary:hover {
+    background-color: #c2c2c2;
+    color: #1a1a1a;
+}
+
+.form-inline .form-control {
+  background-color: #333;
+  border: 1px solid #444;
+  color: #e0e0e0;
+  border-radius: 4px 0 0 4px;
+  flex-grow: 1;
+  height: calc(2.25rem + 2px); /* Adjusted height to match buttons */
+  padding: 0.375rem 0.75rem;
+  margin-right: 0;
+}
+
+.col {
+  min-width: 640px;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .navbar {
+        padding: 0.25rem 0.5rem;
+    }
+    
+    .form-inline {
+        flex-wrap: wrap;
+    }
+    
+    .form-inline .form-control, 
+    .form-inline .btn-outline-success,
+    .form-inline .btn-primary {
+        width: 100%;
+        margin-bottom: 0.5rem;
+        border-radius: 4px;
+    }
+    
+    .form-inline .btn-primary {
+        margin-left: 0;
+    }
 }

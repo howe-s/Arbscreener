@@ -1,37 +1,38 @@
 body {
-    padding-top: 20px;
-    padding-left: 20px;
-    padding-right: 20px;
+    padding-top: 10px;
+    padding-left: 10px;
+    padding-right: 10px;
     background-color: #1a1a1a;
     color: #e0e0e0;
     font-family: Arial, sans-serif;
     margin: 0;
+    font-size: 12px; /* Reduced font size for the body */
 }
 
 .container-fluid {
-    padding: 20px;
+    padding: 10px; /* Reduced padding */
 }
 
 .user-purchases {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
-    padding: 20px; /* Added padding around the user purchases section */
+    padding: 10px; /* Reduced padding */
 }
 
 .add-purchases {
     width: 100%;
     max-width: 400px;
-    margin-bottom: 20px;
-    padding: 20px; /* Added padding inside the add-purchases card */
+    margin-bottom: 10px; /* Reduced margin */
+    padding: 10px; /* Reduced padding */
 }
 
 .card {
-    margin-bottom: 20px;
+    margin-bottom: 10px; /* Reduced margin */
     background-color: #2b2b2b;
     border-radius: 8px;
     border: 1px solid #333;
-    padding: 20px; /* Increased padding for better spacing inside cards */
+    padding: 10px; /* Reduced padding */
 }
 
 .card-header {
@@ -39,26 +40,26 @@ body {
     border-bottom: none;
     color: #4a90e2;
     font-weight: bold;
-    padding: 15px 20px; /* Adjusted padding for card headers */
+    padding: 10px 15px; /* Reduced padding */
 }
 
 .card-body {
-    padding: 20px; /* Increased padding for card body */
+    padding: 10px; /* Reduced padding */
     color: #e0e0e0;
 }
 
 .mb-4 {
     color: #e0e0e0;
-    padding-bottom: 20px; /* Added padding below the mb-4 class */
+    padding-bottom: 10px; /* Reduced padding */
 }
 
 .table-card {
-    padding: 20px; /* Added padding around the table card */
+    padding: 10px; /* Reduced padding */
 }
 
 .table-container {
     overflow-x: auto;
-    padding: 10px; /* Added padding around the table container */
+    padding: 5px; /* Reduced padding */
 }
 
 table {
@@ -68,16 +69,16 @@ table {
 
 .table th, .table td {
     text-align: left;
-    padding: 15px 20px; /* Increased padding for table cells */
+    padding: 8px 12px; /* Further reduced padding for compactness */
     border-bottom: 1px solid #444;
     background-color: #2b2b2b;
     color: #e0e0e0;
-    font-size: 14px;
-    line-height: 1.5;
+    font-size: 11px; /* Slightly smaller font size for more compact look */
+    line-height: 1.3; /* Further reduced line height */
 }
 
 .table th {
-    font-weight: 600;
+    font-weight: 700; /* Increased font weight for distinction */
     text-transform: uppercase;
     letter-spacing: 0.5px;
     border-bottom-width: 2px;
@@ -85,12 +86,10 @@ table {
     color: #e0e0e0;
 }
 
-/* Alternating row colors for better distinction */
 .table tbody tr:nth-child(even) {
     background-color: #333333;
 }
 
-/* Column-specific styling - Example for first two columns */
 .table td:nth-child(1), .table th:nth-child(1) {
     border-right: 1px solid #444;
 }
@@ -99,17 +98,14 @@ table {
     border-right: 1px solid #444;
 }
 
-/* Optional: specific background for important columns */
 .table td.important, .table th.important {
     background-color: #404040;
 }
 
-/* Or use a subtle background for every column */
 .table td, .table th {
     background-color: rgba(68, 68, 68, 0.1);
 }
 
-/* Additional readability enhancements */
 .table td {
     white-space: nowrap;
     overflow: hidden;
@@ -117,9 +113,13 @@ table {
     max-width: 200px;
 }
 
+.table-responsive {
+    width: 100%;
+}
+
 .btn-sm {
-    font-size: 0.875rem;
-    padding: 5px 10px;
+    font-size: 0.8rem; /* Reduced font size */
+    padding: 3px 8px; /* Reduced padding */
     color: #e0e0e0;
 }
 
@@ -147,7 +147,7 @@ table {
 
 .card-title {
     font-weight: 600;
-    font-size: 1.25rem;
+    font-size: 1rem; /* Reduced font size */
     color: #4a90e2;
 }
 
@@ -158,7 +158,7 @@ table {
 }
 
 .card-text {
-    font-size: 0.9rem;
+    font-size: 0.8rem; /* Reduced font size */
     color: #e0e0e0;
 }
 
@@ -172,58 +172,65 @@ table {
     text-decoration: underline;
 }
 
-/* Form styles */
 .form-label {
     display: block;
-    margin-bottom: 5px;
+    margin-bottom: 3px; /* Reduced margin */
     color: #e0e0e0;
-    padding: 5px 0; /* Added padding for form labels */
+    padding: 3px 0; /* Reduced padding */
+    font-size: 0.85rem; /* Reduced font size */
 }
 
 .form-control {
     width: 100%;
-    padding: 10px; /* Increased padding for form inputs */
-    margin-bottom: 15px;
+    padding: 8px; /* Reduced padding */
+    margin-bottom: 10px; /* Reduced margin */
     border: 1px solid #444;
     border-radius: 4px;
     background-color: #333;
     color: #e0e0e0;
+    font-size: 0.85rem; /* Reduced font size */
 }
 
 .btn-primary {
     background-color: #4a90e2;
     border: none;
     color: white;
-    padding: 12px 20px; /* Increased padding for primary buttons */
+    padding: 10px 15px; /* Reduced padding */
     border-radius: 4px;
     cursor: pointer;
+    font-size: 0.9rem; /* Reduced font size */
 }
 
 .btn-primary:hover {
     background-color: #3a7bd5;
 }
 
-/* Specific to the structure in the provided HTML */
 #user-purchases h1 {
     color: #4a90e2;
-    padding-bottom: 20px; /* Added padding below the welcome message */
+    padding-bottom: 10px; /* Reduced padding */
+    font-size: 1.2rem; /* Reduced font size */
 }
 
 .add-purchases .card-header h2,
 .your-purchases .card-header h2 {
     margin: 0;
     color: #4a90e2;
+    font-size: 1rem; /* Reduced font size */
 }
 
-/* Arbitrage Opportunities */
+.col {
+    margin-bottom: 20px;
+}
+
 .col-md-4 .card {
     width: 100%;
-    padding: 20px; /* Added padding for arbitrage opportunity cards */
+    padding: 10px; /* Reduced padding */
+    margin-bottom: 20px;
 }
 
 .col-md-4 .card-header {
     text-align: left;
-    padding: 15px 20px; /* Adjusted padding for card headers */
+    padding: 10px 15px; /* Reduced padding */
 }
 
 .col-md-4 .table {
