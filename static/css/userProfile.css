@@ -1,66 +1,126 @@
 body {
     padding-top: 20px;
-    background-color: #272727;
-    max-width: 100%;
+    padding-left: 20px;
+    padding-right: 20px;
+    background-color: #1a1a1a;
+    color: #e0e0e0;
+    font-family: Arial, sans-serif;
+    margin: 0;
+}
+
+.container-fluid {
+    padding: 20px;
 }
 
 .user-purchases {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
+    justify-content: space-between;
+    padding: 20px; /* Added padding around the user purchases section */
 }
 
-.add-purchases{
-    width: 30vw;    
-    position: flex;
+.add-purchases {
+    width: 100%;
+    max-width: 400px;
+    margin-bottom: 20px;
+    padding: 20px; /* Added padding inside the add-purchases card */
 }
-
-
 
 .card {
     margin-bottom: 20px;
-    background-color: #1f1f1f;
-    border-radius: 10px;
-    border-color: #272727;
-    padding: 10px;    
+    background-color: #2b2b2b;
+    border-radius: 8px;
+    border: 1px solid #333;
+    padding: 20px; /* Increased padding for better spacing inside cards */
 }
 
 .card-header {
-    background-color: #1f1f1f;
+    background-color: #2b2b2b;
     border-bottom: none;
-    color: #5488a8;
+    color: #4a90e2;
+    font-weight: bold;
+    padding: 15px 20px; /* Adjusted padding for card headers */
 }
+
 .card-body {
-    color: white;    
+    padding: 20px; /* Increased padding for card body */
+    color: #e0e0e0;
 }
+
 .mb-4 {
-    color: white;
+    color: #e0e0e0;
+    padding-bottom: 20px; /* Added padding below the mb-4 class */
 }
 
 .table-card {
-    padding: 10px;
+    padding: 20px; /* Added padding around the table card */
 }
+
 .table-container {
     overflow-x: auto;
+    padding: 10px; /* Added padding around the table container */
 }
 
 table {
     width: 100%;
+    border-collapse: collapse;
 }
 
-th, td {
-    text-align: center;
+.table th, .table td {
+    text-align: left;
+    padding: 15px 20px; /* Increased padding for table cells */
+    border-bottom: 1px solid #444;
+    background-color: #2b2b2b;
     color: #e0e0e0;
-    background-color: #1f1f1f;
+    font-size: 14px;
+    line-height: 1.5;
 }
 
 .table th {
-    background-color: #2a2a2a;
-    font-weight: 400;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom-width: 2px;
+    background-color: #333;
+    color: #e0e0e0;
+}
+
+/* Alternating row colors for better distinction */
+.table tbody tr:nth-child(even) {
+    background-color: #333333;
+}
+
+/* Column-specific styling - Example for first two columns */
+.table td:nth-child(1), .table th:nth-child(1) {
+    border-right: 1px solid #444;
+}
+
+.table td:nth-child(2), .table th:nth-child(2) {
+    border-right: 1px solid #444;
+}
+
+/* Optional: specific background for important columns */
+.table td.important, .table th.important {
+    background-color: #404040;
+}
+
+/* Or use a subtle background for every column */
+.table td, .table th {
+    background-color: rgba(68, 68, 68, 0.1);
+}
+
+/* Additional readability enhancements */
+.table td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
 }
 
 .btn-sm {
     font-size: 0.875rem;
+    padding: 5px 10px;
+    color: #e0e0e0;
 }
 
 @media (max-width: 768px) {
@@ -73,12 +133,12 @@ th, td {
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+    max-width: 200px;
 }
 
 #my-table {
     border-collapse: collapse;
     width: 100%;
-    table-layout: auto;
 }
 
 #baseToken-address, #pair-address {
@@ -88,14 +148,13 @@ th, td {
 .card-title {
     font-weight: 600;
     font-size: 1.25rem;
-    color: #5488a8;
-    background: #1f1f1f;
+    color: #4a90e2;
 }
 
 .table-hover tbody tr:hover td,
 .table-hover tbody tr:hover th {
-    background-color: #e0e0e0;
-    color: #1f1f1f;
+    background-color: #333;
+    color: #e0e0e0;
 }
 
 .card-text {
@@ -104,11 +163,69 @@ th, td {
 }
 
 .card-link {
-    color: #5488a8;
+    color: #4a90e2;
     text-decoration: none;
 }
 
 .card-link:hover {
-    color: #5488a8;
+    color: #3a7bd5;
     text-decoration: underline;
+}
+
+/* Form styles */
+.form-label {
+    display: block;
+    margin-bottom: 5px;
+    color: #e0e0e0;
+    padding: 5px 0; /* Added padding for form labels */
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px; /* Increased padding for form inputs */
+    margin-bottom: 15px;
+    border: 1px solid #444;
+    border-radius: 4px;
+    background-color: #333;
+    color: #e0e0e0;
+}
+
+.btn-primary {
+    background-color: #4a90e2;
+    border: none;
+    color: white;
+    padding: 12px 20px; /* Increased padding for primary buttons */
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.btn-primary:hover {
+    background-color: #3a7bd5;
+}
+
+/* Specific to the structure in the provided HTML */
+#user-purchases h1 {
+    color: #4a90e2;
+    padding-bottom: 20px; /* Added padding below the welcome message */
+}
+
+.add-purchases .card-header h2,
+.your-purchases .card-header h2 {
+    margin: 0;
+    color: #4a90e2;
+}
+
+/* Arbitrage Opportunities */
+.col-md-4 .card {
+    width: 100%;
+    padding: 20px; /* Added padding for arbitrage opportunity cards */
+}
+
+.col-md-4 .card-header {
+    text-align: left;
+    padding: 15px 20px; /* Adjusted padding for card headers */
+}
+
+.col-md-4 .table {
+    margin-bottom: 0;
 }

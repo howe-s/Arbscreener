@@ -161,8 +161,8 @@ def logout():
 
 @app.route('/userProfile')
 @login_required
-@cache.cached(timeout=3600, key_prefix='user_profile')  # Cache for 1 hour, adjust timeout as needed
 def userProfile():
+    unique_pair_addresses = []
     # Initial values
     initial_investment = 1000  # Example value, adjust as needed
     slippage_pair1 = 0.005  # Example value
@@ -172,34 +172,17 @@ def userProfile():
     searchTicker = request.args.get('user_input', 'WBTC').lower()
     user_purchases = Purchase.query.filter_by(user_id=current_user.id).all()
     
-    # Cache token_pairs
-    token_pairs = cache.get('token_pairs_' + str(current_user.id))
-    if token_pairs is None:
-        token_pairs = gather_token_pairs_from_purchases(user_purchases)
-        cache.set('token_pairs_' + str(current_user.id), token_pairs, timeout=3600)  # Cache for 1 hour
+    # Gather token pairs without caching
+    token_pairs = gather_token_pairs_from_purchases(user_purchases)
     
-    # Cache arbitrage opportunities
-    arbitrage_opportunities_key = 'arbitrage_opportunities_' + str(current_user.id)
-    arbitrage_opportunities = cache.get(arbitrage_opportunities_key)
-    if arbitrage_opportunities is None:
-        arbitrage_opportunities = find_arbitrage_opportunities_for_user(token_pairs, user_purchases, slippage_pair1, slippage_pair2, fee_percentage, initial_investment)
-        cache.set(arbitrage_opportunities_key, arbitrage_opportunities, timeout=3600)  # Cache for 1 hour
+    # Find arbitrage opportunities without caching
+    arbitrage_opportunities = find_arbitrage_opportunities_for_user(token_pairs, user_purchases, slippage_pair1, slippage_pair2, fee_percentage, initial_investment)
     
-    # Cache quote_pairs and pair_chains
-    quote_pairs_key = 'quote_pairs_' + str(current_user.id)
-    pair_chains_key = 'pair_chains_' + str(current_user.id)
-    quote_pairs, pair_chains = cache.get(quote_pairs_key), cache.get(pair_chains_key)
-    if quote_pairs is None or pair_chains is None:
-        quote_pairs, pair_chains = filter_and_process_opportunities(arbitrage_opportunities)
-        cache.set(quote_pairs_key, quote_pairs, timeout=3600)  # Cache for 1 hour
-        cache.set(pair_chains_key, pair_chains, timeout=3600)  # Cache for 1 hour
+    # Process opportunities without caching
+    quote_pairs, pair_chains = filter_and_process_opportunities(arbitrage_opportunities)
     
-    # Cache opportunities with pairs
-    opportunities_key = 'opportunities_with_pairs_' + str(current_user.id)
-    opportunities_with_pairs = cache.get(opportunities_key)
-    if opportunities_with_pairs is None:
-        opportunities_with_pairs = match_pairs_with_opportunities(arbitrage_opportunities, quote_pairs, pair_chains)
-        cache.set(opportunities_key, opportunities_with_pairs, timeout=3600)  # Cache for 1 hour
+    # Match pairs with opportunities without caching
+    opportunities_with_pairs = match_pairs_with_opportunities(arbitrage_opportunities, quote_pairs, pair_chains)
     
     # Debugging print statements
     print("Total combined opportunities and pairs:", len(opportunities_with_pairs))
@@ -222,38 +205,28 @@ def userProfile():
         search=token_pairs if token_pairs else None
     )
 
+import logging
+logging.basicConfig(level=logging.DEBUG)
+
 @app.route('/add_purchase', methods=['POST'])
 @login_required
 def add_purchase():
+    logging.debug("Form submitted")
     asset_name = request.form.get('asset_name')
-    quantity = request.form.get('quantity')
-    purchase_price = request.form.get('purchase_price')
-    purchase_date = request.form.get('purchase_date')
     baseToken_address = request.form.get('baseToken_address')
-    if not all([asset_name, quantity, purchase_price, purchase_date, baseToken_address]):
+    if not all([asset_name, baseToken_address]):
         flash('All fields are required.')
+        logging.debug("Validation failed: missing fields")
         return redirect(url_for('userProfile'))
 
-    try:
-        quantity = float(quantity)
-        purchase_price = float(purchase_price)
-        purchase_date = datetime.strptime(purchase_date, '%Y-%m-%d')
-    except ValueError:
-        flash('Invalid input values.')
-        return redirect(url_for('userProfile'))
-    
     new_purchase = Purchase(
         user_id=current_user.id,
         asset_name=asset_name,
-        quantity=quantity,
-        purchase_price=purchase_price,
-        purchase_date=purchase_date,
         baseToken_address=baseToken_address
     )
-
     db.session.add(new_purchase)
     db.session.commit()
-
+    cache.delete_memoized(userProfile)  # Clear cache for userProfile
     flash('Purchase added successfully.')
     return redirect(url_for('userProfile'))
 
@@ -264,6 +237,7 @@ def delete_purchase(purchase_id):
     if purchase and purchase.user_id == current_user.id:
         db.session.delete(purchase)
         db.session.commit()
+        cache.delete_memoized(userProfile)  # Clear cache for userProfile
         flash('Purchase deleted successfully.')
     else:
         flash('Purchase not found or unauthorized.')

@@ -18,13 +18,13 @@ class Purchase(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     asset_name = db.Column(db.String(100), nullable=False)
     baseToken_address = db.Column(db.String(100)) 
-    quantity = db.Column(db.Float, nullable=False)
-    purchase_price = db.Column(db.Float, nullable=False)
-    purchase_date = db.Column(db.Date, nullable=False)
-    pair_address = db.Column(db.String(100))  # Existing field
-    pair_url = db.Column(db.String(200))
-    baseToken_url = db.Column(db.String(200))
-    source = db.Column(db.String(50))  # New field for data source
+    # quantity = db.Column(db.Float, nullable=False)
+    # purchase_price = db.Column(db.Float, nullable=False)
+    # purchase_date = db.Column(db.Date, nullable=False)
+    # pair_address = db.Column(db.String(100))  # Existing field
+    # pair_url = db.Column(db.String(200))
+    # baseToken_url = db.Column(db.String(200))
+    # source = db.Column(db.String(50))  # New field for data source
     # tokenPair = db.Column(db.String(50))
 
     # Remove the explicit user relationship here to avoid conflict

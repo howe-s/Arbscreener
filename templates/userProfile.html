@@ -3,328 +3,286 @@
 {% block title %}Home - Dexscreener{% endblock %}
 
 {% block content %}
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/userProfile.css') }}">
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+
     <script>
-        async function fetchPrice(purchaseId) {
-            try {
-                let response = await fetch(`/user_prices/${purchaseId}`);
-                if (response.ok) {
-                    let data = await response.json();
-                    console.log(data);
-                    if (data.tokenPrice) {
-                        console.log(data.userArb)
-                        document.getElementById(`current-price-${purchaseId}`).textContent = `$${data.tokenPrice}`;
-                        document.getElementById(`profit-${purchaseId}`).textContent = `$${data.profit}`;
-                        document.getElementById(`profit-percentage-${purchaseId}`).textContent = `${data.profitPercentage}%`;
-                        document.getElementById(`purchase-cost-${purchaseId}`).textContent = `$${data.purchaseCost}`;
-                        document.getElementById(`price-source-${purchaseId}`).textContent = `${data.source}`;
-                        document.getElementById(`search-name-${purchaseId}`).textContent = `${data.name}`;
-                        document.getElementById(`token-pair-${purchaseId}`).textContent = `${data.tokenPair}`;
-                        document.getElementById(`current-value-${purchaseId}`).textContent = `${data.currentValue}`;
-                        document.getElementById(`chain-id-${purchaseId}`).textContent = `${data.chain_id}`;
+      // async function fetchPrice(purchaseId) {
+      //     try {
+      //         const response = await fetch(`/user_prices/${purchaseId}`);
+      //         if (response.ok) {
+      //             const data = await response.json();
+      //             if (data.tokenPrice) {
+      //                 updateElement(`current-price-${purchaseId}`, `$${data.tokenPrice}`);
+      //                 updateElement(`profit-${purchaseId}`, `$${data.profit}`);
+      //                 updateElement(`profit-percentage-${purchaseId}`, `${data.profitPercentage}%`);
+      //                 updateElement(`purchase-cost-${purchaseId}`, `$${data.purchaseCost}`);
+      //                 updateElement(`price-source-${purchaseId}`, data.source);
+      //                 updateElement(`search-name-${purchaseId}`, data.name);
+      //                 updateElement(`token-pair-${purchaseId}`, data.tokenPair);
+      //                 updateElement(`current-value-${purchaseId}`, data.currentValue);
+      //                 updateElement(`chain-id-${purchaseId}`, data.chain_id);
+  
+      //                 updateTotals(data.profit, data.profitPercentage, data.purchaseCost, data.quantity, data.currentValue);
+      //             } else {
+      //                 updateElement(`current-price-${purchaseId}`, 'Price not available');
+      //             }
+      //         } else {
+      //             updateElement(`current-price-${purchaseId}`, 'Error fetching price');
+      //         }
+      //     } catch (error) {
+      //         console.error('Error fetching price:', error);
+      //     }
+      // }
+  
+      // function updateElement(id, content) {
+      //     document.getElementById(id).textContent = content;
+      // }
+  
+      // function updateTotals(profit, profitPercentage, purchaseCost, quantity, currentValue) {
+      //     const totalQuantity = document.getElementById('total-quantity');
+      //     const totalProfit = document.getElementById('total-profit');
+      //     const totalProfitPercentage = document.getElementById('total-profit-percentage');
+      //     const totalCost = document.getElementById('total-cost');
+      //     const totalValue = document.getElementById('total-value');
+  
+      //     let currentTotalQuantity = Number(totalQuantity.textContent) || 0;
+      //     let currentTotalProfit = Number(totalProfit.textContent.replace('$', '')) || 0;
+      //     let currentTotalCost = Number(totalCost.textContent.replace('$', '')) || 0;
+      //     let currentTotalValue = Number(totalValue.textContent.replace('$', '')) || 0;
+  
+      //     // Update totals
+      //     currentTotalQuantity += 1;
+      //     currentTotalProfit += profit;
+      //     currentTotalCost += purchaseCost;
+      //     currentTotalValue += currentValue;
+      //     const currentTotalProfitPercentage = ((currentTotalValue - currentTotalCost) / currentTotalCost) * 100;
+  
+      //     // Update HTML
+      //     totalQuantity.textContent = currentTotalQuantity;
+      //     totalProfit.textContent = `$${currentTotalProfit.toFixed(2)}`;
+      //     totalProfitPercentage.textContent = `${currentTotalProfitPercentage.toFixed(2)}%`;
+      //     totalCost.textContent = `$${currentTotalCost.toFixed(2)}`;
+      //     totalValue.textContent = `$${currentTotalValue.toFixed(2)}`;
+      // }
+  
+      document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.purchase-row').forEach(row => {
+          fetchPrice(row.dataset.purchaseId);
+      });
+  });
+  </script>
 
-                        // Update totals with new cost
-                        updateTotals(data.profit, data.profitPercentage, data.purchaseCost, data.quantity, data.currentValue);
-                    } else {
-                        document.getElementById(`current-price-${purchaseId}`).textContent = 'Price not available';
-                    }
-                } else {
-                    document.getElementById(`current-price-${purchaseId}`).textContent = 'Error fetching price';
-                }
-            } catch (error) {
-                console.error('Error fetching price:', error);
-            }
-        }
-
-        function updateTotals(profit, profitPercentage, purchaseCost, quantity, currentValue) {
-            const totalQuantity = document.getElementById('total-quantity');
-            const totalProfit = document.getElementById('total-profit');
-            const totalProfitPercentage = document.getElementById('total-profit-percentage');
-            const totalCost = document.getElementById('total-cost');
-            const totalValue = document.getElementById('total-value');
-
-            // Parse current totals and add new values
-            let currentTotalQuantity = parseFloat(totalQuantity.textContent) || 0;
-            let currentTotalProfit = parseFloat(totalProfit.textContent.replace('$', '')) || 0;
-            let currentTotalCost = parseFloat(totalCost.textContent.replace('$', '')) || 0;
-            let currentTotalValue = parseFloat(totalValue.textContent.replace('$', '')) || 0;
-
-            // Update totals
-            currentTotalQuantity += 1;
-            currentTotalProfit += profit;         
-            currentTotalCost += purchaseCost;
-            currentTotalValue += currentValue;
-            currentTotalProfitPercentage = ((currentTotalValue - currentTotalCost) / currentTotalCost) * 100;
-            
-            // Update HTML
-            totalQuantity.textContent = currentTotalQuantity;
-            totalProfit.textContent = `$${currentTotalProfit.toFixed(2)}`;
-            totalProfitPercentage.textContent = `${currentTotalProfitPercentage.toFixed(2)}%`;
-            totalCost.textContent = `$${currentTotalCost.toFixed(2)}`;
-            totalValue.textContent = `$${currentTotalValue.toFixed(2)}`;
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const rows = Array.from(document.querySelectorAll('.purchase-row'));
-            const purchaseIds = rows.map(row => row.dataset.purchaseId);
-
-            purchaseIds.forEach(id => fetchPrice(id));
-        });
-    </script>
     <div class="container-fluid" id="user-purchases">
         <h1 class="mb-4">Welcome, {{ name }}!</h1>
-            <div class="add-purchases">
-                <div class="card">
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card mb-4">
                     <div class="card-header">
-                        <h2>Add a Purchase</h2>
+                        <h2>Add a Contract</h2>
                     </div>
                     <div class="card-body">
                         <form method="post" action="/add_purchase">
-                            <div class="form-group">
-                                <label for="asset_name">Asset Name:</label>
+                            <div class="mb-3">
+                                <label for="asset_name" class="form-label">Asset Name:</label>
                                 <input type="text" name="asset_name" id="asset_name" class="form-control" required>
                             </div>
-
-                            <div class="form-group">
-                                <label for="baseToken_address">Token Address:</label>
+                            <div class="mb-3">
+                                <label for="baseToken_address" class="form-label">Token Address:</label>
                                 <input name="baseToken_address" id="baseToken_address" class="form-control" required>
                             </div>
-
-                            <div class="form-group">
-                                <label for="quantity">Quantity:</label>
+                            <!-- <div class="mb-3">
+                                <label for="quantity" class="form-label">Quantity:</label>
                                 <input type="number" step="0.00000001" name="quantity" id="quantity" class="form-control" required>
                             </div>
-
-                            <div class="form-group">
-                                <label for="purchase_price">Purchase Price:</label>
+                            <div class="mb-3">
+                                <label for="purchase_price" class="form-label">Purchase Price:</label>
                                 <input type="number" step="0.00000001" name="purchase_price" id="purchase_price" class="form-control" required>
                             </div>
-
-                            <div class="form-group">
-                                <label for="purchase_date">Purchase Date:</label>
+                            <div class="mb-3">
+                                <label for="purchase_date" class="form-label">Purchase Date:</label>
                                 <input type="date" name="purchase_date" id="purchase_date" class="form-control" required>
-                            </div>
-
+                            </div> -->
                             <button type="submit" class="btn btn-primary">Add Purchase</button>
                         </form>
                     </div>
                 </div>
             </div>
 
-            <div class="your-purchases">
-                <div class="custom-card">
+            <div class="col-md-6">
+                <div class="card mb-4">
                     <div class="card-header">
-                        <h2>Your Purchases</h2>
+                        <h2>Your Tracked Contracts</h2>
                     </div>
-                    <div class="table-card">
-                        <table class="table table-striped table-bordered" id="my-table">
-                            <thead>
-                                <tr>                                    
-                                    <th scope="col">Search</th>
-                                    <th scope="col">Asset Name</th>
-                                    <th scope="col" style="table-layout: fixed">Asset Address</th>
-                                    <th scope="col">Chain ID</th>
-                                    <th scope="col">Pricing Ticker</th>                                    
-                                    <th scope="col" style="table-layout: fixed">Pricing Address</th>
-                                    <th scope="col">Purchase Date</th>
-                                    <th scope="col">Quantity</th>
-                                    <th scope="col">Purchase Price</th>
-                                    <th scope="col">Cost</th>
-                                    <th scope="col">Current Price</th>
-                                    <th scope="col">Current Value</th>                                    
-                                    <th scope="col">Profit</th>
-                                    <th scope="col">%</th>
-                                    <th scope="col">Source</th>
-                                    <th scope="col">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for purchase in current_user.purchases %}
-                                <tr class="purchase-row" data-purchase-id="{{ purchase.id }}">                                    
-                                    <td class="table-td">{{ purchase.asset_name }}</td>                                    
-                                    <td id="search-name-{{ purchase.id }}">Loading...</td>
-                                    <td id="baseToken-address" class="table-td">
-                                        <a id="baseToken-link" href="{{purchase.baseToken_url}}">{{ purchase.baseToken_address}}</a>
-                                    </td>  
-                                    <td id="chain-id-{{ purchase.id }}">Loading...</td>
-                                    <td id="token-pair-{{ purchase.id }}">Loading...</td>
-                                    <td id="pair-address" class="table-td">
-                                        <a id="pair-link" href="{{purchase.pair_url}}">{{ purchase.pair_address }}</a>
-                                    </td>                                    
-                                    <td>{{ purchase.purchase_date.strftime('%Y-%m-%d') }}</td>
-                                    <td>{{ purchase.quantity }}</td>
-                                    <td>${{ purchase.purchase_price }}</td>
-                                    <td id="purchase-cost-{{ purchase.id }}">Loading...</td>
-                                    <td id="current-price-{{ purchase.id }}">Loading...</td>
-                                    <td id="current-value-{{ purchase.id }}">Loading...</td>
-                                    <td id="profit-{{ purchase.id }}">Loading...</td>
-                                    <td id="profit-percentage-{{ purchase.id }}">Loading...</td>
-                                    <td id="price-source-{{ purchase.id }}">Loading...</td>
-                                    <td>
-                                        <form method="post" action="{{ url_for('delete_purchase', purchase_id=purchase.id) }}" style="display:inline;">
-                                            <button type="submit" class="btn btn-danger btn-sm">X</button>
-                                        </form>
-                                        <a href="{{ url_for('edit_purchase', purchase_id=purchase.id) }}" class="btn btn-info btn-sm">Edit</a>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                            <tfoot>
-                                <tr>
-                                    <th scope="row">Total</th>
-                                    <td>-</td>
-                                    <td>-</td>
-                                    <td>-</td>
-                                    <td>-</td>
-                                    <td>-</td>
-                                    <td>-</td>
-                                    <td id="total-quantity">0</td>
-                                    <td>-</td>
-                                    <td id="total-cost">$0.00</td>
-                                    <td>-</td>
-                                    <td id="total-value">$0.00</td>
-                                    <td id="total-profit">$0.00</td>
-                                    <td id="total-profit-percentage">0%</td>
-                                    <td>-</td>
-                                    <td>-</td>
-                                </tr>
-                            </tfoot>
-                        </table>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-bordered" id="my-table">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Asset</th>
+                                        <!-- <th scope="col">Asset Name</th> -->
+                                        <th scope="col" style="table-layout: fixed">Asset Address</th>
+                                        <!-- <th scope="col">Chain ID</th> -->
+                                        <th scope="col">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for purchase in current_user.purchases %}
+                                    <tr class="purchase-row" data-purchase-id="{{ purchase.id }}">
+                                        <td class="table-td">{{ purchase.asset_name }}</td>
+                                        <!-- <td id="search-name-{{ purchase.id }}">Loading...</td> -->
+                                        <td id="baseToken-address" class="table-td">
+                                            <a id="baseToken-link" href="{{purchase.baseToken_url}}">{{ purchase.baseToken_address}}</a>
+                                        </td>
+                                        <!-- <td id="chain-id-{{ purchase.id }}">Loading...</td>  -->
+                                        <td>
+                                            <form method="post" action="{{ url_for('delete_purchase', purchase_id=purchase.id) }}" style="display:inline;">
+                                                <button type="submit" class="btn btn-danger btn-sm">X</button>
+                                            </form>
+                                            <a href="{{ url_for('edit_purchase', purchase_id=purchase.id) }}" class="btn btn-info btn-sm">Edit</a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>                                
+                            </table>
+                        </div>
                     </div>
                 </div>
-            </div> 
-    </div>
-    <div class="container-fluid">
-      <div class="row" style="justify-content: center;">
-        {% for opportunity in arbitrage_opportunities %}
-        <div class="col-fluid mb-4 text-center">
-          <div class="card shadow-sm">
-    
-            <div class="card-header text-left">
-              <h5 class="card-title mb-0">Arbitrage Opportunity</h5>
             </div>
-            <div class="card-body p-3">
-    
-              <table class="table table-striped table-hover table-responsive" style="table-layout: fixed;">
-                <thead>
-                  <tr>
-                    <th scope="col" style="width: 20%;">Detail</th>
-                    <th scope="col" style="width: 20%;">{{ opportunity.pair1 }}</th>
-                    <th scope="col" style="width: 20%;">{{ opportunity.pair2 }}</th>
-                    {% if 'pair3' in opportunity %}
-                    <th scope="col" style="width: 40%;">{{ opportunity.pair3 }}</th>
-                    {% endif %}
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <th scope="row">Price</th>
-                    <td>{{ opportunity.pair1_price_round }}</td>
-                    <td>{{ opportunity.pair2_price_round }}</td>
-                    {% if 'pair3' in opportunity %}
-                    <td>{{ opportunity.pair3_price_round }}</td>
-                    {% endif %}
-                  </tr>
-                  <tr>
-                    <th scope="row">Price Native</th>
-                    <td>{{ opportunity.pair1_priceNative_round }}</td>
-                    <td>{{ opportunity.pair2_priceNative_round }}</td>
-                    {% if 'pair3' in opportunity %}
-                    <td>{{ opportunity.pair3_priceNative_round }}</td>
-                    {% endif %}
-                  </tr>
-                  <tr>
-                    <th scope="row">Liquidity</th>
-                    <td>{{ opportunity.pair1_liquidity }}</td>
-                    <td>{{ opportunity.pair2_liquidity }}</td>
-                    {% if 'pair3' in opportunity %}
-                    <td>{{ opportunity.pair3_liquidity }}</td>
-                    {% endif %}
-                  </tr>
-                  <tr>
-                    <th scope="row">Base Liquidity</th>
-                    <td>{{ opportunity.pair1_liquidity_base }}</td>
-                    <td>{{ opportunity.pair2_liquidity_base }}</td>
-                    {% if 'pair3' in opportunity %}
-                    <td>{{ opportunity.pair3_liquidity_base }}</td>
-                    {% endif %}
-                  </tr>
-                  <tr>
-                    <th scope="row">Quote Liquidity</th>
-                    <td>{{ opportunity.pair1_liquidity_quote }}</td>
-                    <td>{{ opportunity.pair2_liquidity_quote }}</td>
-                    {% if 'pair3' in opportunity %}
-                    <td>{{ opportunity.pair3_liquidity_quote }}</td>
-                    {% endif %}
-                  </tr>
-                  <tr>
-                    <th scope="row">Chain ID</th>
-                    <td>{{ opportunity.pair1_chain_id }}</td>
-                    <td>{{ opportunity.pair2_chain_id }}</td>
-                    {% if 'pair3' in opportunity %}
-                    <td>{{ opportunity.pair3_chain_id }}</td>
-                    {% endif %}
-                  </tr>
-                  <tr>
-                    <th scope="row">Dex ID</th>
-                    <td>{{ opportunity.pair1_dex_id }}</td>
-                    <td>{{ opportunity.pair2_dex_id }}</td>
-                    {% if 'pair3' in opportunity %}
-                    <td>{{ opportunity.pair3_dex_id }}</td>
-                    {% endif %}
-                  </tr>
-                  <tr>
-                    <th scope="row">Base Token Address</th>
-                    <td class="table-td">{{ opportunity.pair1_baseToken_address }}</td>
-                    <td class="table-td">{{ opportunity.pair2_baseToken_address }}</td>
-                    {% if 'pair3' in opportunity %}
-                    <td class="table-td">{{ opportunity.pair3_baseToken_address }}</td>
-                    {% endif %}
-                  </tr>
-                  <tr>
-                    <th scope="row">Quote Token Address</th>
-                    <td class="table-td">{{ opportunity.pair1_quoteToken_address }}</td>
-                    <td class="table-td">{{ opportunity.pair2_quoteToken_address }}</td>
-                    {% if 'pair3' in opportunity %}
-                    <td class="table-td">{{ opportunity.pair3_quoteToken_address }}</td>
-                    {% endif %}
-                  </tr>
-                  <tr>
-                    <th scope="row">Address</th>
-                    <td class="table-td">{{ opportunity.pool_pair1_address }}</td>
-                    <td class="table-td">{{ opportunity.pool_pair2_address }}</td>
-                    {% if 'pair3' in opportunity %}
-                    <td class="table-td">{{ opportunity.pool_pair3_address }}</td>
-                    {% endif %}
-                  </tr>
-                  <tr>
-                    <th scope="row">URL</th>
-                    <td>
-                      <a href="{{ opportunity.pool_pair1_url }}" target="_blank" class="card-link" title="{{ opportunity.pool_pair1_url }}">
-                        {{ opportunity.pool_pair1_url | truncate(30, True) }}
-                      </a>
-                    </td>
-                    <td>
-                      <a href="{{ opportunity.pool_pair2_url }}" target="_blank" class="card-link" title="{{ opportunity.pool_pair2_url }}">
-                        {{ opportunity.pool_pair2_url | truncate(30, True) }}
-                      </a>
-                    </td>
-                    {% if 'pair3' in opportunity %}
-                    <td>
-                      <a href="{{ opportunity.pool_pair3_url }}" target="_blank" class="card-link" title="{{ opportunity.pool_pair3_url }}">
-                        {{ opportunity.pool_pair3_url | truncate(30, True) }}
-                      </a>
-                    </td>
-                    {% endif %}
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
         </div>
-        {% endfor %}
-      </div>
+
+        <div class="row">
+            {% for opportunity in arbitrage_opportunities %}
+            <div class="col-md-4 mb-4">
+                <div class="card shadow-sm">
+
+                    <div class="card-header text-left">
+                      <h5 class="card-title mb-0">Arbitrage Opportunity</h5>
+                    </div>
+                    <div class="card-body p-3">
+
+                      <table class="table table-striped table-hover table-responsive" style="table-layout: fixed;">
+                        <thead>
+                          <tr>
+                            <th scope="col" style="width: 20%;">Detail</th>
+                            <th scope="col" style="width: 20%;">{{ opportunity.pair1 }}</th>
+                            <th scope="col" style="width: 20%;">{{ opportunity.pair2 }}</th>
+                            {% if 'pair3' in opportunity %}
+                            <th scope="col" style="width: 40%;">{{ opportunity.pair3 }}</th>
+                            {% endif %}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <th scope="row">Price</th>
+                            <td>{{ opportunity.pair1_price_round }}</td>
+                            <td>{{ opportunity.pair2_price_round }}</td>
+                            {% if 'pair3' in opportunity %}
+                            <td>{{ opportunity.pair3_price_round }}</td>
+                            {% endif %}
+                          </tr>
+                          <tr>
+                            <th scope="row">Price Native</th>
+                            <td>{{ opportunity.pair1_priceNative_round }}</td>
+                            <td>{{ opportunity.pair2_priceNative_round }}</td>
+                            {% if 'pair3' in opportunity %}
+                            <td>{{ opportunity.pair3_priceNative_round }}</td>
+                            {% endif %}
+                          </tr>
+                          <tr>
+                            <th scope="row">Liquidity</th>
+                            <td>{{ opportunity.pair1_liquidity }}</td>
+                            <td>{{ opportunity.pair2_liquidity }}</td>
+                            {% if 'pair3' in opportunity %}
+                            <td>{{ opportunity.pair3_liquidity }}</td>
+                            {% endif %}
+                          </tr>
+                          <tr>
+                            <th scope="row">Base Liquidity</th>
+                            <td>{{ opportunity.pair1_liquidity_base }}</td>
+                            <td>{{ opportunity.pair2_liquidity_base }}</td>
+                            {% if 'pair3' in opportunity %}
+                            <td>{{ opportunity.pair3_liquidity_base }}</td>
+                            {% endif %}
+                          </tr>
+                          <tr>
+                            <th scope="row">Quote Liquidity</th>
+                            <td>{{ opportunity.pair1_liquidity_quote }}</td>
+                            <td>{{ opportunity.pair2_liquidity_quote }}</td>
+                            {% if 'pair3' in opportunity %}
+                            <td>{{ opportunity.pair3_liquidity_quote }}</td>
+                            {% endif %}
+                          </tr>
+                          <tr>
+                            <th scope="row">Chain ID</th>
+                            <td>{{ opportunity.pair1_chain_id }}</td>
+                            <td>{{ opportunity.pair2_chain_id }}</td>
+                            {% if 'pair3' in opportunity %}
+                            <td>{{ opportunity.pair3_chain_id }}</td>
+                            {% endif %}
+                          </tr>
+                          <tr>
+                            <th scope="row">Dex ID</th>
+                            <td>{{ opportunity.pair1_dex_id }}</td>
+                            <td>{{ opportunity.pair2_dex_id }}</td>
+                            {% if 'pair3' in opportunity %}
+                            <td>{{ opportunity.pair3_dex_id }}</td>
+                            {% endif %}
+                          </tr>
+                          <tr>
+                            <th scope="row">Base Token Address</th>
+                            <td class="table-td">{{ opportunity.pair1_baseToken_address }}</td>
+                            <td class="table-td">{{ opportunity.pair2_baseToken_address }}</td>
+                            {% if 'pair3' in opportunity %}
+                            <td class="table-td">{{ opportunity.pair3_baseToken_address }}</td>
+                            {% endif %}
+                          </tr>
+                          <tr>
+                            <th scope="row">Quote Token Address</th>
+                            <td class="table-td">{{ opportunity.pair1_quoteToken_address }}</td>
+                            <td class="table-td">{{ opportunity.pair2_quoteToken_address }}</td>
+                            {% if 'pair3' in opportunity %}
+                            <td class="table-td">{{ opportunity.pair3_quoteToken_address }}</td>
+                            {% endif %}
+                          </tr>
+                          <tr>
+                            <th scope="row">Address</th>
+                            <td class="table-td">{{ opportunity.pool_pair1_address }}</td>
+                            <td class="table-td">{{ opportunity.pool_pair2_address }}</td>
+                            {% if 'pair3' in opportunity %}
+                            <td class="table-td">{{ opportunity.pool_pair3_address }}</td>
+                            {% endif %}
+                          </tr>
+                          <tr>
+                            <th scope="row">URL</th>
+                            <td>
+                              <a href="{{ opportunity.pool_pair1_url }}" target="_blank" class="card-link" title="{{ opportunity.pool_pair1_url }}">
+                                {{ opportunity.pool_pair1_url | truncate(30, True) }}
+                              </a>
+                            </td>
+                            <td>
+                              <a href="{{ opportunity.pool_pair2_url }}" target="_blank" class="card-link" title="{{ opportunity.pool_pair2_url }}">
+                                {{ opportunity.pool_pair2_url | truncate(30, True) }}
+                              </a>
+                            </td>
+                            {% if 'pair3' in opportunity %}
+                            <td>
+                              <a href="{{ opportunity.pool_pair3_url }}" target="_blank" class="card-link" title="{{ opportunity.pool_pair3_url }}">
+                                {{ opportunity.pool_pair3_url | truncate(30, True) }}
+                              </a>
+                            </td>
+                            {% endif %}
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
     </div>
 </html>
 {% endblock %}
