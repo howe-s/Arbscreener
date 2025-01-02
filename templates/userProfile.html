@@ -118,12 +118,12 @@
                     <tbody>
                       <tr>
                         <th scope="row">Price</th>
-                        <td>{{ opportunity.pair1_price_round }}</td>
-                        <td>{{ opportunity.pair2_price_round }}</td>
+                        <td>US $ {{ opportunity.pair1_price_round }}</td>
+                        <td>US $ {{ opportunity.pair2_price_round }}</td>
                         {% if 'pair3' in opportunity %}
-                        <td>{{ opportunity.pair3_price_round }}</td>
+                        <td>US $ {{ opportunity.pair3_price_round }}</td>
                         {% endif %}
-                      </tr>
+                    </tr>
                       <tr>
                         <th scope="row">Price Native</th>
                         <td>{{ opportunity.pair1_priceNative_round }}</td>

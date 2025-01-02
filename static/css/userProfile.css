@@ -13,6 +13,10 @@ body {
     padding: 10px; /* Reduced padding */
 }
 
+.row {
+    justify-content: center;
+}
+
 .user-purchases {
     display: flex;
     flex-wrap: wrap;

@@ -4,6 +4,7 @@ from utils.models import Purchase
 from dexscreener import DexscreenerClient
 import time
 from functools import wraps
+from collections import Counter
 
 client = DexscreenerClient()
 
@@ -34,6 +35,7 @@ def rate_limited(max_per_second):
             return ret
         return rate_limited_function
     return decorator
+    
 
 @rate_limited(1/3)  # 1 request per 3 seconds
 def search_pairs_rate_limited(contract):
@@ -42,25 +44,6 @@ def search_pairs_rate_limited(contract):
     """
     return client.search_pairs(contract)
 
-def calculate_arbitrage_profit(initial_investment, price_pair1, price_pair2, slippage_pair1, slippage_pair2, fee_percentage, liquidity_pair1, liquidity_pair2):
-    # Convert initial investment to amount in pair1
-    amount_pair1 = initial_investment / price_pair1
-    
-    # Simplified slippage model
-    def apply_slippage(amount, liquidity, slippage):
-        return amount * (1 - slippage * (amount / float(liquidity)))  # Convert liquidity to float to ensure arithmetic operation works
-    
-    adjusted_amount_pair1 = apply_slippage(amount_pair1, liquidity_pair1, slippage_pair1)
-    value_pair2 = adjusted_amount_pair1 * price_pair2
-    final_amount_pair2 = apply_slippage(value_pair2, liquidity_pair2, slippage_pair2)
-    
-    # Calculate fees
-    fees = initial_investment * fee_percentage * 2  # Considering two trades for fees
-    
-    # Profit calculation
-    profit = final_amount_pair2 - initial_investment - fees
-    
-    return profit
 
 def process_token_pairs(search):
     token_pairs = []
@@ -86,6 +69,27 @@ def process_token_pairs(search):
 
     return token_pairs
 
+def calculate_arbitrage_profit(initial_investment, price_pair1, price_pair2, slippage_pair1, slippage_pair2, fee_percentage, liquidity_pair1, liquidity_pair2):
+    # Convert initial investment to amount in pair1
+    amount_pair1 = initial_investment / price_pair1
+    
+    # Simplified slippage model
+    def apply_slippage(amount, liquidity, slippage):
+        return amount * (1 - slippage * (amount / float(liquidity)))  # Convert liquidity to float to ensure arithmetic operation works
+    
+    adjusted_amount_pair1 = apply_slippage(amount_pair1, liquidity_pair1, slippage_pair1)
+    value_pair2 = adjusted_amount_pair1 * price_pair2
+    final_amount_pair2 = apply_slippage(value_pair2, liquidity_pair2, slippage_pair2)
+    
+    # Calculate fees
+    fees = initial_investment * fee_percentage * 2  # Considering two trades for fees
+    
+    # Profit calculation
+    profit = final_amount_pair2 - initial_investment - fees
+    
+    return profit
+
+
 def find_arbitrage_opportunities(token_pairs, slippage_pair1, slippage_pair2, fee_percentage, initial_investment, user_purchases):
     print('finding arb..')
     arbitrage_opportunities = []
@@ -93,25 +97,51 @@ def find_arbitrage_opportunities(token_pairs, slippage_pair1, slippage_pair2, fe
         for j, pair2 in enumerate(token_pairs):
             if i != j:  # Ensure pairs are different
                 # Check if pairs share a common token
-                if pair1['baseToken_address'] == pair2['baseToken_address'] or pair1['quoteToken_address'] in [pair2['baseToken_address'], pair2['quoteToken_address']]:
-                    # Check for price discrepancy and sufficient liquidity for the first two pairs
-                    if (abs(float(pair2['price_native']) - float(pair1['price_native'])) > 0 and 
-                        float(pair1['liquidity_usd']) > 10000 and 
-                        float(pair2['liquidity_usd']) > 10000):
+                if (pair1['baseToken_address'] == pair2['baseToken_address'] or 
+                    pair1['baseToken_address'] == pair2['quoteToken_address'] or 
+                    pair1['quoteToken_address'] == pair2['baseToken_address']):
+                    
+                    # Determine price for comparison based on token matching
+                    if pair1['baseToken_address'] == pair2['baseToken_address']:
+                        pair1_price = float(pair1['price_native'])
+                        pair2_price = float(pair2['price_native'])
+                    elif pair1['baseToken_address'] == pair2['quoteToken_address']:
+                        pair1_price = float(pair1['price_native'])
+                        pair2_price = 1 / float(pair2['price_native'])  # Invert price since we're comparing base to quote
+                    elif pair1['quoteToken_address'] == pair2['baseToken_address']:
+                        pair1_price = 1 / float(pair1['price_native'])  # Invert price since we're comparing quote to base
+                        pair2_price = float(pair2['price_native'])
+                    else:
+                        continue  # This shouldn't happen due to our condition above, but added for robustness
 
+                    # Check for sufficient liquidity
+                    if float(pair1['liquidity_usd']) > 10000 and float(pair2['liquidity_usd']) > 10000:
+
+                        price_diff = pair2_price - pair1_price
                         liquidity_diff = float(pair1['liquidity_usd']) - float(pair2['liquidity_usd'])
-                        price_diff = float(pair2['price_native']) - float(pair1['price_native'])
-                        
-                        base_liquidity = min(float(pair1['liquidity_base']), float(pair2['liquidity_base']))
-                        profit = calculate_arbitrage_profit(initial_investment, 
-                                                            float(pair1['price_native']), 
-                                                            float(pair2['price_native']), 
-                                                            slippage_pair1, 
-                                                            slippage_pair2, 
-                                                            fee_percentage,
-                                                            float(pair1['liquidity_base']),
-                                                            float(pair2['liquidity_base']))
-                        
+
+                        # Determine which liquidity to use based on the direction of the arbitrage
+                        if price_diff > 0:
+                            # We use the liquidity of the token common in both pairs for base liquidity
+                            if pair1['baseToken_address'] == pair2['baseToken_address']:
+                                base_liquidity = min(float(pair1['liquidity_base']), float(pair2['liquidity_base']))
+                            elif pair1['baseToken_address'] == pair2['quoteToken_address']:
+                                base_liquidity = min(float(pair1['liquidity_base']), float(pair2['liquidity_quote']))
+                            else:  # pair1['quoteToken_address'] == pair2['baseToken_address']
+                                base_liquidity = min(float(pair1['liquidity_quote']), float(pair2['liquidity_base']))
+                            
+                            profit = calculate_arbitrage_profit(initial_investment, 
+                                                                pair1_price, 
+                                                                pair2_price, 
+                                                                slippage_pair1, 
+                                                                slippage_pair2, 
+                                                                fee_percentage,
+                                                                float(pair1['liquidity_base']) if pair1['baseToken_address'] in [pair2['baseToken_address'], pair2['quoteToken_address']] else float(pair1['liquidity_quote']),
+                                                                float(pair2['liquidity_base']) if pair2['baseToken_address'] in [pair1['baseToken_address'], pair1['quoteToken_address']] else float(pair2['liquidity_quote']))
+                        else:
+                            # If price_diff is not positive, we skip this opportunity as there's no immediate arbitrage to exploit
+                            continue
+
                         # Add this check
                         if profit > 0:  # Only consider positive profit opportunities
                             int_profit = int(profit * 10**8) / 10**8
