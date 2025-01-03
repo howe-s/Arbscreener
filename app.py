@@ -332,7 +332,7 @@ def user_prices(purchase_id):
 # @cache.cached(timeout=600)  # Cache for 10 minutes
 def dex_search():
     # Get the user input for ticker and perform the search
-    searchTicker = request.args.get('user_input').lower()    
+    searchTicker = request.args.get('user_input', 'WBTC').lower()    
     search = client.search_pairs(searchTicker)
     
     pool_data = []

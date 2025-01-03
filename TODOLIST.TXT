@@ -5,3 +5,16 @@
 4. Store known pairs into SQL to reduce run time?
 5. Improve login security
 
+
+
+Front end nonsense
+1. landing page styled
+2. landing page info and contact 
+3. Search pair styled (this is going to suck lol)
+4. user pair restyled
+
+Maybe consider making this all one page if at all possible? 
+
+
+Bonus: Stylized Charts for their searched assets? 
+
