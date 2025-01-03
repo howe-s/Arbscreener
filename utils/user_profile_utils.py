@@ -280,6 +280,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 from collections import Counter
 def find_third_contract_data(unique_pair_addresses, arbitrage_opportunities, session, initial_investment, slippage_pair1, slippage_pair2, fee_percentage):        
+    unique_pair_addresses = list(set(unique_pair_addresses))
     # 1. Log the start of the function
     logging.info('Starting to find third contract data')
     print("arbitrage_opportunities", type(arbitrage_opportunities))
@@ -334,7 +335,7 @@ def find_third_contract_data(unique_pair_addresses, arbitrage_opportunities, ses
     combined_opportunities = []
     # arbitrage_opportunities = [opportunity._asdict() for opportunity in session.query(...).all()]
     # 6. Process each arbitrage opportunity to find a matching third pair
-def find_third_contract_data(unique_pair_addresses, arbitrage_opportunities, session, initial_investment, slippage_pair1, slippage_pair2, fee_percentage):        
+def find_third_contract_data(unique_pair_addresses, arbitrage_opportunities, session, initial_investment, slippage_pair1, slippage_pair2, fee_percentage):
     # 1. Log the start of the function
     logging.info('Starting to find third contract data')
     print("arbitrage_opportunities", type(arbitrage_opportunities))
@@ -343,6 +344,8 @@ def find_third_contract_data(unique_pair_addresses, arbitrage_opportunities, ses
     # 2. Initialize data structures
     seen_addresses = set()  # Store seen addresses to avoid duplicates
     third_pair_index = {}   # Dictionary to store potential third pairs
+    combined_opportunities = []  # List to store combined opportunities
+    seen_combined_opportunities = set()  # Set to track unique combinations
 
     # 3. Process each unique pair address for third pair data
     for contract in unique_pair_addresses:
@@ -385,12 +388,8 @@ def find_third_contract_data(unique_pair_addresses, arbitrage_opportunities, ses
     # 4. Log the number of third contracts indexed
     logging.info(f'Indexed {len(third_pair_index)} third contracts')
     
-    # 5. Prepare to combine opportunities with third pair data
-    combined_opportunities = []
-    # arbitrage_opportunities = [opportunity._asdict() for opportunity in session.query(...).all()]
     # 6. Process each arbitrage opportunity to find a matching third pair
     for opportunity in arbitrage_opportunities:
-        # print(opportunity)
         logging.debug(f'Processing opportunity for pair1: {opportunity["pair1"]}, pair2: {opportunity["pair2"]}')
         matched_pair = None
         
@@ -401,14 +400,11 @@ def find_third_contract_data(unique_pair_addresses, arbitrage_opportunities, ses
             opportunity['pair2_baseToken_address'],
             opportunity['pair2_quoteToken_address']
         ]
-        print("addresses", addresses)
         
         # 6.2. Find unique tokens that appear only once across the two pairs
         counter = Counter(addresses)
         unique_tokens = [addr for addr, count in counter.items() if count == 1]
         shared_tokens = [addr for addr, count in counter.items() if count > 1]
-        # print("unique_tokens", unique_tokens)
-        # print("shared_tokens", shared_tokens)
 
         # 6.3. Modify the logic to handle different scenarios
         if len(unique_tokens) == 2:
@@ -446,7 +442,6 @@ def find_third_contract_data(unique_pair_addresses, arbitrage_opportunities, ses
 
         # 6.4. Update the opportunity with third pair data if a match is found
         if matched_pair:
-            print('MATCH FOUND')
             combined_opportunity = opportunity.copy()
             combined_opportunity.update({
                 'pair3': matched_pair['pair'],
@@ -464,8 +459,15 @@ def find_third_contract_data(unique_pair_addresses, arbitrage_opportunities, ses
                 'pair3_priceNative': matched_pair['price_native'],
                 'pair3_priceNative_round': f"{round(float(matched_pair['price_native']), 8)}"
             })
-            # 6.6. Add the updated opportunity to the list only if a match was found
-            combined_opportunities.append(combined_opportunity)
+            
+            # Ensure uniqueness by creating a tuple of sorted pair names
+            opportunity_key = tuple(sorted([combined_opportunity['pair1'], combined_opportunity['pair2'], combined_opportunity['pair3']]))
+            if opportunity_key not in seen_combined_opportunities:
+                seen_combined_opportunities.add(opportunity_key)
+                combined_opportunities.append(combined_opportunity)
+                logging.debug(f'Added unique opportunity: {combined_opportunity}')
+            else:
+                logging.debug(f'Skipped duplicate opportunity: {combined_opportunity}')
 
     # 7. Log the final number of opportunities processed
     logging.info(f'Final number of arbitrage opportunities with third pair: {len(combined_opportunities)}')
