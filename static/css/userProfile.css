@@ -17,6 +17,10 @@ body {
     justify-content: center;
 }
 
+.col-md-6 {
+    max-width: 33%;
+}
+
 .user-purchases {
     display: flex;
     flex-wrap: wrap;

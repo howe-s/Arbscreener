@@ -32,3 +32,17 @@ class Purchase(db.Model):
 
     def __repr__(self):
         return f'<Purchase {self.asset_name}>'
+    
+class Contracts(db.Model):
+    __tablename__ = 'contracts'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    contract_address = db.Column(db.String(100), unique=True, nullable=False)
+    base_token_address = db.Column(db.String(100), nullable=False)
+    quote_token_address = db.Column(db.String(100), nullable=False)
+    chain_id = db.Column(db.String(50))
+    dex_id = db.Column(db.String(50))
+    last_updated = db.Column(db.DateTime, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
+
+    def __repr__(self):
+        return f'<Contract {self.contract_address}>'

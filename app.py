@@ -38,24 +38,8 @@ from utils.api_utils import rate_limit, fetch_current_price
 from collections import Counter, defaultdict
 import time
 from flask_caching import Cache
-# from utils.arbitrage_utils import find_arbitrage_opportunities, process_token_pairs
-# from utils.user_profile_utils import (
-#     get_user_purchases,
-#     gather_token_pairs_from_purchases,
-#     find_arbitrage_opportunities_for_user,
-#     filter_and_process_opportunities,
-#     match_pairs_with_opportunities,
-#     find_third_contract_data
-# )
-from utils.user_profile_utils import (
-    get_user_purchases,
-    gather_token_pairs_from_purchases,
-    find_arbitrage_opportunities_for_user,
-    filter_and_process_opportunities,
-    match_pairs_with_opportunities,
-    find_third_contract_data,
-    find_arbitrage_opportunities, process_token_pairs
-)
+
+
 
 # RUN FLASK
 app = Flask(__name__)
@@ -74,6 +58,8 @@ cache = Cache(app)
 # Initialize DB
 db.init_app(app)
 migrate = Migrate(app, db)
+# Gather token pairs without caching
+
 
 # Setup Flask-Login
 login_manager = LoginManager()
@@ -143,7 +129,7 @@ def register():
         # Create a new user with hashed password
         hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
         new_user = User(username=username, email=email, password=hashed_password, full_name=full_name)
-
+        # THIS WORKS
         db.session.add(new_user)
         db.session.commit()
 
@@ -162,39 +148,58 @@ def logout():
 @app.route('/userProfile')
 @login_required
 def userProfile():
+
+    from utils.user_profile_utils import (    
+    gather_token_pairs_from_purchases,
+    find_arbitrage_opportunities_for_user,
+    filter_and_process_opportunities,
+    match_pairs_with_opportunities,
+    find_third_contract_data,
+)
+    logging.info('Processing user profile request')
+    
     unique_pair_addresses = []
+    
     # Initial values
     initial_investment = 1000  # Example value, adjust as needed
     slippage_pair1 = 0.005  # Example value
     slippage_pair2 = 0.005  # Example value
     fee_percentage = 0.003  # Example value, this is typically 0.3% for many DEXs
-    
+
     searchTicker = request.args.get('user_input', 'WBTC').lower()
     user_purchases = Purchase.query.filter_by(user_id=current_user.id).all()
+      
+    session = db.session
+    token_pairs = gather_token_pairs_from_purchases(user_purchases, session)
     
-    # Gather token pairs without caching
-    token_pairs = gather_token_pairs_from_purchases(user_purchases)
-    
-    # Find arbitrage opportunities without caching
+    logging.info('Finding arbitrage opportunities')
     arbitrage_opportunities = find_arbitrage_opportunities_for_user(token_pairs, user_purchases, slippage_pair1, slippage_pair2, fee_percentage, initial_investment)
-    
-    # Process opportunities without caching
+    logging.info(f'Found {len(arbitrage_opportunities)} initial arbitrage opportunities.')
+
+    # Process opportunities 
     quote_pairs, pair_chains = filter_and_process_opportunities(arbitrage_opportunities)
-    
-    # Match pairs with opportunities without caching
+    logging.info(f'After filtering, {len(quote_pairs)} quote pairs and {len(pair_chains)} pair chains remain.')
+
+    # Match pairs with opportunities
     opportunities_with_pairs = match_pairs_with_opportunities(arbitrage_opportunities, quote_pairs, pair_chains)
-    
+    logging.info(f'Matched pairs result in {len(opportunities_with_pairs)} opportunities.')
+
     # Debugging print statements
-    print("Total combined opportunities and pairs:", len(opportunities_with_pairs))
+    logging.debug(f"Total combined opportunities and pairs: {len(opportunities_with_pairs)}")
     if opportunities_with_pairs:
         sample_combined = opportunities_with_pairs[0]
         all_pair_addresses = list(set(p.pair_address for o in opportunities_with_pairs for p in o['matching_pairs']))
         unique_pair_addresses = sorted(all_pair_addresses)
 
     # Use the initially defined values here
-    all_three_contracts = find_third_contract_data(unique_pair_addresses, arbitrage_opportunities, initial_investment, slippage_pair1, slippage_pair2, fee_percentage)
+    logging.info('Finding third contract data')
+    with app.app_context(): 
+        session = db.session       
+        all_three_contracts = find_third_contract_data(unique_pair_addresses, arbitrage_opportunities, session, initial_investment, slippage_pair1, slippage_pair2, fee_percentage)
+    # print('ALL THREE CONTRACTS', all_three_contracts)
     sorted_opportunities = sorted(all_three_contracts, key=lambda x: x['int_profit'], reverse=True)
-
+    logging.info(f'Final number of arbitrage opportunities: {len(sorted_opportunities)}')
+    # print("API calls made:", api_call_counter)
     return render_template(
         'userProfile.html',
         user_input=searchTicker,
@@ -204,19 +209,20 @@ def userProfile():
         arbitrage_opportunities=sorted_opportunities,
         search=token_pairs if token_pairs else None
     )
-
 import logging
-logging.basicConfig(level=logging.DEBUG)
+# logging.basicConfig(level=logging.DEBUG)
 
 @app.route('/add_purchase', methods=['POST'])
 @login_required
 def add_purchase():
-    logging.debug("Form submitted")
+    from utils.models import Purchase
+    # import logging
+    # logging.debug("Form submitted")
     asset_name = request.form.get('asset_name')
     baseToken_address = request.form.get('baseToken_address')
     if not all([asset_name, baseToken_address]):
         flash('All fields are required.')
-        logging.debug("Validation failed: missing fields")
+        # logging.debug("Validation failed: missing fields")
         return redirect(url_for('userProfile'))
 
     new_purchase = Purchase(
@@ -233,6 +239,7 @@ def add_purchase():
 @app.route('/delete_purchase/<int:purchase_id>', methods=['POST'])
 @login_required
 def delete_purchase(purchase_id):
+    from utils.models import Purchase
     purchase = Purchase.query.get(purchase_id)
     if purchase and purchase.user_id == current_user.id:
         db.session.delete(purchase)
@@ -247,6 +254,7 @@ def delete_purchase(purchase_id):
 @app.route('/edit_purchase/<int:purchase_id>', methods=['GET', 'POST'])
 @login_required
 def edit_purchase(purchase_id):
+    from utils.models import Purchase
     purchase = Purchase.query.get(purchase_id)
     if purchase and purchase.user_id == current_user.id:
         if request.method == 'POST':
@@ -271,6 +279,8 @@ def edit_purchase(purchase_id):
 @cache.cached(timeout=300)  # Cache for 5 minutes
 def user_prices(purchase_id):
     print('Getting prices...')  
+    from utils.models import Purchase
+    from utils.api_utils import fetch_current_price
       
     # Helper function to calculate profit and percentages
     def calculate_profit_and_percentages(token_price, purchase_price, quantity):
@@ -319,7 +329,7 @@ def user_prices(purchase_id):
 
 @app.route('/dex_search', methods=['GET', 'POST'])
 @login_required
-@cache.cached(timeout=600)  # Cache for 10 minutes
+# @cache.cached(timeout=600)  # Cache for 10 minutes
 def dex_search():
     # Get the user input for ticker and perform the search
     searchTicker = request.args.get('user_input').lower()    
@@ -373,6 +383,11 @@ def dex_search():
 @login_required
 @cache.cached(timeout=300)  # Cache for 5 minutes
 def arb():
+
+    from utils.user_profile_utils import (   
+        find_arbitrage_opportunities, 
+        process_token_pairs
+    )
     searchTicker = request.args.get('user_input', 'WBTC').lower()
     search = client.search_pairs(searchTicker)
     
@@ -381,7 +396,7 @@ def arb():
     slippage_pair1 = 0.03  # 1% slippage
     slippage_pair2 = 0.03 # 1% slippage
     fee_percentage = 0.001  # 0.3% trading fee
-    initial_investment = 1000  # Example initial investment
+    initial_investment = 10000  # Example initial investment
 
     arbitrage_opportunities = find_arbitrage_opportunities(
         token_pairs, slippage_pair1, slippage_pair2, fee_percentage, initial_investment
