@@ -277,81 +277,22 @@ def find_arbitrage_opportunities(token_pairs, slippage_pair1, slippage_pair2, fe
 # Configure logging if not already done in the module where this function resides
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-
-from collections import Counter
-def find_third_contract_data(unique_pair_addresses, arbitrage_opportunities, session, initial_investment, slippage_pair1, slippage_pair2, fee_percentage):        
-    unique_pair_addresses = list(set(unique_pair_addresses))
-    # 1. Log the start of the function
-    logging.info('Starting to find third contract data')
-    print("arbitrage_opportunities", type(arbitrage_opportunities))
-    print("arbitrage_opportunities", type(arbitrage_opportunities))
-    
-    # 2. Initialize data structures
-    seen_addresses = set()  # Store seen addresses to avoid duplicates
-    third_pair_index = {}   # Dictionary to store potential third pairs
-
-    # 3. Process each unique pair address for third pair data
-    for contract in unique_pair_addresses:
-        if contract not in seen_addresses:
-            # 3.1. Add to seen addresses to avoid processing duplicates
-            seen_addresses.add(contract)
-            logging.info(f'Processing contract: {contract}')
-            
-            # 3.2. Search for pairs related to this contract
-            search = search_pairs_rate_limited(session, contract)
-            if search:
-                for pair in search:
-                    # 3.3. Filter pairs based on liquidity
-                    liquidity_data = safe_get(pair, 'liquidity', {})
-                    if hasattr(liquidity_data, 'usd') and liquidity_data.usd > 1:
-                        logging.debug(f'Processing pair with sufficient liquidity: {pair.pair_address}')
-                        
-                        # 3.4. Extract details of the pair if it meets liquidity criteria
-                        pair_details = {
-                            'baseToken_address': safe_get(pair.base_token, 'address', 'N/A'),
-                            'quoteToken_address': safe_get(pair.quote_token, 'address', 'N/A'),
-                            'pair_address': safe_get(pair, 'pair_address', 'N/A'),
-                            'pair': f"{safe_get(pair.base_token, 'name', 'N/A')}/{safe_get(pair.quote_token, 'name', 'N/A')}",
-                            'price_usd': safe_get(pair, 'priceUsd', '0.0'),
-                            'price_native': safe_get(pair, 'priceNative', '0.0'),
-                            'liquidity': liquidity_data,
-                            'url': safe_get(pair, 'url', 'N/A'),
-                            'chain_id': safe_get(pair, 'chain_id', 'N/A'),
-                            'dex_id': safe_get(pair, 'dex_id', 'N/A')
-                        }
-                        # 3.5. Add the pair to the index using its address as the key
-                        third_pair_index[safe_get(pair, 'pair_address', 'N/A')] = pair_details
-            else:
-                # 3.6. Log if no search results were found for this contract
-                logging.debug(f'No search results for contract {contract}')
-        else:
-            # 3.7. Skip already processed contracts
-            logging.info(f'Skipping already seen address: {contract}')
-
-    # 4. Log the number of third contracts indexed
-    logging.info(f'Indexed {len(third_pair_index)} third contracts')
-    
-    # 5. Prepare to combine opportunities with third pair data
-    combined_opportunities = []
-    # arbitrage_opportunities = [opportunity._asdict() for opportunity in session.query(...).all()]
-    # 6. Process each arbitrage opportunity to find a matching third pair
 def find_third_contract_data(unique_pair_addresses, arbitrage_opportunities, session, initial_investment, slippage_pair1, slippage_pair2, fee_percentage):
     # 1. Log the start of the function
     logging.info('Starting to find third contract data')
     print("arbitrage_opportunities", type(arbitrage_opportunities))
-    print("arbitrage_opportunities", type(arbitrage_opportunities))
     
     # 2. Initialize data structures
-    seen_addresses = set()  # Store seen addresses to avoid duplicates
+    # seen_addresses = set()  # Store seen addresses to avoid duplicates
     third_pair_index = {}   # Dictionary to store potential third pairs
     combined_opportunities = []  # List to store combined opportunities
     seen_combined_opportunities = set()  # Set to track unique combinations
 
     # 3. Process each unique pair address for third pair data
     for contract in unique_pair_addresses:
-        if contract not in seen_addresses:
+        # if contract not in seen_addresses:
             # 3.1. Add to seen addresses to avoid processing duplicates
-            seen_addresses.add(contract)
+            # seen_addresses.add(contract)
             logging.info(f'Processing contract: {contract}')
             
             # 3.2. Search for pairs related to this contract
@@ -369,8 +310,8 @@ def find_third_contract_data(unique_pair_addresses, arbitrage_opportunities, ses
                             'quoteToken_address': safe_get(pair.quote_token, 'address', 'N/A'),
                             'pair_address': safe_get(pair, 'pair_address', 'N/A'),
                             'pair': f"{safe_get(pair.base_token, 'name', 'N/A')}/{safe_get(pair.quote_token, 'name', 'N/A')}",
-                            'price_usd': safe_get(pair, 'priceUsd', '0.0'),
-                            'price_native': safe_get(pair, 'priceNative', '0.0'),
+                            'price_usd': safe_get(pair, 'price_usd', '0.0'),
+                            'price_native': safe_get(pair, 'price_native', '0.0'),
                             'liquidity': liquidity_data,
                             'url': safe_get(pair, 'url', 'N/A'),
                             'chain_id': safe_get(pair, 'chain_id', 'N/A'),
@@ -381,9 +322,9 @@ def find_third_contract_data(unique_pair_addresses, arbitrage_opportunities, ses
             else:
                 # 3.6. Log if no search results were found for this contract
                 logging.debug(f'No search results for contract {contract}')
-        else:
+        # else:
             # 3.7. Skip already processed contracts
-            logging.info(f'Skipping already seen address: {contract}')
+            # logging.info(f'Skipping already seen address: {contract}')
 
     # 4. Log the number of third contracts indexed
     logging.info(f'Indexed {len(third_pair_index)} third contracts')
