@@ -45,6 +45,7 @@ class Contracts(db.Model):
     dex_id = db.Column(db.Integer)
     last_updated = db.Column(db.DateTime)
     price_native = db.Column(db.Float)
+    price_usd = db.Column(db.Float)
     # base_token_name = db.Column(db.String(255))  # Uncomment if adding this column
 
     def __repr__(self):
