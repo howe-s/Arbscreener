@@ -3,144 +3,177 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arbscreener</title>
+    <title>Arbscreener - Smart Contract Discovery</title>
     <style>
-        /* Base styles for a more dynamic quantum minimalist design */
         body {
             margin: 0;
             font-family: 'Arial', sans-serif;
-            background-color: #121212; /* Dark background */
-            color: #F0F0F0; /* Light gray text */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
+            background-color: #0A0A0A; /* Darker background for contrast */
+            color: #E0E0E0; /* Light gray text for readability */
+            line-height: 1.6;
         }
 
         .container {
-            position: relative;
             display: flex;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
+            padding: 50px 20px;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
             text-align: center;
-            padding: 50px;
-            width: 70%;
+            margin-bottom: 40px;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin: 0;
+            color: #4a90e2;
+        }
+
+        header h2 {
+            font-size: 1.2em;
+            color: #B0B0B0;
+            margin: 5px 0 20px;
+        }
+
+        .hero {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            padding: 30px;
+            margin-bottom: 40px;
+            width: 100%;
             max-width: 800px;
-            /* background-color: #1A1A1A; */
-            /* border-radius: 16px; */
-            /* box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5); */
-            transform: scale(1);
-            transition: transform 0.3s ease-in-out;
         }
 
-        .container:hover {
-            transform: scale(1.05); /* Slight zoom effect */
-        }
-
-        .logo {
-            margin-bottom: 20px;
-            animation: fadeIn 1.2s ease-out;
-            height: auto; /* Maintain aspect ratio */
-            /* max-width: 100%;  */
-        }
-
-
-        .logo pre {
-            font-family: 'Courier New', monospace; /* Use a monospace font for ASCII art */
-            font-size: 0.7em; /* Adjust size as needed */
-            color: #FF6F00; /* Neon orange accent */
+        .hero p {
+            margin: 20px 0;
         }
 
         .btn {
             display: inline-block;
-            margin: 20px;
-            padding: 16px 32px;
-            background-color: #FF6F00;
+            margin: 10px 10px 0 0;
+            padding: 15px 30px;
+            background: linear-gradient(45deg, #4a90e2, #63b8ff);
             color: #1A1A1A;
-            font-size: 1.1rem;
+            font-size: 1rem;
             text-transform: uppercase;
-            letter-spacing: 3px;
+            letter-spacing: 2px;
             border-radius: 50px;
             text-decoration: none;
             transition: all 0.3s ease;
-            transform: translateY(0);
-            animation: buttonAnim 0.5s ease-out forwards;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
         .btn:hover {
-            background-color: #121212;
-            color: #FF6F00;
-            border: 2px solid #FF6F00;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            transform: translateY(-4px);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
         }
 
-        .btn:nth-child(1) {
-            animation-delay: 0.2s; /* Staggered button animations */
+        .features, .how-it-works {
+            width: 100%;
+            margin-bottom: 40px;
+            text-align: center;
         }
 
-        .btn:nth-child(2) {
-            animation-delay: 0.4s;
+        .features h3, .how-it-works h3 {
+            color: #4a90e2;
+            font-size: 1.5em;
+            margin-bottom: 20px;
         }
 
-        @keyframes buttonAnim {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
+        .feature, .step {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: calc(33.333% - 20px);
+            display: inline-block;
+            vertical-align: top;
+        }
+
+        footer {
+            width: 100%;
+            text-align: center;
+            font-size: 0.8em;
+            padding: 20px 0;
+            background: rgba(255, 255, 255, 0.1);
+            border-top: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .feature, .step {
+                width: calc(50% - 20px);
             }
         }
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Responsive design for smaller screens */
-        @media (max-width: 600px) {
-            .logo pre {
-                font-size: 0.9em;
-            }
-
-            .btn {
-                padding: 12px 25px;
-                font-size: 1rem;
+        @media (max-width: 480px) {
+            .feature, .step {
+                width: 100%;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="logo">            
-            <pre>
-            
-_____/\\\\\\\\\___________________/\\\__________________________________________________________________________________________________________________________        
-___/\\\\\\\\\\\\\________________\/\\\__________________________________________________________________________________________________________________________       
- __/\\\/////////\\\_______________\/\\\__________________________________________________________________________________________________________________________      
-  _\/\\\_______\/\\\__/\\/\\\\\\\__\/\\\_________/\\\\\\\\\\_____/\\\\\\\\__/\\/\\\\\\\______/\\\\\\\\______/\\\\\\\\___/\\/\\\\\\_______/\\\\\\\\___/\\/\\\\\\\__     
-   _\/\\\\\\\\\\\\\\\_\/\\\/////\\\_\/\\\\\\\\\__\/\\\//////____/\\\//////__\/\\\/////\\\___/\\\/////\\\___/\\\/////\\\_\/\\\////\\\____/\\\/////\\\_\/\\\/////\\\_    
-    _\/\\\/////////\\\_\/\\\___\///__\/\\\////\\\_\/\\\\\\\\\\__/\\\_________\/\\\___\///___/\\\\\\\\\\\___/\\\\\\\\\\\__\/\\\__\//\\\__/\\\\\\\\\\\__\/\\\___\///__   
-     _\/\\\_______\/\\\_\/\\\_________\/\\\__\/\\\_\////////\\\_\//\\\________\/\\\_________\//\\///////___\//\\///////___\/\\\___\/\\\_\//\\///////___\/\\\_________  
-      _\/\\\_______\/\\\_\/\\\_________\/\\\\\\\\\___/\\\\\\\\\\__\///\\\\\\\\_\/\\\__________\//\\\\\\\\\\__\//\\\\\\\\\\_\/\\\___\/\\\__\//\\\\\\\\\\_\/\\\_________ 
-       _\///________\///__\///__________\/////////___\//////////_____\////////__\///____________\//////////____\//////////__\///____\///____\//////////__\///__________
+        <header>
+            <h1>Arbscreener</h1>
+            <h2>Your Fastest Path to Smart Contract Discovery</h2>
+        </header>
 
-            </pre>
-        </div>
-        <a href="/dex_search" class="btn">Explore Contracts</a>
-        {% if is_logged_in %}
-            <a class="btn" href="{{ url_for('logout') }}">Logout</a>
-        {% endif %}
+        <section class="hero">
+            <p>Find contracts for your bots in seconds</p>
+            <p>Discover, analyze, and deploy smart contracts effortlessly with our advanced search technology.</p>
+            <a href="/dex_search" class="btn">Explore Contracts</a>
+            {% if is_logged_in %}
+                <a class="btn" href="{{ url_for('logout') }}">Logout</a>
+            {% endif %}
+        </section>
+
+        <section class="features">
+            <h3>Key Features</h3>
+            <div class="feature">
+                <h4>Advanced Search</h4>
+                <p>Utilize our powerful search algorithms to find exactly what you need.</p>
+            </div>
+            <div class="feature">
+                <h4>Real-Time Data</h4>
+                <p>Stay updated with real-time contract data for immediate action.</p>
+            </div>
+            <div class="feature">
+                <h4>User-Friendly Interface</h4>
+                <p>Intuitive design ensures ease of use for all levels of expertise.</p>
+            </div>
+        </section>
+
+        <section class="how-it-works">
+            <h3>How It Works</h3>
+            <div class="step">
+                <h4>Search</h4>
+                <p>Input your criteria and let Arbscreener find the contracts.</p>
+            </div>
+            <div class="step">
+                <h4>Analyze</h4>
+                <p>Review the contracts details, terms, and potential.</p>
+            </div>
+            <div class="step">
+                <h4>Deploy</h4>
+                <p>Deploy your bots or integrate the contracts into your systems.</p>
+            </div>
+        </section>
+
+        <footer>
+            <p>© 2025 Arbscreener. All rights reserved.</p>
+        </footer>
     </div>
 </body>
 </html>

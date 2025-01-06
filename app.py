@@ -148,27 +148,40 @@ def logout():
 @app.route('/userProfile')
 @login_required
 def userProfile():
-
-    from utils.user_profile_utils import (    
-    gather_token_pairs_from_purchases,
-    find_arbitrage_opportunities_for_user,
-    filter_and_process_opportunities,
-    match_pairs_with_opportunities,
-    find_third_contract_data,
-)
     logging.info('Processing user profile request')
     
-    unique_pair_addresses = []
-    
-    # Initial values
-    initial_investment = 1000  # Example value, adjust as needed
-    slippage_pair1 = 0.005  # Example value
-    slippage_pair2 = 0.005  # Example value
-    fee_percentage = 0.003  # Example value, this is typically 0.3% for many DEXs
-
     searchTicker = request.args.get('user_input', 'WBTC').lower()
+    
+    # Render the template first with basic user info
+    return render_template(
+        'userProfile.html',
+        user_input=searchTicker,
+        name=current_user.username,
+        full_name=current_user.full_name,
+        is_logged_in=current_user.is_authenticated,
+        arbitrage_opportunities=[],  # Placeholder, will be updated by JS
+        search=None
+    )
+
+
+@app.route('/get_arbitrage_data', methods=['POST'])
+@login_required
+def get_arbitrage_data():
+
+    from utils.user_profile_utils import (    
+        gather_token_pairs_from_purchases,
+        find_arbitrage_opportunities_for_user,
+        filter_and_process_opportunities,
+        match_pairs_with_opportunities,
+        find_third_contract_data,
+    )
+    initial_investment = 1000
+    slippage_pair1 = 0.005
+    slippage_pair2 = 0.005
+    fee_percentage = 0.003
+
     user_purchases = Purchase.query.filter_by(user_id=current_user.id).all()
-      
+    
     session = db.session
     token_pairs = gather_token_pairs_from_purchases(user_purchases, session)
     
@@ -176,39 +189,20 @@ def userProfile():
     arbitrage_opportunities = find_arbitrage_opportunities_for_user(token_pairs, user_purchases, slippage_pair1, slippage_pair2, fee_percentage, initial_investment)
     logging.info(f'Found {len(arbitrage_opportunities)} initial arbitrage opportunities.')
 
-    # Process opportunities 
     quote_pairs, pair_chains = filter_and_process_opportunities(arbitrage_opportunities)
-    logging.info(f'After filtering, {len(quote_pairs)} quote pairs and {len(pair_chains)} pair chains remain.')
-
-    # Match pairs with opportunities
     opportunities_with_pairs = match_pairs_with_opportunities(arbitrage_opportunities, quote_pairs, pair_chains)
-    logging.info(f'Matched pairs result in {len(opportunities_with_pairs)} opportunities.')
 
-    # Debugging print statements
-    logging.debug(f"Total combined opportunities and pairs: {len(opportunities_with_pairs)}")
-    if opportunities_with_pairs:
-        sample_combined = opportunities_with_pairs[0]
-        all_pair_addresses = list(set(p.pair_address for o in opportunities_with_pairs for p in o['matching_pairs']))
-        unique_pair_addresses = sorted(all_pair_addresses)
+    unique_pair_addresses = sorted(set(p.pair_address for o in opportunities_with_pairs for p in o['matching_pairs']))
 
-    # Use the initially defined values here
     logging.info('Finding third contract data')
     with app.app_context(): 
         session = db.session       
         all_three_contracts = find_third_contract_data(unique_pair_addresses, arbitrage_opportunities, session, initial_investment, slippage_pair1, slippage_pair2, fee_percentage)
-    # print('ALL THREE CONTRACTS', all_three_contracts)
+
     sorted_opportunities = sorted(all_three_contracts, key=lambda x: x['int_profit'], reverse=True)
     logging.info(f'Final number of arbitrage opportunities: {len(sorted_opportunities)}')
-    # print("API calls made:", api_call_counter)
-    return render_template(
-        'userProfile.html',
-        user_input=searchTicker,
-        name=current_user.username,
-        full_name=current_user.full_name,
-        is_logged_in=current_user.is_authenticated,
-        arbitrage_opportunities=sorted_opportunities,
-        search=token_pairs if token_pairs else None
-    )
+
+    return jsonify(sorted_opportunities)
 import logging
 # logging.basicConfig(level=logging.DEBUG)
 
