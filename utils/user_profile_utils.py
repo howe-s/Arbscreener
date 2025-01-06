@@ -12,18 +12,10 @@ import requests
 from flask import Flask, current_app
 from utils.models import db
 
-
 client = DexscreenerClient()
 session = db.session
-# print('PRINTTESTING~~~~~~~~~~~~~~~~~~~', type(session))
 
 api_call_counter = Counter()
-
-# def some_function():
-#     with db.engine.connect() as connection:
-#         result = connection.execute(db.session.query(Contracts).statement).fetchall()
-#         print(result)
-#         return result
 
 def safe_get(obj, attr, default=None):
     """Helper function to safely access an attribute or return a default value."""
@@ -72,54 +64,49 @@ def retry_with_backoff(func, max_retries=3, initial_delay=1, backoff_factor=2):
         return None  # or handle as appropriate if all retries fail
     return wrapper
 
-# @lru_cache(maxsize=128)
+seen_addresses = defaultdict(bool)
+
 @retry_with_backoff
-@rate_limited(1/2)  # 1 request per 2 seconds, if safe with API limits
-def search_pairs_rate_limited(session, contract: Union[str, List[str]]):
+@rate_limited(1/2)  # Adjust rate limiting as needed
+@retry_with_backoff
+@rate_limited(1/2)  # Adjust rate limiting as needed
+def fetch_and_cache_pairs(session, contract: Union[str, List[str]]):
     """
-    Search for pairs with rate limiting and caching, and insert into SQL if new.
-    
-    :param session: SQLAlchemy session object for database operations
-    :param contract: Either a single contract address as a string or a list of contract addresses
-    :return: List of search results from the API call or None if there's an error
-    """  
-    # Ensure we're in the Flask application context
-    with current_app.app_context():
-        if isinstance(contract, list):
-            search_query = ", ".join(contract)
-        else:
-            search_query = contract
+    Fetch pairs with rate limiting, caching, and address checking.
+    """
+    if isinstance(contract, list):
+        search_query = ", ".join(contract)
+    else:
+        search_query = contract
 
-        api_call_counter['search_pairs'] += 1
-        
-        try:
-            search_results = client.search_pairs(search_query)
+    try:
+        search_results = client.search_pairs(search_query)
+        if search_results:
+            for pair in search_results:
+                contract_address = pair.pair_address      
+                existing_contract = db.session.query(Contracts).filter_by(contract_address=contract_address).first()
+                if not existing_contract:
+                    new_contract = Contracts(
+                        contract_address=contract_address,
+                        base_token_address=pair.base_token.address,
+                        quote_token_address=pair.quote_token.address,
+                        chain_id=pair.chain_id,
+                        dex_id=pair.dex_id,
+                        price_native=float(pair.price_native) if pair.price_native is not None else 0.0
+                        
+                    )
+                    db.session.add(new_contract)
+            db.session.commit()  
             
-            if search_results:
-                first_two_pairs_count = min(2, len(search_results))
-                print(f'Found {first_two_pairs_count} of the first two pairs.')
-                
-                for pair in search_results:
-                    contract_address = pair.pair_address      
-                    # Use db.session directly to avoid confusion
-                    existing_contract = db.session.query(Contracts).filter_by(contract_address=contract_address).first()
-                    if not existing_contract:
-                        new_contract = Contracts(
-                            contract_address=contract_address,
-                            base_token_address=pair.base_token.address,
-                            quote_token_address=pair.quote_token.address,
-                            chain_id=pair.chain_id,
-                            dex_id=pair.dex_id
-                        )
-                        db.session.add(new_contract)
-                db.session.commit()  
-            
-            # print(f"Search results for {search_query}:", search_results)
+            # Mark as seen after successful processing
+            for addr in search_query.split(', ') if isinstance(contract, list) else [search_query]:
+                seen_addresses[addr] = True
+            # print(search_results)
             return search_results
-        except Exception as e:
-            print(f"Error in search_pairs_rate_limited with query {search_query}: {e}")
-            return None
-
+    except Exception as e:
+        logging.error(f"Error in fetch_and_cache_pairs with query {search_query}: {e}")
+        return None
+    
 def process_token_pairs(search):
     token_pairs = []
     for TokenPair in search:        
@@ -279,32 +266,43 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 def find_third_contract_data(unique_pair_addresses, arbitrage_opportunities, session, initial_investment, slippage_pair1, slippage_pair2, fee_percentage):
     logging.info('Starting to find third contract data')
-    seen_addresses = set()
-    third_pair_index = {}
+    third_pair_index = {}  # This will hold either new or cached data
     combined_opportunities = []
     seen_combined_opportunities = set()
 
-    # Function to fetch or get last known price from DB
     def get_last_known_price(contract_address):
-        contract = db.session.query(Contracts).filter_by(contract_address=contract_address).first()
-        return float(contract.price_native) if contract else None
-
-    # Function to update price in DB
-    def update_price_in_db(contract_address, new_price):
-        contract = db.session.query(Contracts).filter_by(contract_address=contract_address).first()
+        contract = session.query(Contracts).filter_by(contract_address=contract_address).first()
         if contract:
-            contract.price_native = new_price
+            return float(contract.price_native) if contract.price_native is not None else None
         else:
-            new_contract = Contracts(contract_address=contract_address, price_native=new_price)
-            db.session.add(new_contract)
-        db.session.commit()
+            return None
 
+    def update_price_in_db(contract_address, new_price):
+        contract = session.query(Contracts).filter_by(contract_address=contract_address).first()
+        if contract:
+            contract.price_native = float(new_price)
+        else:
+            new_contract = Contracts(contract_address=contract_address, price_native=float(new_price))
+            session.add(new_contract)
+        session.commit()
+
+    # Check if price has changed for any of the addresses before making API calls
+    should_fetch_new_data = False
     for contract in unique_pair_addresses:
-        if contract not in seen_addresses:
-            seen_addresses.add(contract)
-            logging.info(f'Processing contract: {contract}')
-            
-            search = search_pairs_rate_limited(session, contract)
+        last_known_price = get_last_known_price(contract)
+        if last_known_price is None:  # If we don't have any stored data, we need to fetch
+            should_fetch_new_data = True
+            break
+        search = fetch_and_cache_pairs(session, contract)  # Here we're not fetching, just checking if we would fetch new data
+        if search and any(float(safe_get(pair, 'price_native', 0.0)) != last_known_price for pair in search if safe_get(pair, 'pair_address') == contract):
+            should_fetch_new_data = True
+            break
+
+    # Only fetch new data if price has changed or if there's no stored data
+    if should_fetch_new_data:
+        for contract in unique_pair_addresses:
+            search = fetch_and_cache_pairs(session, contract)
+            print(search)
             if search:
                 for pair in search:
                     liquidity_data = safe_get(pair, 'liquidity', {})
@@ -314,7 +312,7 @@ def find_third_contract_data(unique_pair_addresses, arbitrage_opportunities, ses
                             'quoteToken_address': safe_get(pair.quote_token, 'address', 'N/A'),
                             'pair_address': safe_get(pair, 'pair_address', 'N/A'),
                             'pair': f"{safe_get(pair.base_token, 'name', 'N/A')}/{safe_get(pair.quote_token, 'name', 'N/A')}",
-                            'price_native': safe_get(pair, 'price_native', '0.0'),
+                            'price_native': float(safe_get(pair, 'price_native', 0.0)),
                             'liquidity': liquidity_data,
                             'url': safe_get(pair, 'url', 'N/A'),
                             'chain_id': safe_get(pair, 'chain_id', 'N/A'),
@@ -326,94 +324,99 @@ def find_third_contract_data(unique_pair_addresses, arbitrage_opportunities, ses
                         update_price_in_db(pair.pair_address, pair_details['price_native'])
             else:
                 logging.debug(f'No search results for contract {contract}')
-        else:
-            logging.info(f'Skipping already seen address: {contract}')
+    else:
+        # Use the existing (cached) data from the database
+        for contract in unique_pair_addresses:
+            stored_contract = session.query(Contracts).filter_by(contract_address=contract).first()
+            if stored_contract:
+                third_pair_index[contract] = {
+                    'baseToken_address': stored_contract.base_token_address,
+                    'quoteToken_address': stored_contract.quote_token_address,
+                    'pair_address': stored_contract.contract_address,
+                    'pair': f"{stored_contract.base_token_name}/{stored_contract.quote_token_name}",  # Assuming these are stored in the database
+                    'price_native': stored_contract.price_native,
+                    'liquidity': {'usd': 0.0, 'base': 0.0, 'quote': 0.0},  # Placeholder since this might not be stored
+                    'url': 'N/A',
+                    'chain_id': stored_contract.chain_id,
+                    'dex_id': stored_contract.dex_id
+                }
+            else:
+                logging.warning(f'No stored data for contract address: {contract}')
 
     logging.info(f'Indexed {len(third_pair_index)} third contracts')
 
     for opportunity in arbitrage_opportunities:
         logging.debug(f'Processing opportunity for pair1: {opportunity["pair1"]}, pair2: {opportunity["pair2"]}')
         matched_pair = None
+        addresses = [
+            opportunity['pair1_baseToken_address'],
+            opportunity['pair1_quoteToken_address'],
+            opportunity['pair2_baseToken_address'],
+            opportunity['pair2_quoteToken_address']
+        ]
         
-        # Check if the prices of the first two contracts have changed
-        price_changed = False
-        for pair in ['pair1', 'pair2']:
-            current_price = float(opportunity[f'{pair}_price'])
-            last_known_price = get_last_known_price(opportunity[f'pool_{pair}_address'])
-            if last_known_price is not None and abs(current_price - last_known_price) > 0.01:  # Threshold for change
-                price_changed = True
-                break
+        counter = Counter(addresses)
+        unique_tokens = [addr for addr, count in counter.items() if count == 1]
+        shared_tokens = [addr for addr, count in counter.items() if count > 1]
 
-        if price_changed:
-            # Only proceed if price has changed for either of the first two contracts
-            addresses = [
-                opportunity['pair1_baseToken_address'],
-                opportunity['pair1_quoteToken_address'],
-                opportunity['pair2_baseToken_address'],
-                opportunity['pair2_quoteToken_address']
-            ]
+        # Logic to match third pair stays the same, now using either fetched or cached data
+        if len(unique_tokens) == 2:
+            unique_token1, unique_token2 = sorted(unique_tokens)
+            for pair_address, pair_data in third_pair_index.items():
+                if (pair_data['baseToken_address'] == unique_token1 and pair_data['quoteToken_address'] == unique_token2) or \
+                   (pair_data['baseToken_address'] == unique_token2 and pair_data['quoteToken_address'] == unique_token1):
+                    matched_pair = pair_data
+                    logging.info(f'Matched third pair: {pair_data["pair"]}')
+                    break
+        elif len(unique_tokens) == 1 and len(shared_tokens) == 1:
+            unique_token = unique_tokens[0]
+            shared_token = shared_tokens[0]
+            for pair_address, pair_data in third_pair_index.items():
+                if (pair_data['baseToken_address'] == unique_token and pair_data['quoteToken_address'] == shared_token) or \
+                   (pair_data['baseToken_address'] == shared_token and pair_data['quoteToken_address'] == unique_token):
+                    matched_pair = pair_data
+                    logging.info(f'Matched third pair: {pair_data["pair"]}')
+                    break
+        elif len(shared_tokens) == 2:
+            shared_token1, shared_token2 = sorted(shared_tokens)
+            for pair_address, pair_data in third_pair_index.items():
+                if (pair_data['baseToken_address'] == shared_token1 and pair_data['quoteToken_address'] == shared_token2) or \
+                   (pair_data['baseToken_address'] == shared_token2 and pair_data['quoteToken_address'] == shared_token1):
+                    matched_pair = pair_data
+                    logging.info(f'Matched third pair: {pair_data["pair"]}')
+                    break
+        else:
+            logging.debug(f"Complex token configuration for opportunity: {opportunity}")
+            matched_pair = None
+
+        if matched_pair:
+            combined_opportunity = opportunity.copy()
+            combined_opportunity.update({
+                'pair3': matched_pair['pair'],
+                'pair3_price': matched_pair['price_native'],
+                'pair3_price_round': f"{round(float(matched_pair['price_native']), 8)}",
+                'pair3_liquidity': f"${safe_get(matched_pair['liquidity'], 'usd', 0.0):,.2f}",
+                'pair3_liquidity_base': f"{safe_get(matched_pair['liquidity'], 'base', 0.0):,.2f}",
+                'pair3_liquidity_quote': f"{safe_get(matched_pair['liquidity'], 'quote', 0.0):,.2f}",
+                'pool_pair3_address': matched_pair['pair_address'],
+                'pair3_baseToken_address': matched_pair['baseToken_address'],
+                'pair3_quoteToken_address': matched_pair['quoteToken_address'],
+                'pool_pair3_url': matched_pair['url'],
+                'pair3_chain_id': matched_pair['chain_id'],
+                'pair3_dex_id': matched_pair['dex_id']
+            })
             
-            counter = Counter(addresses)
-            unique_tokens = [addr for addr, count in counter.items() if count == 1]
-            shared_tokens = [addr for addr, count in counter.items() if count > 1]
-
-            if len(unique_tokens) == 2:
-                unique_token1, unique_token2 = sorted(unique_tokens)
-                for pair_address, pair_data in third_pair_index.items():
-                    if (pair_data['baseToken_address'] == unique_token1 and pair_data['quoteToken_address'] == unique_token2) or \
-                       (pair_data['baseToken_address'] == unique_token2 and pair_data['quoteToken_address'] == unique_token1):
-                        matched_pair = pair_data
-                        logging.info(f'Matched third pair: {pair_data["pair"]}')
-                        break
-            elif len(unique_tokens) == 1 and len(shared_tokens) == 1:
-                unique_token = unique_tokens[0]
-                shared_token = shared_tokens[0]
-                for pair_address, pair_data in third_pair_index.items():
-                    if (pair_data['baseToken_address'] == unique_token and pair_data['quoteToken_address'] == shared_token) or \
-                       (pair_data['baseToken_address'] == shared_token and pair_data['quoteToken_address'] == unique_token):
-                        matched_pair = pair_data
-                        logging.info(f'Matched third pair: {pair_data["pair"]}')
-                        break
-            elif len(shared_tokens) == 2:
-                shared_token1, shared_token2 = sorted(shared_tokens)
-                for pair_address, pair_data in third_pair_index.items():
-                    if (pair_data['baseToken_address'] == shared_token1 and pair_data['quoteToken_address'] == shared_token2) or \
-                       (pair_data['baseToken_address'] == shared_token2 and pair_data['quoteToken_address'] == shared_token1):
-                        matched_pair = pair_data
-                        logging.info(f'Matched third pair: {pair_data["pair"]}')
-                        break
-            else:
-                logging.debug(f"Complex token configuration for opportunity: {opportunity}")
-                matched_pair = None
-
-            if matched_pair:
-                combined_opportunity = opportunity.copy()
-                combined_opportunity.update({
-                    'pair3': matched_pair['pair'],
-                    'pair3_price': matched_pair['price_native'],
-                    'pair3_price_round': f"{round(float(matched_pair['price_native']), 8)}",
-                    'pair3_liquidity': f"${safe_get(matched_pair['liquidity'], 'usd', 0.0):,.2f}",
-                    'pair3_liquidity_base': f"{safe_get(matched_pair['liquidity'], 'base', 0.0):,.2f}",
-                    'pair3_liquidity_quote': f"{safe_get(matched_pair['liquidity'], 'quote', 0.0):,.2f}",
-                    'pool_pair3_address': matched_pair['pair_address'],
-                    'pair3_baseToken_address': matched_pair['baseToken_address'],
-                    'pair3_quoteToken_address': matched_pair['quoteToken_address'],
-                    'pool_pair3_url': matched_pair['url'],
-                    'pair3_chain_id': matched_pair['chain_id'],
-                    'pair3_dex_id': matched_pair['dex_id']
-                })
+            opportunity_key = tuple(sorted([combined_opportunity['pair1'], combined_opportunity['pair2'], combined_opportunity['pair3']]))
+            if opportunity_key not in seen_combined_opportunities:
+                seen_combined_opportunities.add(opportunity_key)
                 
-                opportunity_key = tuple(sorted([combined_opportunity['pair1'], combined_opportunity['pair2'], combined_opportunity['pair3']]))
-                if opportunity_key not in seen_combined_opportunities:
-                    seen_combined_opportunities.add(opportunity_key)
-                    
-                    if check_price_compatibility(combined_opportunity, initial_investment, slippage_pair1, slippage_pair2, fee_percentage):
-                        combined_opportunities.append(combined_opportunity)
-                        logging.info(f'Added unique opportunity with compatible price: {combined_opportunity}')
-                    else:
-                        logging.debug(f'Skipped opportunity due to incompatible price: {combined_opportunity}')
+                if check_price_compatibility(combined_opportunity, initial_investment, slippage_pair1, slippage_pair2, fee_percentage):
+                    combined_opportunities.append(combined_opportunity)
+                    logging.info(f'Added opportunity: {combined_opportunity}')
                 else:
-                    logging.debug(f'Skipped duplicate opportunity: {combined_opportunity}')
+                    logging.debug(f'Skipped opportunity due to incompatible price: {combined_opportunity}')
+            else:
+                logging.debug(f'Skipped duplicate opportunity: {combined_opportunity}')
 
     logging.info(f'Final number of arbitrage opportunities with third pair: {len(combined_opportunities)}')
     return combined_opportunities
@@ -467,7 +470,7 @@ def gather_token_pairs_from_purchases(purchases, session):
     baseToken_addresses = [purchase.baseToken_address for purchase in purchases]
     all_token_pairs = []
     for address in baseToken_addresses:
-        search = search_pairs_rate_limited(db.session, address)
+        search = fetch_and_cache_pairs(db.session, address)
         if search:
             all_token_pairs.extend(process_token_pairs(search))
     return all_token_pairs

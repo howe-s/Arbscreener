@@ -36,14 +36,16 @@ class Purchase(db.Model):
 class Contracts(db.Model):
     __tablename__ = 'contracts'
     
+    __tablename__ = 'contracts'
     id = db.Column(db.Integer, primary_key=True)
-    contract_address = db.Column(db.String(100), unique=True, nullable=False)
-    base_token_address = db.Column(db.String(100), nullable=False)
-    quote_token_address = db.Column(db.String(100), nullable=False)
-    chain_id = db.Column(db.String(50))
-    dex_id = db.Column(db.String(50))
-    last_updated = db.Column(db.DateTime, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
-    price_native = db.Column(db.Float, nullable=True)
+    contract_address = db.Column(db.String(255), unique=True, nullable=False)
+    base_token_address = db.Column(db.String(255))
+    quote_token_address = db.Column(db.String(255))
+    chain_id = db.Column(db.Integer)
+    dex_id = db.Column(db.Integer)
+    last_updated = db.Column(db.DateTime)
+    price_native = db.Column(db.Float)
+    # base_token_name = db.Column(db.String(255))  # Uncomment if adding this column
 
     def __repr__(self):
         return f'<Contract {self.contract_address}>'
