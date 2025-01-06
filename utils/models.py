@@ -43,6 +43,7 @@ class Contracts(db.Model):
     chain_id = db.Column(db.String(50))
     dex_id = db.Column(db.String(50))
     last_updated = db.Column(db.DateTime, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
+    price_native = db.Column(db.Float, nullable=True)
 
     def __repr__(self):
         return f'<Contract {self.contract_address}>'

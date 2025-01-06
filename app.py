@@ -34,7 +34,7 @@ from utils.chart_utils import (
     pie_chart_volume,
     generate_bar_chart
 )
-from utils.api_utils import rate_limit, fetch_current_price
+from utils.old_utils.api_utils import rate_limit, fetch_current_price
 from collections import Counter, defaultdict
 import time
 from flask_caching import Cache
@@ -145,6 +145,59 @@ def logout():
     flash('You have been logged out.')
     return redirect(url_for('login'))
 
+@app.route('/dex_search', methods=['GET', 'POST'])
+@login_required
+# @cache.cached(timeout=600)  # Cache for 10 minutes
+def dex_search():
+    # Get the user input for ticker and perform the search
+    searchTicker = request.args.get('user_input', 'WBTC').lower()    
+    search = client.search_pairs(searchTicker)
+    
+    pool_data = []
+ 
+    for TokenPair in search:
+        # chart
+            # Example data
+        x_data = ['5m', '1h', '6h', '24h']
+        y_data = [TokenPair.volume.m5, TokenPair.volume.h1, TokenPair.volume.h6, TokenPair.volume.h24]
+
+        # Generate the bar chart
+        chart_div = generate_bar_chart(x_data, y_data)
+        
+        # print(TokenPair.liquidity)
+        pool_data.append({
+            'chain_id': TokenPair.chain_id,
+            'dex_id': TokenPair.dex_id,
+            'liquidity': TokenPair.liquidity,
+            'liquidity_usd_formatted': f"${TokenPair.liquidity.usd:,.2f}",
+            'liquidity_base_formatted': f"{TokenPair.liquidity.base:,.2f}",
+            'liquidity_quote_formatted': f"{TokenPair.liquidity.quote:,.2f}",            
+            'price_native': TokenPair.price_native,
+            'price_native_formatted': f"${TokenPair.price_native:,.2f}",
+            'price_usd': TokenPair.price_usd,
+            'price_usd_formatted': f"${TokenPair.price_usd:,.2f}",
+            'volume_5m': TokenPair.volume.m5,  # Store the raw numerical value
+            'volume_5m_formatted': f"${TokenPair.volume.m5:,.2f}",  # Formatted string for display
+            'volume_1h': TokenPair.volume.h1,  # Store the raw numerical value
+            'volume_1h_formatted': f"${TokenPair.volume.h1:,.2f}",  # Formatted string for display
+            'volume_6h': TokenPair.volume.h6,  # Store the raw numerical value
+            'volume_6h_formatted': f"${TokenPair.volume.h6:,.2f}",  # Formatted string for display
+            'volume_24h': TokenPair.volume.h24,  # Store the raw numerical value
+            'volume_24h_formatted': f"${TokenPair.volume.h24:,.2f}",  # Formatted string for display
+            'pool_address': TokenPair.pair_address,
+            'quote_token': TokenPair.quote_token.symbol,
+            'base_token': TokenPair.base_token.symbol,
+            'pair_url': TokenPair.url,
+            'baseToken_address': TokenPair.base_token.address,
+            'quoteToken_address': TokenPair.quote_token.address
+            
+        })
+
+    sorted_pool = sorted(pool_data, key=lambda x: x['volume_24h'], reverse=True)
+    # Pass the data to the template
+    return render_template('dex_search.html', pool_data=sorted_pool, user_input=searchTicker, chart_div=chart_div, is_logged_in=current_user.is_authenticated)
+
+
 @app.route('/userProfile')
 @login_required
 def userProfile():
@@ -168,39 +221,19 @@ def userProfile():
 @login_required
 def get_arbitrage_data():
 
-    from utils.user_profile_utils import (    
-        gather_token_pairs_from_purchases,
-        find_arbitrage_opportunities_for_user,
-        filter_and_process_opportunities,
-        match_pairs_with_opportunities,
-        find_third_contract_data,
+    from utils.user_profile_utils import ( 
+        process_arbitrage_data
     )
-    initial_investment = 1000
-    slippage_pair1 = 0.005
-    slippage_pair2 = 0.005
-    fee_percentage = 0.003
+    initial_investment = 10000
+    slippage_pair1 = 0.0005
+    slippage_pair2 = 0.0005
+    fee_percentage = 0.0003
 
     user_purchases = Purchase.query.filter_by(user_id=current_user.id).all()
     
-    session = db.session
-    token_pairs = gather_token_pairs_from_purchases(user_purchases, session)
-    
-    logging.info('Finding arbitrage opportunities')
-    arbitrage_opportunities = find_arbitrage_opportunities_for_user(token_pairs, user_purchases, slippage_pair1, slippage_pair2, fee_percentage, initial_investment)
-    logging.info(f'Found {len(arbitrage_opportunities)} initial arbitrage opportunities.')
-
-    quote_pairs, pair_chains = filter_and_process_opportunities(arbitrage_opportunities)
-    opportunities_with_pairs = match_pairs_with_opportunities(arbitrage_opportunities, quote_pairs, pair_chains)
-
-    unique_pair_addresses = sorted(set(p.pair_address for o in opportunities_with_pairs for p in o['matching_pairs']))
-
-    logging.info('Finding third contract data')
     with app.app_context(): 
-        session = db.session       
-        all_three_contracts = find_third_contract_data(unique_pair_addresses, arbitrage_opportunities, session, initial_investment, slippage_pair1, slippage_pair2, fee_percentage)
-
-    sorted_opportunities = sorted(all_three_contracts, key=lambda x: x['int_profit'], reverse=True)
-    logging.info(f'Final number of arbitrage opportunities: {len(sorted_opportunities)}')
+        session = db.session
+        sorted_opportunities = process_arbitrage_data(user_purchases, session, initial_investment, slippage_pair1, slippage_pair2, fee_percentage)
 
     return jsonify(sorted_opportunities)
 import logging
@@ -274,7 +307,7 @@ def edit_purchase(purchase_id):
 def user_prices(purchase_id):
     print('Getting prices...')  
     from utils.models import Purchase
-    from utils.api_utils import fetch_current_price
+    from utils.old_utils.api_utils import fetch_current_price
       
     # Helper function to calculate profit and percentages
     def calculate_profit_and_percentages(token_price, purchase_price, quantity):
@@ -321,57 +354,6 @@ def user_prices(purchase_id):
         'chain_id': token_price_data['chain_id']
     }
 
-@app.route('/dex_search', methods=['GET', 'POST'])
-@login_required
-# @cache.cached(timeout=600)  # Cache for 10 minutes
-def dex_search():
-    # Get the user input for ticker and perform the search
-    searchTicker = request.args.get('user_input', 'WBTC').lower()    
-    search = client.search_pairs(searchTicker)
-    
-    pool_data = []
- 
-    for TokenPair in search:
-        # chart
-            # Example data
-        x_data = ['5m', '1h', '6h', '24h']
-        y_data = [TokenPair.volume.m5, TokenPair.volume.h1, TokenPair.volume.h6, TokenPair.volume.h24]
-
-        # Generate the bar chart
-        chart_div = generate_bar_chart(x_data, y_data)
-        
-        # print(TokenPair.liquidity)
-        pool_data.append({
-            'chain_id': TokenPair.chain_id,
-            'dex_id': TokenPair.dex_id,
-            'liquidity': TokenPair.liquidity,
-            'liquidity_usd_formatted': f"${TokenPair.liquidity.usd:,.2f}",
-            'liquidity_base_formatted': f"{TokenPair.liquidity.base:,.2f}",
-            'liquidity_quote_formatted': f"{TokenPair.liquidity.quote:,.2f}",            
-            'price_native': TokenPair.price_native,
-            'price_native_formatted': f"${TokenPair.price_native:,.2f}",
-            'price_usd': TokenPair.price_usd,
-            'price_usd_formatted': f"${TokenPair.price_usd:,.2f}",
-            'volume_5m': TokenPair.volume.m5,  # Store the raw numerical value
-            'volume_5m_formatted': f"${TokenPair.volume.m5:,.2f}",  # Formatted string for display
-            'volume_1h': TokenPair.volume.h1,  # Store the raw numerical value
-            'volume_1h_formatted': f"${TokenPair.volume.h1:,.2f}",  # Formatted string for display
-            'volume_6h': TokenPair.volume.h6,  # Store the raw numerical value
-            'volume_6h_formatted': f"${TokenPair.volume.h6:,.2f}",  # Formatted string for display
-            'volume_24h': TokenPair.volume.h24,  # Store the raw numerical value
-            'volume_24h_formatted': f"${TokenPair.volume.h24:,.2f}",  # Formatted string for display
-            'pool_address': TokenPair.pair_address,
-            'quote_token': TokenPair.quote_token.symbol,
-            'base_token': TokenPair.base_token.symbol,
-            'pair_url': TokenPair.url,
-            'baseToken_address': TokenPair.base_token.address,
-            'quoteToken_address': TokenPair.quote_token.address
-            
-        })
-
-    sorted_pool = sorted(pool_data, key=lambda x: x['volume_24h'], reverse=True)
-    # Pass the data to the template
-    return render_template('dex_search.html', pool_data=sorted_pool, user_input=searchTicker, chart_div=chart_div, is_logged_in=current_user.is_authenticated)
 
 @app.route('/arb', methods=['GET', 'POST'])
 @login_required
