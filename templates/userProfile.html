@@ -32,6 +32,7 @@
                         arbitrageContainer.empty();  // Clear loading animation
 
                         if (data.length > 0) {
+                            console.log(data)
                             data.forEach(opportunity => {
                                 // Create card for each opportunity
                                 let cardHTML = `
@@ -70,7 +71,19 @@
                                                                 <td>${opportunity.quote_price_usd_2}</td>
                                                                 ${opportunity.pair3 ? `<td>${opportunity.quote_price_usd_3}</td>` : ''}
                                                             </tr>
+                                                            <!-- New rows for base and quote discrepancies -->
                                                             <tr>
+                                                                <th>Base Token Discrepancy</th>
+                                                                <td>${opportunity.baseToken_difference_12}</td>
+                                                                <td>${opportunity.baseToken_difference_13}</td>
+                                                                <td>${opportunity.baseToken_difference_23}</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <th>Quote Token Discrepancy</th>
+                                                                <td>${opportunity.quoteToken_difference_12}</td>
+                                                                <td>${opportunity.quoteToken_difference_13}</td>
+                                                                <td>${opportunity.quoteToken_difference_23}</td>
+                                                            </tr>
                                                             <tr>
                                                                 <th>Liquidity</th>
                                                                 <td>${opportunity.pair1_liquidity}</td>
