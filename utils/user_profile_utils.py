@@ -260,6 +260,26 @@ def find_arbitrage_opportunities(token_pairs, slippage_pair1, slippage_pair2, fe
     logging.info(f'Checked {total_pairs_checked} pair combinations. Found {len(arbitrage_opportunities)} arbitrage opportunities.')
     return arbitrage_opportunities
 
+
+def calculate_price_difference(price1, price2):
+    # Convert to float to ensure proper arithmetic
+    price1 = float(price1)
+    price2 = float(price2)
+    
+    # Determine if we need to invert one of the prices
+    if price1 == 0 or price2 == 0:
+        return "0.00%"  # Avoid division by zero
+    
+    # If price1 is much smaller than price2, it might be a native price comparison
+    if price1 < 1 and price2 > 1:
+        difference = (price2 - 1/price1) / (1/price1) * 100
+    elif price2 < 1 and price1 > 1:
+        difference = (1/price2 - price1) / price1 * 100
+    else:
+        difference = (price2 - price1) / price1 * 100
+    
+    return f"{difference:.2f}%"
+
 # Configure logging if not already done in the module where this function resides
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -318,7 +338,7 @@ def find_third_contract_data(unique_pair_addresses, arbitrage_opportunities, ses
                             'quoteToken_address': safe_get(pair.quote_token, 'address', 'N/A'),
                             'pair_address': safe_get(pair, 'pair_address', 'N/A'),
                             'pair': f"{safe_get(pair.base_token, 'name', 'N/A')}/{safe_get(pair.quote_token, 'name', 'N/A')}",
-                            'price_usd': float(safe_get(pair, 'price_native', 0.0)),
+                            'price_usd': float(safe_get(pair, 'price_usd', 0.0)),
                             'price_native': float(safe_get(pair, 'price_native', 0.0)),
                             'liquidity': liquidity_data,
                             'url': safe_get(pair, 'url', 'N/A'),
@@ -403,10 +423,9 @@ def find_third_contract_data(unique_pair_addresses, arbitrage_opportunities, ses
                 matched_pair = None
 
             if matched_pair:
-                print('MATCHED PAIR~~~~~~', matched_pair)
-                logging.debug(f"Matched pair details: {matched_pair}")
                 combined_opportunity = opportunity.copy()
                 combined_opportunity.update({
+                    # ... (previous key-value pairs)
                     'pair3': matched_pair['pair'],
                     'pair3_price': matched_pair['price_usd'],
                     'pair3_priceNative_round': f"{round(float(matched_pair['price_native']), 8)}",
@@ -420,8 +439,27 @@ def find_third_contract_data(unique_pair_addresses, arbitrage_opportunities, ses
                     'pair3_chain_id': matched_pair['chain_id'],
                     'pair3_dex_id': matched_pair['dex_id']
                 })
-                logging.debug(f"Updated opportunity with third pair: {combined_opportunity}")
+
+                # Calculate the price of quote asset in USD for each pair
+                # For pair1
+                quote_price_usd_1 = 1 / float(combined_opportunity['pair1_priceNative_round']) * float(combined_opportunity['pair1_price'])
+                combined_opportunity['quote_price_usd_1'] = f"${quote_price_usd_1:.2f}"
                 
+                # For pair2
+                quote_price_usd_2 = 1.0 if combined_opportunity['pair2_quoteToken_address'].lower() == 'usd' else 1 / float(combined_opportunity['pair2_priceNative_round']) * float(combined_opportunity['pair2_price'])
+                combined_opportunity['quote_price_usd_2'] = f"${quote_price_usd_2:.2f}"
+                
+                # For pair3
+                quote_price_usd_3 = 1 / float(combined_opportunity['pair3_priceNative_round']) * float(combined_opportunity['pair3_price'])
+                combined_opportunity['quote_price_usd_3'] = f"${quote_price_usd_3:.2f}"
+
+                # Calculating price differences for quote asset
+                combined_opportunity['quote_difference_1_2'] = calculate_price_difference(quote_price_usd_1, quote_price_usd_2)
+                combined_opportunity['quote_difference_1_3'] = calculate_price_difference(quote_price_usd_1, quote_price_usd_3)
+                combined_opportunity['quote_difference_2_3'] = calculate_price_difference(quote_price_usd_2, quote_price_usd_3)
+
+
+                    
                 opportunity_key = tuple(sorted([combined_opportunity['pair1'], combined_opportunity['pair2'], combined_opportunity['pair3']]))
                 if opportunity_key not in seen_combined_opportunities:
                     seen_combined_opportunities.add(opportunity_key)

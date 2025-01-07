@@ -18,3 +18,11 @@ Maybe consider making this all one page if at all possible?
 
 Bonus: Stylized Charts for their searched assets? 
 
+
+
+### BIGGGGG IDEAS
+
+1. BUILD A LIGHT-WEIGHT, ADDRESS CHECKER USING THE CONTRACTS IN THE DB
+2. START SCRAPING 
+3. FIGURE OUT A WAY TO HOST THIS 
+4. Is there even a possibility we're adding SQL caching again to this? Or do we build this DB off user data 

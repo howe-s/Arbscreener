@@ -56,7 +56,7 @@
                                                                 <th>Price</th>
                                                                 <td>US $ ${opportunity.pair1_price_round}</td>
                                                                 <td>US $ ${opportunity.pair2_price_round}</td>
-                                                                ${opportunity.pair3 ? `<td>US $ ${opportunity.pair3_price}</td>` : ''}
+                                                                ${opportunity.pair3 ? `<td>$ ${opportunity.pair3_price}</td>` : ''}
                                                             </tr>
                                                             <tr>
                                                                 <th>Price Native</th>
@@ -64,6 +64,13 @@
                                                                 <td>${opportunity.pair2_priceNative_round}</td>
                                                                 ${opportunity.pair3 ? `<td>${opportunity.pair3_priceNative_round}</td>` : ''}
                                                             </tr>
+                                                            <tr>
+                                                                <th>Price Quote in USD</th>
+                                                                <td>${opportunity.quote_price_usd_1}</td>
+                                                                <td>${opportunity.quote_price_usd_2}</td>
+                                                                ${opportunity.pair3 ? `<td>${opportunity.quote_price_usd_3}</td>` : ''}
+                                                            </tr>
+                                                            <tr>
                                                             <tr>
                                                                 <th>Liquidity</th>
                                                                 <td>${opportunity.pair1_liquidity}</td>
