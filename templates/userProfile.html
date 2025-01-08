@@ -4,6 +4,261 @@
 
 {% block content %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/userProfile.css') }}">
+
+    <style>
+
+    body {
+        padding-top: 10px;
+        padding-left: 10px;
+        padding-right: 10px;
+        background-color: #121212;
+        color: #e0e0e0;
+        font-family: Arial, sans-serif;
+        margin: 0;
+        font-size: 12px; /* Reduced font size for the body */
+    }
+
+    .container-fluid {
+        padding: 10px; /* Reduced padding */
+    }
+
+    .row {
+        justify-content: center;
+    }
+
+    .col-md-6 {
+        min-width: 640px;
+        max-width: 33%;
+    }
+
+    .user-purchases {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        padding: 10px; /* Reduced padding */
+    }
+
+    .add-purchases {
+        width: 100%;
+        max-width: 400px;
+        margin-bottom: 10px; /* Reduced margin */
+        padding: 10px; /* Reduced padding */
+    }
+
+    .card {
+        margin-bottom: 10px; /* Reduced margin */
+        background-color: #2b2b2b;
+        border-radius: 8px;
+        border: 1px solid #333;
+        padding: 10px; /* Reduced padding */
+    }
+
+    .card-header {
+        background-color: #2b2b2b;
+        border-bottom: none;
+        color: #4a90e2;
+        font-weight: bold;
+        padding: 10px 15px; /* Reduced padding */
+    }
+
+    .card-body {
+        padding: 10px; /* Reduced padding */
+        color: #e0e0e0;
+    }
+
+    .mb-4 {
+        color: #e0e0e0;
+        padding-bottom: 10px; /* Reduced padding */
+    }
+
+    .table-card {
+        padding: 10px; /* Reduced padding */
+    }
+
+    .table-container {
+        overflow-x: auto;
+        padding: 5px; /* Reduced padding */
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .table th, .table td {
+        text-align: left;
+        padding: 8px 12px; /* Further reduced padding for compactness */
+        border-bottom: 1px solid #444;
+        background-color: #2b2b2b;
+        color: #e0e0e0;
+        font-size: 11px; /* Slightly smaller font size for more compact look */
+        line-height: 1.3; /* Further reduced line height */
+    }
+
+    .table th {
+        font-weight: 700; /* Increased font weight for distinction */
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom-width: 2px;
+        background-color: #333;
+        color: #e0e0e0;
+    }
+
+    .table tbody tr:nth-child(even) {
+        background-color: #333333;
+    }
+
+    .table td:nth-child(1), .table th:nth-child(1) {
+        border-right: 1px solid #444;
+    }
+
+    .table td:nth-child(2), .table th:nth-child(2) {
+        border-right: 1px solid #444;
+    }
+
+    .table td.important, .table th.important {
+        background-color: #404040;
+    }
+
+    .table td, .table th {
+        background-color: rgba(68, 68, 68, 0.1);
+    }
+
+    .table td {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 200px;
+    }
+
+    .table-responsive {
+        width: 100%;
+    }
+
+    .btn-sm {
+        font-size: 0.8rem; /* Reduced font size */
+        padding: 3px 8px; /* Reduced padding */
+        color: #e0e0e0;
+    }
+
+    @media (max-width: 768px) {
+        .table-container {
+            overflow-x: auto;
+        }
+    }
+
+    .table-td {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        max-width: 200px;
+    }
+
+    #my-table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    #baseToken-address, #pair-address {
+        max-width: 200px;
+    }
+
+    .card-title {
+        font-weight: 600;
+        font-size: 1rem; /* Reduced font size */
+        color: #4a90e2;
+    }
+
+    .table-hover tbody tr:hover td,
+    .table-hover tbody tr:hover th {
+        background-color: #333;
+        color: #e0e0e0;
+    }
+
+    .card-text {
+        font-size: 0.8rem; /* Reduced font size */
+        color: #e0e0e0;
+    }
+
+    .card-link {
+        color: #4a90e2;
+        text-decoration: none;
+    }
+
+    .card-link:hover {
+        color: #3a7bd5;
+        text-decoration: underline;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 3px; /* Reduced margin */
+        color: #e0e0e0;
+        padding: 3px 0; /* Reduced padding */
+        font-size: 0.85rem; /* Reduced font size */
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 8px; /* Reduced padding */
+        margin-bottom: 10px; /* Reduced margin */
+        border: 1px solid #444;
+        border-radius: 4px;
+        background-color: #333;
+        color: #e0e0e0;
+        font-size: 0.85rem; /* Reduced font size */
+    }
+
+    .btn-primary {
+        background-color: #4a90e2;
+        border: none;
+        color: white;
+        padding: 10px 15px; /* Reduced padding */
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9rem; /* Reduced font size */
+    }
+
+    .btn-primary:hover {
+        background-color: #3a7bd5;
+    }
+
+    #user-purchases h1 {
+        color: #4a90e2;
+        padding-bottom: 10px; /* Reduced padding */
+        font-size: 1.2rem; /* Reduced font size */
+    }
+
+    .add-purchases .card-header h2,
+    .your-purchases .card-header h2 {
+        margin: 0;
+        color: #4a90e2;
+        font-size: 1rem; /* Reduced font size */
+    }
+
+    .col {
+        margin-bottom: 20px;
+    }
+
+    #arb-cards {
+        min-width: min-content;
+    }
+
+    .col-md-4 .card {
+        width: 100%;
+        padding: 10px; /* Reduced padding */
+        margin-bottom: 20px;
+    }
+
+    .col-md-4 .card-header {
+        text-align: left;
+        padding: 10px 15px; /* Reduced padding */
+    }
+
+    .col-md-4 .table {
+        margin-bottom: 0;
+    }
+    </style>
     
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
@@ -36,7 +291,7 @@
                             data.forEach(opportunity => {
                                 // Create card for each opportunity
                                 let cardHTML = `
-                                    <div class="col">
+                                    <div id="arb-cards" class="col">
                                         <div class="card shadow-sm h-100">
                                             <div class="card-header text-left">
                                                 <h5 class="card-title mb-0">Arbitrage Opportunity</h5>

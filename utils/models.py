@@ -50,3 +50,18 @@ class Contracts(db.Model):
 
     def __repr__(self):
         return f'<Contract {self.contract_address}>'
+    
+class ContractLake(db.Model):
+    __tablename__ = 'lake'
+    id = db.Column(db.Integer, primary_key=True)
+    contract_address = db.Column(db.String(255), unique=True, nullable=False)
+    base_token_address = db.Column(db.String(255))
+    quote_token_address = db.Column(db.String(255))
+    chain_id = db.Column(db.Integer)
+    dex_id = db.Column(db.Integer)
+    last_updated = db.Column(db.DateTime)
+    price_native = db.Column(db.Float)
+    price_usd = db.Column(db.Float)  # I just added this
+
+    def __repr__(self):
+        return f'<Contract {self.contract_address}>'

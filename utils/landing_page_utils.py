@@ -68,9 +68,9 @@ seen_addresses = defaultdict(bool)
 
 @retry_with_backoff
 @rate_limited(1/2)  # Adjust rate limiting as needed
-def fetch_and_cache_pairs(session, contract: Union[str, List[str]]):
+def fetch_and_cache_pairs(contract: Union[str, List[str]]):
     """
-    Fetch pairs with rate limiting, caching, and address checking.
+    Fetch pairs with rate limiting and caching.
     """
     if isinstance(contract, list):
         search_query = ", ".join(contract)
@@ -82,25 +82,13 @@ def fetch_and_cache_pairs(session, contract: Union[str, List[str]]):
         if search_results:
             for pair in search_results:
                 contract_address = pair.pair_address      
-                existing_contract = db.session.query(Contracts).filter_by(contract_address=contract_address).first()
-                if not existing_contract:
-                    new_contract = Contracts(
-                        contract_address=contract_address,
-                        base_token_address=pair.base_token.address,
-                        quote_token_address=pair.quote_token.address,
-                        chain_id=pair.chain_id,
-                        dex_id=pair.dex_id,                        
-                        price_native=float(pair.price_native) if pair.price_native is not None else 0.0
-                        
-                    )
-                    db.session.add(new_contract)
-                    logging.info(f"Saved contract address: {contract_address}, price_native: {new_contract.price_native}")
-            db.session.commit()  
+                # Note: Since we're not using session, we'll skip adding to DB here
+                # Instead, we'll just return the data
+                logging.info(f"Processed contract address: {contract_address}")
             
             # Mark as seen after successful processing
             for addr in search_query.split(', ') if isinstance(contract, list) else [search_query]:
                 seen_addresses[addr] = True
-            # print(search_results)
             return search_results
     except Exception as e:
         logging.error(f"Error in fetch_and_cache_pairs with query {search_query}: {e}")
@@ -592,32 +580,19 @@ def get_user_purchases(user_id):
 def gather_token_pairs_from_purchases(purchases, session):
     """
     Gather all token pairs from the user's purchase history with rate limiting.
-    If there are no purchases, return an empty list to avoid unnecessary operations.
     """
-    if not purchases:
-        return []
-
-    baseToken_addresses = [purchase.baseToken_address for purchase in purchases if purchase.baseToken_address]
+    baseToken_addresses = [purchase.baseToken_address for purchase in purchases]
     all_token_pairs = []
     for address in baseToken_addresses:
-        if address not in seen_addresses:  # Assuming seen_addresses is global or passed somehow
-            search = fetch_and_cache_pairs(session, address)
-            if search:
-                all_token_pairs.extend(process_token_pairs(search))
+        search = fetch_and_cache_pairs(db.session, address)
+        if search:
+            all_token_pairs.extend(process_token_pairs(search))
     return all_token_pairs
 
-def find_arbitrage_opportunities_for_user(token_pairs, purchases, slippage_pair1, slippage_pair2, fee_percentage, initial_investment, search_address):
+def find_arbitrage_opportunities_for_user(token_pairs, purchases, slippage_pair1, slippage_pair2, fee_percentage, initial_investment):
     """
-    Find arbitrage opportunities based on either user's token pairs or a provided address.
+    Find arbitrage opportunities based on user's token pairs.
     """
-    if not token_pairs:  # If no user data, use the search_address
-        search = fetch_and_cache_pairs(session, search_address)
-        if search:
-            token_pairs = process_token_pairs(search)
-        else:
-            logging.warning("No token pairs found for the given address.")
-            return []
-
     return find_arbitrage_opportunities(token_pairs, slippage_pair1, slippage_pair2, fee_percentage, initial_investment, purchases)
 
 def filter_and_process_opportunities(opportunities):
@@ -677,20 +652,12 @@ def match_pairs_with_opportunities(opportunities, quote_pairs, pair_chains):
 
 
 
-def process_arbitrage_data(user_purchases, session, initial_investment, slippage_pair1, slippage_pair2, fee_percentage, search_address=None):
-    """
-    Process arbitrage data, using either user's purchase history or a provided search address.
-    """
+def process_arbitrage_data(user_purchases, session, initial_investment, slippage_pair1, slippage_pair2, fee_percentage):
     token_pairs = gather_token_pairs_from_purchases(user_purchases, session)
     
     logging.info('Finding arbitrage opportunities')
-    arbitrage_opportunities = find_arbitrage_opportunities_for_user(token_pairs, user_purchases, slippage_pair1, slippage_pair2, fee_percentage, initial_investment, search_address)
+    arbitrage_opportunities = find_arbitrage_opportunities_for_user(token_pairs, user_purchases, slippage_pair1, slippage_pair2, fee_percentage, initial_investment)
     logging.info(f'Found {len(arbitrage_opportunities)} initial arbitrage opportunities.')
-
-    # Continue with the rest of the function logic, ensuring to handle if opportunities are empty
-    if not arbitrage_opportunities:
-        logging.info('No arbitrage opportunities found.')
-        return []
 
     quote_pairs, pair_chains = filter_and_process_opportunities(arbitrage_opportunities)
     opportunities_with_pairs = match_pairs_with_opportunities(arbitrage_opportunities, quote_pairs, pair_chains)

@@ -94,7 +94,75 @@ def fetch_historical_price(asset_name, start_timestamp, end_timestamp):
 # APPLICATION ROUTES
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    return render_template('index.html', is_logged_in=current_user.is_authenticated)
+    return render_template(
+        'index.html', 
+        is_logged_in=current_user.is_authenticated,
+        arbitrage_opportunities=[]
+        )
+
+@app.route('/landing_page_data', methods=['POST'])
+def landing_page_data():
+    from utils.user_profile_utils import process_arbitrage_data
+
+    # Retrieve form data
+    initial_investment = float(request.form.get('initial_investment', 10000))
+    slippage_pair1 = float(request.form.get('slippage_pair1', 0.0005))
+    slippage_pair2 = float(request.form.get('slippage_pair2', 0.0005))
+    slippage_pair3 = float(request.form.get('slippage_pair3', 0.0005))
+    fee_percentage = float(request.form.get('fee_percentage', 0.0003))
+    address = request.form.get('search', '7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs')
+
+    # Since this isn't fetching user purchases, we'll use None or an empty list
+    user_purchases = None  # or []
+
+    with app.app_context():
+        session = db.session
+        # Pass the search address to handle the case without user purchases
+        sorted_opportunities = process_arbitrage_data(user_purchases, session, initial_investment, slippage_pair1, slippage_pair2, fee_percentage, search_address=address)
+    
+    print('SORTED OPPS:', sorted_opportunities)
+    return jsonify(sorted_opportunities), 200
+
+@app.route('/userProfile')
+@login_required
+def userProfile():
+    logging.info('Processing user profile request')
+    
+    searchTicker = request.args.get('user_input', 'WBTC').lower()
+    
+    # Render the template first with basic user info
+    return render_template(
+        'userProfile.html',
+        user_input=searchTicker,
+        name=current_user.username,
+        full_name=current_user.full_name,
+        is_logged_in=current_user.is_authenticated,
+        arbitrage_opportunities=[],  # Placeholder, will be updated by JS
+        search=None
+    )
+
+@app.route('/get_arbitrage_data', methods=['POST'])
+@login_required
+def get_arbitrage_data():
+
+    from utils.user_profile_utils import ( 
+        process_arbitrage_data
+    )
+    initial_investment = 10000
+    slippage_pair1 = 0.0005
+    slippage_pair2 = 0.0005
+    fee_percentage = 0.0003
+
+    user_purchases = Purchase.query.filter_by(user_id=current_user.id).all()
+    
+    with app.app_context(): 
+        session = db.session
+        sorted_opportunities = process_arbitrage_data(user_purchases, session, initial_investment, slippage_pair1, slippage_pair2, fee_percentage)
+
+    return jsonify(sorted_opportunities)
+import logging
+# logging.basicConfig(level=logging.DEBUG)
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -198,46 +266,9 @@ def dex_search():
     return render_template('dex_search.html', pool_data=sorted_pool, user_input=searchTicker, chart_div=chart_div, is_logged_in=current_user.is_authenticated)
 
 
-@app.route('/userProfile')
-@login_required
-def userProfile():
-    logging.info('Processing user profile request')
-    
-    searchTicker = request.args.get('user_input', 'WBTC').lower()
-    
-    # Render the template first with basic user info
-    return render_template(
-        'userProfile.html',
-        user_input=searchTicker,
-        name=current_user.username,
-        full_name=current_user.full_name,
-        is_logged_in=current_user.is_authenticated,
-        arbitrage_opportunities=[],  # Placeholder, will be updated by JS
-        search=None
-    )
 
 
-@app.route('/get_arbitrage_data', methods=['POST'])
-@login_required
-def get_arbitrage_data():
 
-    from utils.user_profile_utils import ( 
-        process_arbitrage_data
-    )
-    initial_investment = 10000
-    slippage_pair1 = 0.0005
-    slippage_pair2 = 0.0005
-    fee_percentage = 0.0003
-
-    user_purchases = Purchase.query.filter_by(user_id=current_user.id).all()
-    
-    with app.app_context(): 
-        session = db.session
-        sorted_opportunities = process_arbitrage_data(user_purchases, session, initial_investment, slippage_pair1, slippage_pair2, fee_percentage)
-
-    return jsonify(sorted_opportunities)
-import logging
-# logging.basicConfig(level=logging.DEBUG)
 
 @app.route('/add_purchase', methods=['POST'])
 @login_required

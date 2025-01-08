@@ -231,6 +231,10 @@ table {
     margin-bottom: 20px;
 }
 
+#arb-cards {
+    min-width: min-content;
+}
+
 .col-md-4 .card {
     width: 100%;
     padding: 10px; /* Reduced padding */
