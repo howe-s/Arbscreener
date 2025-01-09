@@ -24,26 +24,11 @@ def safe_get(obj, attr, default=None):
     except AttributeError:
         return default
 
-def rate_limited(max_per_second):
-    """
-    Decorator for basic rate limiting of function calls.
-    """
-    min_interval = 1.0 / float(max_per_second)
-    
-    def decorator(func):
-        last_time_called = [0.0]
-        
-        @wraps(func)
-        def rate_limited_function(*args, **kargs):
-            elapsed = time.time() - last_time_called[0]
-            left_to_wait = min_interval - elapsed
-            if left_to_wait > 0:
-                time.sleep(left_to_wait)
-            ret = func(*args, **kargs)
-            last_time_called[0] = time.time()
-            return ret
-        return rate_limited_function
-    return decorator
+
+requests_this_minute = 0
+last_reset_time = 0
+
+
 
 def retry_with_backoff(func, max_retries=3, initial_delay=1, backoff_factor=2):
     """
@@ -66,8 +51,34 @@ def retry_with_backoff(func, max_retries=3, initial_delay=1, backoff_factor=2):
 
 seen_addresses = defaultdict(bool)
 
+
 @retry_with_backoff
-@rate_limited(1/2)  # Adjust rate limiting as needed
+def rate_limited(max_calls_per_minute):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            global requests_this_minute, last_reset_time
+            current_time = time.time()
+            
+            # Reset counter if a minute has passed
+            if current_time - last_reset_time >= 60:
+                requests_this_minute = 0
+                last_reset_time = current_time
+            
+            # Increment counter and check limit
+            requests_this_minute += 1
+            if requests_this_minute > max_calls_per_minute:
+                # If limit is exceeded, wait until the next minute
+                sleep_time = 60 - (current_time - last_reset_time)
+                sleep(sleep_time)
+                requests_this_minute = 1
+                last_reset_time = time.time()
+            
+            return func(*args, **kwargs)
+        return wrapper
+    return decorator
+
+@retry_with_backoff
+@rate_limited(60)  # Adjust rate limiting as needed
 def fetch_and_cache_pairs(session, contract: Union[str, List[str]]):
     """
     Fetch pairs with rate limiting, caching, and address checking.
