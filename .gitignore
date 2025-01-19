@@ -38,6 +38,7 @@ env/
 *.rar
 *.7z
 migrations/
+TODOLIST.TXT
 
 # Coverage reports
 .coverage
