@@ -38,7 +38,7 @@ env/
 *.rar
 *.7z
 migrations/
-TODOLIST.TXT
+
 
 # Coverage reports
 .coverage
@@ -48,3 +48,4 @@ coverage.xml
 nosetests.xml
 test_coverage/
 notes.txt
+TODOLIST.txt
