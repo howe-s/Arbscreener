@@ -27,6 +27,7 @@ ENV/
 env/
 .venv/
 
+
 # Miscellaneous
 *.DS_Store
 *.thumb
@@ -36,6 +37,7 @@ env/
 *.tgz
 *.rar
 *.7z
+migrations/
 
 # Coverage reports
 .coverage
