@@ -1,59 +1,158 @@
-# Arbscreener Flask Application
+# Crypto Arbitrage Detection System
 
-## Overview
-
-This project is a Flask-based web application that integrates with the Dexscreener API to display cryptocurrency token pair details. The application generates dynamic HTML content to visualize token liquidity, prices, and volumes, providing a user-friendly interface for exploring token data.
+A sophisticated Flask-based application that detects and analyzes arbitrage opportunities across cryptocurrency trading pairs in real-time. The system monitors price discrepancies across different exchanges and calculates potential profits while accounting for slippage, fees, and liquidity constraints.
 
 ## Features
 
-- **Dynamic Token Pair Cards:** Display token pair details including liquidity, price, and volume in an organized card format.
-- **Interactive Summary Display:** Click on a token pair card to display detailed information in a fixed summary div.
-- **Charts Visualization:** Generate pie and tree charts for liquidity and volume data using Matplotlib and Squarify.
-- **Responsive Design:** The layout adapts to different screen sizes, ensuring a consistent user experience across devices.
+- Real-time arbitrage opportunity detection across multiple DEXes
+- Slippage and trading fee considerations
+- Liquidity analysis and validation
+- Rate-limited API interactions with exponential backoff
+- Caching system for frequently accessed data
+- Support for triangular arbitrage opportunities
+- User-specific arbitrage opportunity tracking
+- Price change monitoring and updates
+- Comprehensive profit calculation considering all trading costs
+
+## Prerequisites
+
+- Python 3.8+
+- Flask
+- SQLAlchemy
+- DexScreener API access
 
 ## Installation
 
-### Prerequisites
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd crypto-arbitrage-detection
+```
 
-- Python 3.x
-- Pip (Python package installer)
+2. Install required dependencies:
+```bash
+pip install -r requirements.txt
+```
 
-### Setup
+3. Set up your environment variables:
+```bash
+export FLASK_APP=app.py
+export FLASK_ENV=development
+```
 
-1. **Clone the repository:**
+## Configuration
 
-    ```bash
-    git clone https://github.com/your-username/dexscreener-flask.git
-    cd dexscreener-flask
-    ```
+The system accepts several configuration parameters that can be adjusted based on your needs:
 
-2. **Install dependencies:**
+- `initial_investment`: Starting amount for arbitrage calculations (default: 10000)
+- `slippage_pair1`: Expected slippage for first pair (default: 0.0005)
+- `slippage_pair2`: Expected slippage for second pair (default: 0.0005)
+- `slippage_pair3`: Expected slippage for third pair (default: 0.0005)
+- `fee_percentage`: Trading fee percentage (default: 0.0003)
 
-    ```bash
-    pip install -r requirements.txt
-    ```
+## API Endpoints
 
-3. **Run the application:**
+### Landing Page Data
+```python
+POST /landing_page_data
+```
 
-    ```bash
-    python app.py
-    ```
+Parameters:
+- `initial_investment`: Float (default: 10000)
+- `slippage_pair1`: Float (default: 0.0005)
+- `slippage_pair2`: Float (default: 0.0005)
+- `slippage_pair3`: Float (default: 0.0005)
+- `fee_percentage`: Float (default: 0.0003)
+- `search`: String (Wallet address)
 
-4. **Open your browser and navigate to:**
+Returns:
+- JSON array of arbitrage opportunities sorted by profit potential
 
-    ```
-    http://127.0.0.1:5000/
-    ```
+## Core Components
 
-## Dependencies
+### 1. Arbitrage Detection
+The system implements sophisticated arbitrage detection through several key components:
 
-- Flask
-- Matplotlib
-- Numpy
-- Pandas
-- Squarify
-- Dexscreener
-- Plotly
+- `find_arbitrage_opportunities()`: Core algorithm for detecting price discrepancies
+- `calculate_arbitrage_profit()`: Calculates potential profits considering all costs
+- `check_price_compatibility()`: Validates price relationships across trading pairs
+
+### 2. Data Management
+Efficient data handling through:
+
+- Rate-limited API calls with exponential backoff
+- Caching system for frequently accessed data
+- Database integration for persistent storage
+
+### 3. Safety Features
+Built-in protections including:
+
+- Liquidity validation
+- Slippage consideration
+- Trading fee calculations
+- Rate limiting for API calls
+
+## Usage Example
+
+```python
+from flask import Flask
+from utils.user_profile_utils import process_arbitrage_data
+
+app = Flask(__name__)
+
+@app.route('/landing_page_data', methods=['POST'])
+def landing_page_data():
+    initial_investment = 10000
+    slippage = 0.0005
+    fee_percentage = 0.0003
+    
+    opportunities = process_arbitrage_data(
+        user_purchases=None,
+        session=db.session,
+        initial_investment=initial_investment,
+        slippage_pair1=slippage,
+        slippage_pair2=slippage,
+        fee_percentage=fee_percentage
+    )
+    
+    return jsonify(opportunities), 200
+```
+
+## Error Handling
+
+The system implements comprehensive error handling:
+
+- API rate limit management
+- Connection error recovery
+- Data validation
+- Transaction safety checks
+
+## Performance Optimization
+
+Several optimizations are implemented:
+
+- LRU caching for frequent calculations
+- Batch processing of API requests
+- Efficient data structures for quick lookups
+- Smart update strategies for price changes
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch: `git checkout -b feature/new-feature`
+3. Commit your changes: `git commit -am 'Add new feature'`
+4. Push to the branch: `git push origin feature/new-feature`
+5. Submit a pull request
+
+## License
+
+[Add your license information here]
+
+## Acknowledgments
+
+- DexScreener API for providing real-time cryptocurrency data
+- Flask community for the robust web framework
+- SQLAlchemy team for the powerful ORM
   
 ![image](https://github.com/user-attachments/assets/ddd975d6-6b0d-4049-87e2-e670713be36d)
 
