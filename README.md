@@ -146,7 +146,7 @@ Several optimizations are implemented:
 
 ## Project Background and Current State
 
-This project initially started as portfolio and arbitrage alert application. However, due to the nature of finding second and third contracts, there is an inability to scale for a full portolfio using third party API data. The limitation is the amount of API calls required to compile a list of opprotunities for multiple assets with their updated and realtime pricing information. To address this, I have implemented a data lake mechanism to store lists of compatible contracts in SQL allowing for quick identification of second and third contracts. However, I am still limited by the realtime pricing and plan to implement nodes network by network for accurate contract liquidity states to determine prices. 
+This project initially started as portfolio and arbitrage alert application. However, due to the nature of finding second and third contracts, there is an inability to scale for a full portolfio using third party API data. The limitation is the amount of API calls required to compile a list of opprotunities for multiple assets with their updated and realtime pricing information. To address this, I have implemented a data lake mechanism to store lists of compatible contracts in SQL allowing for quick identification of second and third contracts. However, I am still limited by the realtime pricing and plan to implement non-validating nodes network by network for accurate contract liquidity states to determine real-time asset pricing without an external API. 
 
 
 
