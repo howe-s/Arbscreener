@@ -470,7 +470,7 @@ def calculate_price_discrepancies(combined_opportunity):
         return None
 
     # Calculate discrepancies for each token across all pairs
-    pairs = ['1', '2', '3']  # Assuming these are the pair numbers you're working with
+    pairs = ['1', '2', '3']  
 
     # Dictionary to store calculated discrepancies
     discrepancies = {}
@@ -516,7 +516,7 @@ def calculate_price_discrepancies(combined_opportunity):
 
     for key in expected_discrepancies:
         if key not in combined_opportunity:
-            combined_opportunity[key] = '0.00%'  # or any default value you prefer
+            combined_opportunity[key] = '0.00%'  
             print(f"Added missing discrepancy: {key}")
 
     print("FINAL COMBINED_OPPORTUNITY~~~~~", combined_opportunity)
