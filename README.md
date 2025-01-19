@@ -89,10 +89,8 @@ This project is a Flask-based web application that integrates with the Dexscreen
 - Squarify
 - Dexscreener
 - Plotly
-
-![image](https://github.com/user-attachments/assets/6b6e0ce7-e937-4fbc-a3c2-b6d833653d47)
-![image](https://github.com/user-attachments/assets/c351f74e-348a-419a-b54c-cbe600400fde)
-![image](https://github.com/user-attachments/assets/9ddf6dff-bbac-4f05-a319-745760eabe81)
+  
+![image](https://github.com/user-attachments/assets/ddd975d6-6b0d-4049-87e2-e670713be36d)
 
 
 
