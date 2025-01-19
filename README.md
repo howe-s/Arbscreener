@@ -11,41 +11,6 @@ This project is a Flask-based web application that integrates with the Dexscreen
 - **Charts Visualization:** Generate pie and tree charts for liquidity and volume data using Matplotlib and Squarify.
 - **Responsive Design:** The layout adapts to different screen sizes, ensuring a consistent user experience across devices.
 
-## Project Structure
-
-
-<!-- project-root/
-├── main.py              # Main Flask application file
-├── templates/           # HTML templates for the application
-│   ├── base.html        # Base template for consistent layout
-│   ├── index.html       # Main page displaying token pair cards
-│   ├── charts.html      # Page displaying liquidity and volume charts
-│   ├── summary.html     # Page displaying a summary of token pair data
-│   ├── token_summary.html # Page displaying detailed token pair statistics
-│   └── ...
-├── static/              # Directory for static files (e.g., CSS, JavaScript)
-│   ├── style.css        # Custom styles for the application
-│   └── ...
-├── README.md            # Project documentation
-└── requirements.txt     # Python dependencies -->
-
-### Documentation files
-    project-root/
-    ├── app.py              # Main Flask application file
-    ├── templates/           # HTML templates for the application
-    │   ├── base.html        # Base template for consistent layout
-    │   ├── index.html       # Main page displaying token pair cards
-    │   ├── charts.html      # Page displaying liquidity and volume charts
-    │   ├── summary.html     # Page displaying a summary of token pair data
-    │   ├── token_summary.html # Page displaying detailed token pair statistics
-    │   └── ...
-    ├── static/              # Directory for static files (e.g., CSS, JavaScript)
-    │   ├── style.css        # Custom styles for the application
-    │   └── ...
-    ├── README.md            # Project documentation
-    └── requirements.txt     # Python dependencies
-
-
 ## Installation
 
 ### Prerequisites
