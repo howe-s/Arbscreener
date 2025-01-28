@@ -9,14 +9,12 @@ from flask_login import (
     current_user
 )
 from flask_caching import Cache
-from werkzeug.security import generate_password_hash, check_password_hash
 from flask_migrate import Migrate
-import requests
 from dexscreener import DexscreenerClient
+import pandas as pd
 import matplotlib
-matplotlib.use('Agg')  # Use non-interactive backend for server-side plotting
-from utils.models import db, User, Purchase  # Ensure Purchase is imported
-from utils.api_utils import rate_limit, fetch_current_price
+matplotlib.use('Agg')  
+from utils.models import db, User
 from flask_caching import Cache
 
 
@@ -54,23 +52,6 @@ def load_user(user_id):
 with app.app_context():
     db.create_all()
 
-@cache.memoize(timeout=3600)  # Cache for 1 hour
-def fetch_historical_price(asset_name, start_timestamp, end_timestamp):
-    print('Fetching historical price...')
-    rate_limit()
-    responseHistoricalPrice = requests.get(f'https://api.coincap.io/v2/assets/{asset_name}/history?interval=d1&start={start_timestamp}&end={end_timestamp}')
-    if responseHistoricalPrice.status_code == 200:
-        try:
-            data = responseHistoricalPrice.json()['data']
-            # print('historical price data', data)
-            return data
-        except KeyError:
-            print('Error parsing historical price data.')
-            return None
-    else:
-        print(f'Error fetching historical price: {responseHistoricalPrice.status_code}')
-        return None
-
 # APPLICATION ROUTES
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -82,7 +63,7 @@ def index():
 
 @app.route('/landing_page_data', methods=['POST'])
 def landing_page_data():
-    from utils.user_profile_utils import process_arbitrage_data
+    from utils.main_utils import process_arbitrage_data
 
     # Retrieve form data
     initial_investment = float(request.form.get('initial_investment', 10000))
