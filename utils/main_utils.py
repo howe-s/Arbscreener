@@ -140,7 +140,7 @@ def process_token_pairs(search):
         })
     return token_pairs
 
-def calculate_arbitrage_profit(initial_investment, price_pair1, price_pair2, slippage_pair1, slippage_pair2, fee_percentage, liquidity_pair1, liquidity_pair2):
+def calculate_arbitrage_profit(initial_investment, price_pair1, price_pair2, slippage, fee_percentage, liquidity_pair1, liquidity_pair2):
     # Convert initial investment to amount in pair1
     amount_pair1 = initial_investment / price_pair1
     
@@ -148,9 +148,9 @@ def calculate_arbitrage_profit(initial_investment, price_pair1, price_pair2, sli
     def apply_slippage(amount, liquidity, slippage):
         return amount * (1 - slippage * (amount / float(liquidity)))  # Convert liquidity to float to ensure arithmetic operation works
     
-    adjusted_amount_pair1 = apply_slippage(amount_pair1, liquidity_pair1, slippage_pair1)
+    adjusted_amount_pair1 = apply_slippage(amount_pair1, liquidity_pair1, slippage)
     value_pair2 = adjusted_amount_pair1 * price_pair2
-    final_amount_pair2 = apply_slippage(value_pair2, liquidity_pair2, slippage_pair2)
+    final_amount_pair2 = apply_slippage(value_pair2, liquidity_pair2, slippage)
     
     # Calculate fees
     fees = initial_investment * fee_percentage * 2  # Considering two trades for fees
@@ -164,7 +164,7 @@ import logging
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def find_arbitrage_opportunities(token_pairs, slippage_pair1, slippage_pair2, fee_percentage, initial_investment, user_purchases):
+def find_arbitrage_opportunities(token_pairs, slippage, fee_percentage, initial_investment, user_purchases):
     logging.info('Starting arbitrage opportunity detection')
     arbitrage_opportunities = []
     total_pairs_checked = 0
@@ -213,8 +213,7 @@ def find_arbitrage_opportunities(token_pairs, slippage_pair1, slippage_pair2, fe
                             profit = calculate_arbitrage_profit(initial_investment, 
                                                                 pair1_price, 
                                                                 pair2_price, 
-                                                                slippage_pair1, 
-                                                                slippage_pair2, 
+                                                                slippage,                                                                 
                                                                 fee_percentage,
                                                                 float(pair1['liquidity_base']) if pair1['baseToken_address'] in [pair2['baseToken_address'], pair2['quoteToken_address']] else float(pair1['liquidity_quote']),
                                                                 float(pair2['liquidity_base']) if pair2['baseToken_address'] in [pair1['baseToken_address'], pair1['quoteToken_address']] else float(pair2['liquidity_quote']))
@@ -277,7 +276,7 @@ def find_arbitrage_opportunities(token_pairs, slippage_pair1, slippage_pair2, fe
 # Configure logging if not already done in the module where this function resides
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def find_third_contract_data(unique_pair_addresses, arbitrage_opportunities, session, initial_investment, slippage_pair1, slippage_pair2, fee_percentage):
+def find_third_contract_data(unique_pair_addresses, arbitrage_opportunities, session, initial_investment, slippage, fee_percentage):
     logging.info('Starting to find third contract data')
     third_pair_index = {}  # This will hold either new or cached data
     combined_opportunities = []
@@ -300,8 +299,10 @@ def find_third_contract_data(unique_pair_addresses, arbitrage_opportunities, ses
             opportunity_key = tuple(sorted([combined_opportunity['pair1'], combined_opportunity['pair2'], combined_opportunity['pair3']]))
             if opportunity_key not in seen_combined_opportunities:
                 seen_combined_opportunities.add(opportunity_key)
+                combined_opportunities.append(combined_opportunity)
+                logging.info(f'Added opportunity: {combined_opportunity}')
                 
-                if check_price_compatibility(combined_opportunity, initial_investment, slippage_pair1, slippage_pair2, fee_percentage):
+                if check_price_compatibility(combined_opportunity, initial_investment, slippage, fee_percentage):
                     combined_opportunities.append(combined_opportunity)
                     logging.info(f'Added opportunity: {combined_opportunity}')
                 else:
@@ -559,13 +560,13 @@ def safe_get(d, key, default=None):
 
 
 from typing import Dict, Union, List
-def check_price_compatibility(opportunity: Dict[str, Union[str, float]], initial_investment: float, slippage_pair1: float, slippage_pair2: float, fee_percentage: float) -> bool:
+def check_price_compatibility(opportunity: Dict[str, Union[str, float]], initial_investment: float, slippage: float, fee_percentage: float) -> bool:
     """
     Check if the third pair's price fits into the arbitrage chain to make a profit.
     
     :param opportunity: Dictionary containing details of the three pairs in the arbitrage opportunity
     :param initial_investment: The amount of USD to invest in the arbitrage
-    :param slippage_pair1, slippage_pair2: Expected slippage for each trade
+    :param slippage, slippage: Expected slippage for each trade
     :param fee_percentage: Trading fee percentage
     :return: Boolean indicating if the third pair's price would result in a profit
     """
@@ -575,10 +576,10 @@ def check_price_compatibility(opportunity: Dict[str, Union[str, float]], initial
 
     # Now simulate trades through all three pairs
     # This is a simplified model; real implementation would need to account for complex price dynamics
-    amount_after_first_trade = initial_amount / (1 + slippage_pair1)
+    amount_after_first_trade = initial_amount / (1 + slippage)
     logging.debug(f"Amount after first trade: {amount_after_first_trade}")
     price_first_to_second = float(opportunity['pair2_price'])
-    amount_after_second_trade = (amount_after_first_trade * price_first_to_second) / (1 + slippage_pair2)
+    amount_after_second_trade = (amount_after_first_trade * price_first_to_second) / (1 + slippage)
     logging.debug(f"Amount after second trade: {amount_after_second_trade}")
     price_second_to_third = float(opportunity['pair3_price'])
     final_amount = amount_after_second_trade / price_second_to_third
@@ -617,7 +618,7 @@ def gather_token_pairs_from_purchases(purchases, session):
                 all_token_pairs.extend(process_token_pairs(search))
     return all_token_pairs
 
-def find_arbitrage_opportunities_for_user(token_pairs, purchases, slippage_pair1, slippage_pair2, fee_percentage, initial_investment, search_address):
+def find_arbitrage_opportunities_for_user(token_pairs, purchases, slippage, fee_percentage, initial_investment, search_address):
     """
     Find arbitrage opportunities based on either user's token pairs or a provided address.
     """
@@ -629,7 +630,7 @@ def find_arbitrage_opportunities_for_user(token_pairs, purchases, slippage_pair1
             logging.warning("No token pairs found for the given address.")
             return []
 
-    return find_arbitrage_opportunities(token_pairs, slippage_pair1, slippage_pair2, fee_percentage, initial_investment, purchases)
+    return find_arbitrage_opportunities(token_pairs, slippage, fee_percentage, initial_investment, purchases)
 
 def filter_and_process_opportunities(opportunities):
     """
@@ -688,14 +689,14 @@ def match_pairs_with_opportunities(opportunities, quote_pairs, pair_chains):
 
 
 
-def process_arbitrage_data(user_purchases, session, initial_investment, slippage_pair1, slippage_pair2, fee_percentage, search_address=None):
+def process_arbitrage_data(user_purchases, session, initial_investment, slippage, fee_percentage, search_address=None):
     """
     Process arbitrage data, using either user's purchase history or a provided search address.
     """
     token_pairs = gather_token_pairs_from_purchases(user_purchases, session)
     
     logging.info('Finding arbitrage opportunities')
-    arbitrage_opportunities = find_arbitrage_opportunities_for_user(token_pairs, user_purchases, slippage_pair1, slippage_pair2, fee_percentage, initial_investment, search_address)
+    arbitrage_opportunities = find_arbitrage_opportunities_for_user(token_pairs, user_purchases, slippage, fee_percentage, initial_investment, search_address)
     logging.info(f'Found {len(arbitrage_opportunities)} initial arbitrage opportunities.')
 
     # Continue with the rest of the function logic, ensuring to handle if opportunities are empty
@@ -709,7 +710,7 @@ def process_arbitrage_data(user_purchases, session, initial_investment, slippage
     unique_pair_addresses = sorted(set(p.pair_address for o in opportunities_with_pairs for p in o['matching_pairs']))
 
     logging.info('Finding third contract data')
-    all_three_contracts = find_third_contract_data(unique_pair_addresses, arbitrage_opportunities, session, initial_investment, slippage_pair1, slippage_pair2, fee_percentage)
+    all_three_contracts = find_third_contract_data(unique_pair_addresses, arbitrage_opportunities, session, initial_investment, slippage, fee_percentage)
 
     sorted_opportunities = sorted(all_three_contracts, key=lambda x: x['int_profit'], reverse=True)
     logging.info(f'Final number of arbitrage opportunities: {len(sorted_opportunities)}')

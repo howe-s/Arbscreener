@@ -67,9 +67,9 @@ def landing_page_data():
 
     # Retrieve form data
     initial_investment = float(request.form.get('initial_investment', 10000))
-    slippage_pair1 = float(request.form.get('slippage_pair1', 0.0005))
-    slippage_pair2 = float(request.form.get('slippage_pair2', 0.0005))
-    slippage_pair3 = float(request.form.get('slippage_pair3', 0.0005))
+    slippage = float(request.form.get('slippage_pair1', 0.0005))
+    # slippage_pair2 = float(request.form.get('slippage_pair2', 0.0005))
+    # slippage_pair3 = float(request.form.get('slippage_pair3', 0.0005))
     fee_percentage = float(request.form.get('fee_percentage', 0.0003))
     address = request.form.get('search', '7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs')
 
@@ -79,7 +79,7 @@ def landing_page_data():
     with app.app_context():
         session = db.session
         # Pass the search address to handle the case without user purchases
-        sorted_opportunities = process_arbitrage_data(user_purchases, session, initial_investment, slippage_pair1, slippage_pair2, fee_percentage, search_address=address)
+        sorted_opportunities = process_arbitrage_data(user_purchases, session, initial_investment, slippage, fee_percentage, search_address=address)
     
     print('SORTED OPPS:', sorted_opportunities)
     return jsonify(sorted_opportunities), 200

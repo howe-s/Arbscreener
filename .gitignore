@@ -6,6 +6,7 @@ __pycache__/
 *.sqlite3
 /old_files
 .qodo
+/migrations
 
 # Flask-related
 instance/
