@@ -96,32 +96,6 @@ Built-in protections including:
 - Trading fee calculations
 - Rate limiting for API calls
 
-## Usage Example
-
-```python
-from flask import Flask
-from utils.user_profile_utils import process_arbitrage_data
-
-app = Flask(__name__)
-
-@app.route('/landing_page_data', methods=['POST'])
-def landing_page_data():
-    initial_investment = 10000
-    slippage = 0.0005
-    fee_percentage = 0.0003
-    
-    opportunities = process_arbitrage_data(
-        user_purchases=None,
-        session=db.session,
-        initial_investment=initial_investment,
-        slippage_pair1=slippage,
-        slippage_pair2=slippage,
-        fee_percentage=fee_percentage
-    )
-    
-    return jsonify(opportunities), 200
-```
-
 ## Error Handling
 
 The system implements comprehensive error handling:
