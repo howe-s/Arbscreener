@@ -277,7 +277,7 @@ def find_arbitrage_opportunities(token_pairs, slippage, fee_percentage, initial_
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def find_third_contract_data(unique_pair_addresses, arbitrage_opportunities, session, initial_investment, slippage, fee_percentage):
-    logging.info('Starting to find third contract data')
+    # logging.info('Starting to find third contract data')
     third_pair_index = {}  # This will hold either new or cached data
     combined_opportunities = []
     seen_combined_opportunities = set()
@@ -285,7 +285,7 @@ def find_third_contract_data(unique_pair_addresses, arbitrage_opportunities, ses
     # Fetch or use cached data for third pair
     third_pair_index = fetch_or_use_cached_data(unique_pair_addresses, session)
     
-    logging.info(f'Indexed {len(third_pair_index)} third contracts')
+    # logging.info(f'Indexed {len(third_pair_index)} third contracts')
 
     for opportunity in arbitrage_opportunities:
         logging.debug(f'Processing opportunity for pair1: {opportunity["pair1"]}, pair2: {opportunity["pair2"]}')
@@ -697,7 +697,7 @@ def process_arbitrage_data(user_purchases, session, initial_investment, slippage
     
     logging.info('Finding arbitrage opportunities')
     arbitrage_opportunities = find_arbitrage_opportunities_for_user(token_pairs, user_purchases, slippage, fee_percentage, initial_investment, search_address)
-    logging.info(f'Found {len(arbitrage_opportunities)} initial arbitrage opportunities.')
+    # logging.info(f'Found {len(arbitrage_opportunities)} initial arbitrage opportunities.')
 
     # Continue with the rest of the function logic, ensuring to handle if opportunities are empty
     if not arbitrage_opportunities:
@@ -709,11 +709,11 @@ def process_arbitrage_data(user_purchases, session, initial_investment, slippage
 
     unique_pair_addresses = sorted(set(p.pair_address for o in opportunities_with_pairs for p in o['matching_pairs']))
 
-    logging.info('Finding third contract data')
+    logging.info('Finding third contract')
     all_three_contracts = find_third_contract_data(unique_pair_addresses, arbitrage_opportunities, session, initial_investment, slippage, fee_percentage)
 
     sorted_opportunities = sorted(all_three_contracts, key=lambda x: x['int_profit'], reverse=True)
-    logging.info(f'Final number of arbitrage opportunities: {len(sorted_opportunities)}')
+    logging.info(f'Total arbitrage opportunities: {len(sorted_opportunities)}')
 
     return sorted_opportunities
 
@@ -721,13 +721,22 @@ def process_arbitrage_data(user_purchases, session, initial_investment, slippage
 
 
 # LOG LOADER
-from logging import Filter
+from logging import Filter, LogRecord 
 from typing import List
 # Custom handler to send logs to client
 class HeartbeatFilter(Filter):
-    def filter(self, record: logging.LogRecord) -> bool:
-        # Exclude records containing 'heartbeat' in the message
-        return '/get_logs' not in record.getMessage().lower()
+    def filter(self, record: LogRecord) -> bool:
+        # Exclude debugger logs (all logs from Werkzeug)
+        if record.name.startswith('werkzeug'):
+            return False
+        
+        # Exclude records related to /get_logs, /landing_page_data, and /
+        message = record.getMessage().lower()
+        if '/get_logs' in message or '/landing_page_data' in message or 'get / ' in message:
+            return False
+        
+        # Allow all other logs
+        return True
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
