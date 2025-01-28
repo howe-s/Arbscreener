@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Arbscreener</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         $(document).ready(function() {
             let arbitrageContainer = $('#arbitrage-opportunities');
@@ -72,18 +71,6 @@
                                                                 <td>${opportunity.quote_price_usd_2}</td>
                                                                 ${opportunity.pair3 ? `<td>${opportunity.quote_price_usd_3}</td>` : ''}
                                                             </tr>
-                                                            <!-- <tr>
-                                                                <th>Base Token Discrepancy</th>
-                                                                <td>${opportunity.baseToken_difference_12}</td>
-                                                                <td>${opportunity.baseToken_difference_13}</td>
-                                                                <td>${opportunity.baseToken_difference_23}</td>
-                                                            </tr>
-                                                            <tr>
-                                                                <th>Quote Token Discrepancy</th>
-                                                                <td>${opportunity.quoteToken_difference_12}</td>
-                                                                <td>${opportunity.quoteToken_difference_13}</td>
-                                                                <td>${opportunity.quoteToken_difference_23}</td>
-                                                            </tr> -->
                                                             <tr>
                                                                 <th>Liquidity</th>
                                                                 <td>${opportunity.pair1_liquidity}</td>
@@ -181,16 +168,32 @@
                 });
             }
 
+            // Function to fetch logs
+            function fetchLogs() {
+                $.ajax({
+                    type: 'GET',
+                    url: '/get_logs',
+                    success: function(logs) {
+                        let logWindow = $('#log-window');
+                        logs.forEach(log => {
+                            logWindow.append($('<p>').text(log));
+                        });
+                        logWindow.scrollTop(logWindow[0].scrollHeight); // Auto-scroll to bottom
+                    }
+                });
+            }
+
             // Prevent form submission and use AJAX instead
             $('form').on('submit', function(e) {
                 e.preventDefault(); // Prevent the default form submission which would refresh the page
                 
                 var formData = $(this).serialize(); // Serialize form data
                 fetchArbitrageData(formData);
+                fetchLogs(); // Fetch logs after fetching data
             });
+
             // Function to update colors of matching token addresses
             function updateTokenColors() {
-                // Get all tables within arbitrage opportunities
                 let tables = document.querySelectorAll('#arbitrage-opportunities table');
 
                 // Define colors to cycle through
@@ -221,6 +224,9 @@
                     }
                 });
             }
+
+            // Set up periodic log fetching
+            setInterval(fetchLogs, 1000); // Fetch logs every second
         });
     </script>
 </head>
@@ -349,62 +355,89 @@
         align-items: center; /* Vertically centers content */
         flex-direction: column; /* Stack arbitrage cards vertically */
     }
+
+    #log-window {
+        max-height: 50%;
+        max-width: 50%; /* Adjust the width as per your requirement */
+        padding-top: 20px;
+        order: 2; /* Ensure it stays below main-content */
+        display: flex;
+        /* justify-content: center;  */
+        align-items: center; /* Vertically centers content */
+        flex-direction: column; /* Stack arbitrage cards vertically */
+    }
+
     #arb-cards {
-            margin: 10px;
-            padding: 15px;
-            background-color: #1a1a1a; /* Slightly lighter than the body for contrast */
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            transition: transform 0.3s ease;
-            max-width: fit-content;
-        }
+        margin: 10px;
+        padding: 15px;
+        background-color: #1a1a1a; /* Slightly lighter than the body for contrast */
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        transition: transform 0.3s ease;
+        max-width: fit-content;
+    }
 
-        #arb-cards:hover {
-            transform: scale(1.02); /* Slight scale on hover for interaction feedback */
-        }
+    #arb-cards:hover {
+        transform: scale(1.02); /* Slight scale on hover for interaction feedback */
+    }
 
-        .card-header {
-            background-color: #2a2a2a;
-            border-radius: 8px 8px 0 0;
-            padding: 10px;
-        }
+    .card-header {
+        background-color: #2a2a2a;
+        border-radius: 8px 8px 0 0;
+        padding: 10px;
+    }
 
-        .card-title {
-            color: #4a90e2;
-        }
+    .card-title {
+        color: #4a90e2;
+    }
 
-        .card-body {
-            border-radius: 0 0 8px 8px;
-        }
+    .card-body {
+        border-radius: 0 0 8px 8px;
+    }
 
-        .table-responsive {
-            overflow-x: auto;
-        }
+    .table-responsive {
+        overflow-x: auto;
+    }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
 
-        th, td {
-            padding: 10px;
-            text-align: left;
-            border-bottom: 1px solid #333;
-        }
+    th, td {
+        padding: 10px;
+        text-align: left;
+        border-bottom: 1px solid #333;
+    }
 
-        th {
-            background-color: #2a2a2a;
-        }
+    th {
+        background-color: #2a2a2a;
+    }
 
-        .card-link {
-            color: #63b8ff;
-            text-decoration: none;
-        }
+    .card-link {
+        color: #63b8ff;
+        text-decoration: none;
+    }
 
-        .card-link:hover {
-            text-decoration: underline;
-        }
+    .card-link:hover {
+        text-decoration: underline;
+    }
 
+    #log-window {
+        height: 200px;
+        overflow-y: scroll;
+        border: 1px solid #ccc;
+        margin-top: 20px;
+        width: 80%;
+        background-color: #1a1a1a;
+        padding: 10px;
+        border-radius: 8px;
+    }
+
+    #log-window p {
+        margin: 5px 0;
+        font-size: 0.9rem;
+    }
 </style>
 <body>
     <div id="main-container">
@@ -421,24 +454,25 @@
                     <span class="input-label">Initial Investment</span>
                 </div>
                 <div>
-                    <input type="number" class="arbitrage-input" name="slippage_pair1" placeholder="Slippage Pair 1" value="0.0005" step="0.0001" required>
-                    <span class="input-label">Slippage %</span>
+                    <input type="number" class="arbitrage-input" name="slippage" placeholder="Slippage" value="0.0005" step="0.0001" required>
+                    <span class="input-label">Slippage</span>
                 </div>
-                <!-- <div>
-                    <input type="number" class="arbitrage-input" name="slippage_pair2" placeholder="Slippage Pair 2" value="0.0005" step="0.0001" required>
-                    <span class="input-label">Slippage Pair 2</span>
-                </div> -->
                 <div>
                     <input type="number" class="arbitrage-input" name="fee_percentage" placeholder="Fee Percentage" value="0.0003" step="0.0001" required>
-                    <span class="input-label">Fee %</span>
+                    <span class="input-label">Fee</span>
                 </div>
                 <button type="submit" class="search-btn">Search</button>
             </form>
+        </div>
+        <div id="log-window">
+            <!-- Logs will be displayed here -->
         </div>
 
         <div id="arbitrage-opportunities" class="row row-cols-1 row-cols-md-3 g-3">
             <!-- Arbitrage opportunities will be populated here by JavaScript -->
         </div>
+
+
     </div>
     <footer>© 2025 Arbscreener. All rights reserved.</footer>
 </body>

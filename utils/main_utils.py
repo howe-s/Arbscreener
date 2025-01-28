@@ -219,7 +219,7 @@ def find_arbitrage_opportunities(token_pairs, slippage, fee_percentage, initial_
                                                                 float(pair2['liquidity_base']) if pair2['baseToken_address'] in [pair1['baseToken_address'], pair1['quoteToken_address']] else float(pair2['liquidity_quote']))
                             
                             if profit > 0:  # Only consider positive profit opportunities
-                                logging.info(f'Found potential arbitrage opportunity: Profit = ${profit:.2f} for pairs {pair1["pair"]} and {pair2["pair"]}')
+                                logging.info(f'Found potential arbitrage opportunity: {pair1["pair"]} and {pair2["pair"]}')
                                 int_profit = int(profit * 10**8) / 10**8
                                 
                                 opportunity = {
@@ -300,11 +300,11 @@ def find_third_contract_data(unique_pair_addresses, arbitrage_opportunities, ses
             if opportunity_key not in seen_combined_opportunities:
                 seen_combined_opportunities.add(opportunity_key)
                 combined_opportunities.append(combined_opportunity)
-                logging.info(f'Added opportunity: {combined_opportunity}')
+                # logging.info(f'Added opportunity: {combined_opportunity}')
                 
                 if check_price_compatibility(combined_opportunity, initial_investment, slippage, fee_percentage):
                     combined_opportunities.append(combined_opportunity)
-                    logging.info(f'Added opportunity: {combined_opportunity}')
+                    # logging.info(f'Added opportunity: {combined_opportunity}')
                 else:
                     logging.debug(f'Skipped opportunity due to incompatible price: {combined_opportunity}')
             else:
@@ -312,7 +312,7 @@ def find_third_contract_data(unique_pair_addresses, arbitrage_opportunities, ses
         else:
             logging.warning(f"No third pair matched for opportunity: {opportunity}")
 
-    logging.info(f'Final number of arbitrage opportunities with third pair: {len(combined_opportunities)}')
+    # logging.info(f'Final number of arbitrage opportunities with third pair: {len(combined_opportunities)}')
     return combined_opportunities
 
 def fetch_or_use_cached_data(unique_pair_addresses, session):
@@ -464,7 +464,7 @@ def calculate_usd_prices(combined_opportunity):
     combined_opportunity['quote_price_usd_3'] = f"${quote_price_usd_3:.2f}"
 
 def calculate_price_discrepancies(combined_opportunity):
-    print('COMBINED_OPPORTUNITY~~~~~', combined_opportunity)
+    # print('COMBINED_OPPORTUNITY~~~~~', combined_opportunity)
     
     # Extract prices for all pairs
     base_price_usd_1 = float(combined_opportunity['pair1_price'])
@@ -543,7 +543,7 @@ def calculate_price_discrepancies(combined_opportunity):
             combined_opportunity[key] = '0.00%'  # or any default value you prefer
             print(f"Added missing discrepancy: {key}")
 
-    print("FINAL COMBINED_OPPORTUNITY~~~~~", combined_opportunity)
+    # print("FINAL COMBINED_OPPORTUNITY~~~~~", combined_opportunity)
 
 def safe_get(d, key, default=None):
     try:
@@ -716,3 +716,40 @@ def process_arbitrage_data(user_purchases, session, initial_investment, slippage
     logging.info(f'Final number of arbitrage opportunities: {len(sorted_opportunities)}')
 
     return sorted_opportunities
+
+
+
+
+# LOG LOADER
+from logging import Filter
+from typing import List
+# Custom handler to send logs to client
+class HeartbeatFilter(Filter):
+    def filter(self, record: logging.LogRecord) -> bool:
+        # Exclude records containing 'heartbeat' in the message
+        return '/get_logs' not in record.getMessage().lower()
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger()
+
+# Create a custom handler for client logs
+class ClientLoggingHandler(logging.Handler):
+    def __init__(self):
+        super().__init__()
+        self.logs: List[str] = []
+        # Add the heartbeat filter
+        self.addFilter(HeartbeatFilter())
+
+    def emit(self, record: logging.LogRecord) -> None:
+        log_entry = self.format(record)
+        self.logs.append(log_entry)
+
+    def get_logs(self) -> List[str]:
+        logs = self.logs.copy()
+        self.logs.clear()  # Clear after retrieval
+        return logs
+
+# Create and configure the logger
+client_handler = ClientLoggingHandler()
+logger.addHandler(client_handler)
