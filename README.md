@@ -2,7 +2,7 @@
 
 **Work in progress**
 
-A sophisticated Flask-based application that detects and analyzes arbitrage opportunities across cryptocurrency trading pairs in real-time. The system monitors price discrepancies across different exchanges and calculates potential profits while accounting for slippage, fees, and liquidity constraints.
+A Flask-based application that detects and analyzes arbitrage opportunities across cryptocurrency trading pairs in real-time. 
 
 ![image](https://github.com/user-attachments/assets/ddd975d6-6b0d-4049-87e2-e670713be36d)
 
