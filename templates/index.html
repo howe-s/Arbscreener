@@ -7,6 +7,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         $(document).ready(function() {
+            fetchLogs();
             let arbitrageContainer = $('#arbitrage-opportunities');
             
             // Function to show loading animation
@@ -16,7 +17,7 @@
                         <div class="spinner-border text-primary" role="status">
                             <span class="visually-hidden"></span>
                         </div>
-                        <p>Fetching contracts... (If you're seeing this message, it's working. Please do not refresh)</p>
+                        <p>(Please do not refresh)</p>
                     </div>
                 `);
             }
@@ -175,10 +176,15 @@
                     url: '/get_logs',
                     success: function(logs) {
                         let logWindow = $('#log-window');
-                        logs.forEach(log => {
-                            logWindow.append($('<p>').text(log));
-                        });
-                        logWindow.scrollTop(logWindow[0].scrollHeight); // Auto-scroll to bottom
+                        if (logs.length > 0) {
+                            // If there are logs, show the log window
+                            logWindow.removeClass('hidden');
+                            // Append logs to the window
+                            logs.forEach(log => {
+                                logWindow.append($('<p>').text(log));
+                            });
+                            logWindow.scrollTop(logWindow[0].scrollHeight); // Auto-scroll to bottom
+                        } 
                     }
                 });
             }
@@ -231,38 +237,48 @@
     </script>
 </head>
 <style>
-    body {
+    :root {
+        --primary-color: #4a90e2;
+        --secondary-color: #63b8ff;
+        --background-color: #0A0A0A;
+        --text-color: #E0E0E0;
+        --card-bg: #1a1a1a;
+        --card-header-bg: #2a2a2a;
+        --border-color: #333;
+    }
+
+    * {
         margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
         font-family: 'Arial', sans-serif;
-        background-color: #0A0A0A; /* Dark background */
-        color: #E0E0E0; /* Light text */
+        background-color: var(--background-color);
+        color: var(--text-color);
         display: flex;
-        flex-direction: column; /* Stack sections vertically */
+        flex-direction: column;
         align-items: center;
-        justify-content: flex-start; /* Ensure items are aligned at the top */
-        min-height: 100vh; /* Ensure the body covers the entire viewport */
+        min-height: 100vh;
+        padding: 20px;
     }
 
     h1 {
         font-size: 3rem;
-        margin: 0;
-        color: #4a90e2;
+        color: var(--primary-color);
         text-transform: uppercase;
         letter-spacing: 2px;
-    }
-
-    p {
-        font-size: 1.2rem;
-        margin: 10px 0 30px;
-        color: #B0B0B0;
+        margin-bottom: 20px;
     }
 
     .search-container {
         display: flex;
-        gap: 10px; /* Space between elements */
-        margin-bottom: 20px;
-        flex-wrap: wrap; /* Allow wrapping for smaller screens */
+        gap: 15px;
+        flex-wrap: wrap;
         justify-content: center;
+        margin-bottom: 30px;
+        margin-top: 30px;
     }
 
     .search-container input {
@@ -270,35 +286,33 @@
         font-size: 1rem;
         border-radius: 50px;
         border: none;
-        outline: none;
         background-color: #202020;
-        color: #E0E0E0;
-        width: 120px; /* Default width for arbitrage inputs */
+        color: var(--text-color);
+        width: 100px;
+        text-align: center;
     }
 
-    .search-input {
-        width: 300px; /* Adjust width as needed */
-        border-radius: 50px 0 0 50px;
+    #address-input input {
+        width: 250px;
     }
 
     .search-btn {
-        display: inline-block;
         padding: 14px 28px;
-        background: linear-gradient(45deg, #4a90e2, #63b8ff);
-        color: #FFF;
+        background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+        color: white;
         font-size: 1rem;
-        text-decoration: none;
         border-radius: 50px;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         transition: all 0.3s ease;
         text-transform: uppercase;
         letter-spacing: 1px;
         cursor: pointer;
-        border: none;
+        height: 48px;
+        line-height: 1;
     }
 
     .search-btn:hover {
-        background: linear-gradient(45deg, #357abd, #4a90e2);
+        background: linear-gradient(45deg, #357abd, var(--primary-color));
         box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
         transform: translateY(-2px);
     }
@@ -306,7 +320,7 @@
     .divider {
         width: 80px;
         height: 3px;
-        background-color: #4a90e2;
+        background-color: var(--primary-color);
         margin: 20px 0;
         border-radius: 3px;
     }
@@ -314,10 +328,9 @@
     .input-label {
         font-size: 0.8rem;
         color: #B0B0B0;
-        margin-top: -5px; /* Adjust as needed to position label */
+        margin-top: 3px;
         display: block;
         text-align: center;
-        margin-top: 3px;
     }
 
     footer {
@@ -326,96 +339,92 @@
         font-size: 0.8rem;
         color: #606060;
     }
-    
+
     #main-container {
+        width: 100%;
+        max-width: 1200px;
         display: flex;
         flex-direction: column;
-        align-items: center; /* Centers content horizontally */
-        width: 100%;
-        height: 100%;
-        flex-grow: 1; /* Ensures it takes up available space */
+        align-items: center;
+        height: 100vh;
+        padding: 20px;
     }
 
     #main-content {
         margin-top: 10%;
         width: 100%;
+        max-width: 800px;
         display: flex;
         flex-direction: column;
         align-items: center;
-        order: 1; /* Ensures it stays at the top */
     }
 
     #arbitrage-opportunities {
-        max-height: 50%;
-        width: 80%; /* Adjust the width as per your requirement */
-        padding-top: 20px;
-        order: 2; /* Ensure it stays below main-content */
+        width: 100%;
+        max-width: 1200px;
+        margin-top: 40px;
         display: flex;
-        justify-content: center; /* Centers the child elements */
-        align-items: center; /* Vertically centers content */
-        flex-direction: column; /* Stack arbitrage cards vertically */
-    }
-
-    #log-window {
-        max-height: 50%;
-        max-width: 50%; /* Adjust the width as per your requirement */
-        padding-top: 20px;
-        order: 2; /* Ensure it stays below main-content */
-        display: flex;
-        /* justify-content: center;  */
-        align-items: center; /* Vertically centers content */
-        flex-direction: column; /* Stack arbitrage cards vertically */
+        flex-wrap: wrap;
+        gap: 20px;
+        justify-content: center;
     }
 
     #arb-cards {
-        margin: 10px;
-        padding: 15px;
-        background-color: #1a1a1a; /* Slightly lighter than the body for contrast */
+        background-color: var(--card-bg);
         border-radius: 8px;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        padding: 15px;
+        width: 100%;
+        min-width: fit-content;
         transition: transform 0.3s ease;
-        max-width: fit-content;
+        min-height: 400px;
     }
 
     #arb-cards:hover {
-        transform: scale(1.02); /* Slight scale on hover for interaction feedback */
+        transform: scale(1.02);
     }
 
     .card-header {
-        background-color: #2a2a2a;
+        background-color: var(--card-header-bg);
         border-radius: 8px 8px 0 0;
-        padding: 10px;
+        padding: 15px;
     }
 
     .card-title {
-        color: #4a90e2;
+        color: var(--primary-color);
+        font-size: 1.2rem;
     }
 
     .card-body {
+        padding: 15px;
         border-radius: 0 0 8px 8px;
     }
 
     .table-responsive {
         overflow-x: auto;
+        width: 100%;
     }
 
     table {
         width: 100%;
         border-collapse: collapse;
+        margin-top: 10px;
     }
 
     th, td {
-        padding: 10px;
+        padding: 12px;
         text-align: left;
-        border-bottom: 1px solid #333;
+        border-bottom: 1px solid var(--border-color);
+        font-size: 0.9rem;
     }
 
     th {
-        background-color: #2a2a2a;
+        background-color: var(--card-header-bg);
+        font-weight: 600;
     }
 
     .card-link {
-        color: #63b8ff;
+        color: var(--secondary-color);
         text-decoration: none;
     }
 
@@ -425,18 +434,63 @@
 
     #log-window {
         height: 200px;
+        overflow-y: auto;
+        border: 1px solid #333;
+        margin: 20px 0;
+        width: 100%;
+        max-width: 50%;
+        min-height: 120px;
+        max-height: 120px;
         overflow-y: scroll;
-        border: 1px solid #ccc;
-        margin-top: 20px;
-        width: 80%;
-        background-color: #1a1a1a;
-        padding: 10px;
+        background-color: var(--card-bg);
+        padding: 15px;
         border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    #log-window.hidden {
+        opacity: 0;
+        height: 0;
+        padding: 0;
+        transition: all 0.3s ease;
     }
 
     #log-window p {
         margin: 5px 0;
         font-size: 0.9rem;
+        color: #B0B0B0;
+    }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #202020;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: #333;
+        border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: #404040;
+    }
+
+    /* Improved card spacing */
+    .card {
+        margin-bottom: 20px;
+    }
+
+    /* Better table row spacing */
+    .table-striped tbody tr:nth-of-type(odd) {
+        background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: rgba(0, 0, 0, 0.1);
     }
 </style>
 <body>
@@ -446,7 +500,7 @@
             <div class="divider"></div>
             <p>Your Fastest Path to Smart Contract Discovery</p>
             <form class="search-container" action="/landing_page_data" method="POST">
-                <div>
+                <div id="address-input">
                     <input type="search" class="search-input" placeholder="Search contracts..." name="search">
                 </div>
                 <div>
@@ -464,7 +518,7 @@
                 <button type="submit" class="search-btn">Search</button>
             </form>
         </div>
-        <div id="log-window">
+        <div id="log-window" class="hidden">
             <!-- Logs will be displayed here -->
         </div>
 

@@ -165,7 +165,7 @@ import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def find_arbitrage_opportunities(token_pairs, slippage, fee_percentage, initial_investment, user_purchases):
-    logging.info('Starting arbitrage opportunity detection')
+    # logging.info('Starting arbitrage opportunity detection')
     arbitrage_opportunities = []
     total_pairs_checked = 0
     
@@ -219,7 +219,7 @@ def find_arbitrage_opportunities(token_pairs, slippage, fee_percentage, initial_
                                                                 float(pair2['liquidity_base']) if pair2['baseToken_address'] in [pair1['baseToken_address'], pair1['quoteToken_address']] else float(pair2['liquidity_quote']))
                             
                             if profit > 0:  # Only consider positive profit opportunities
-                                logging.info(f'Found potential arbitrage opportunity: {pair1["pair"]} and {pair2["pair"]}')
+                                # logging.info(f'Found potential arbitrage opportunity: {pair1["pair"]} and {pair2["pair"]}')
                                 int_profit = int(profit * 10**8) / 10**8
                                 
                                 opportunity = {
