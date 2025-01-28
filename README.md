@@ -1,6 +1,6 @@
 # Crypto Arbitrage Detection System
 
-**Work in progress**
+***Work in progress***
 
 A Flask-based application that detects and analyzes arbitrage opportunities across cryptocurrency trading pairs and decentralized exchange in real-time. 
 
