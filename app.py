@@ -34,7 +34,7 @@ from utils.chart_utils import (
     pie_chart_volume,
     generate_bar_chart
 )
-from utils.old_utils.api_utils import rate_limit, fetch_current_price
+from utils.api_utils import rate_limit, fetch_current_price
 from collections import Counter, defaultdict
 import time
 from flask_caching import Cache
@@ -338,7 +338,7 @@ def edit_purchase(purchase_id):
 def user_prices(purchase_id):
     print('Getting prices...')  
     from utils.models import Purchase
-    from utils.old_utils.api_utils import fetch_current_price
+    from utils.api_utils import fetch_current_price
       
     # Helper function to calculate profit and percentages
     def calculate_profit_and_percentages(token_price, purchase_price, quantity):
