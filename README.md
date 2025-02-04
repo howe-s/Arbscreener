@@ -1,4 +1,4 @@
-# Crypto Arbitrage Detection System
+# Arbitrage Contract Finder
 
 ***Work in progress***
 
