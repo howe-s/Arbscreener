@@ -14,6 +14,10 @@ instance/
 *.db
 *.log
 
+# No Share
+arbscreener.mp4
+/utils/main_utils.py
+
 # IDE-related
 .vscode/
 .idea/
