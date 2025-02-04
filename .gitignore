@@ -18,6 +18,10 @@ instance/
 arbscreener.mp4
 /utils/main_utils.py
 /static/GROKARB.jpg
+/static/css/dex_search.css
+/static/css/login.css
+/static/css/token_table.css
+/static/css/index.css
 
 # IDE-related
 .vscode/
