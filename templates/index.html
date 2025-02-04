@@ -280,12 +280,13 @@
 
     h1 {
         font-size: 3rem;
-        color: var(--secondary-color);
+        color: var(--dark-color);
         text-transform: uppercase;
         letter-spacing: 2px;        
-        background: linear-gradient(45deg, var(--secondary-color), #fff);
+        background: linear-gradient(45deg, var(--secondary-color), #2e78cc);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
+
     }
 
     .search-container {
@@ -384,7 +385,7 @@
         gap: 20px;
         /* justify-content: center; */
         overflow-y: auto;
-        max-height: calc(85vh - 400px); /* Adjust based on your content */
+        max-height: 1200px;
     }
 
     #arb-cards {
@@ -397,6 +398,7 @@
         transition: all 0.3s ease;
         min-height: 400px;
         border: 1px solid var(--border-color);
+        padding-top: 10px;
     }
 
     #arb-cards:hover {
@@ -426,7 +428,7 @@
 
     table {
         width: 100%;
-        table-layout: fixed; /* Fixed table layout for better control */
+        table-layout: fixed; 
     }
 
     th, td {
@@ -510,12 +512,10 @@
     ::-webkit-scrollbar-thumb:hover {
         background: var(--hover-color);
     }
-
-    /* Improved card spacing */
+    
     .card {
         margin-bottom: 20px;
     }
-
     .search-container input:-webkit-autofill,
     .search-container input:-webkit-autofill:hover,
     .search-container input:-webkit-autofill:focus,
@@ -524,8 +524,7 @@
         -webkit-text-fill-color: var(--light-color) !important;
         transition: background-color 5000s ease-in-out 0s;
     }
-
-    /* Better table row spacing */
+    
     .table-striped tbody tr:nth-of-type(odd) {
         background-color: rgba(100, 255, 218, 0.05);
     }
@@ -566,7 +565,7 @@
                 </div>
                 <div>
                     <input type="number" class="arbitrage-input" name="initial_investment" placeholder="Initial Investment" value="10000" required>
-                    <span class="input-label">Amount>
+                    <span class="input-label">Amount</span>
                 </div>
                 <div>
                     <input type="number" class="arbitrage-input" name="slippage" placeholder="Slippage" value="0.0005" step="0.0001" required>
