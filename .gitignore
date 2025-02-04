@@ -17,6 +17,7 @@ instance/
 # No Share
 arbscreener.mp4
 /utils/main_utils.py
+/static/GROKARB.jpg
 
 # IDE-related
 .vscode/
