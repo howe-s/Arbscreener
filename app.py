@@ -15,23 +15,31 @@ import pandas as pd
 import matplotlib
 matplotlib.use('Agg')  
 from utils.models import db, User
-from flask_caching import Cache
-
-
+import logging
 
 # RUN FLASK
 app = Flask(__name__)
-cache = Cache(app, config={'CACHE_TYPE': 'simple'})  # Simple cache in memory, for production, consider Redis or Memcached
-client = DexscreenerClient()
-app.config['SECRET_KEY'] = 'your_secret_key'  # Replace with your secret key
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'  # Database URI
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['STATIC_FOLDER'] = 'static'
 
-# Configuration for caching
-app.config['CACHING'] = True
-app.config['CACHE_TYPE'] = 'simple'  # Use 'simple' for in-memory caching, adjust as needed
+# Single configuration block for all app settings
+app.config.update(
+    SECRET_KEY='your_secret_key',
+    SQLALCHEMY_DATABASE_URI='sqlite:///users.db',
+    SQLALCHEMY_TRACK_MODIFICATIONS=False,
+    STATIC_FOLDER='static',
+    CACHING=True,
+    CACHE_TYPE='simple'
+)
+
+# Single cache initialization
 cache = Cache(app)
+
+# Initialize logging once
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+
+client = DexscreenerClient()
 
 # Initialize DB
 db.init_app(app)
@@ -62,25 +70,29 @@ def index():
         )
 
 @app.route('/landing_page_data', methods=['POST'])
-def landing_page_data():
+def fetch_arbitrage_opportunities():
     from utils.main_utils import process_arbitrage_data
 
-    # Retrieve form data
-    initial_investment = float(request.form.get('initial_investment', 10000))
-    slippage = float(request.form.get('slippage', 0.0005))
-    fee_percentage = float(request.form.get('fee_percentage', 0.0003))
-    address = request.form.get('search', '7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs')
+    # Renamed variables to be more descriptive
+    investment_amount = float(request.form.get('initial_investment', 10000))
+    slippage_rate = float(request.form.get('slippage', 0.0005))
+    transaction_fee = float(request.form.get('fee_percentage', 0.0003))
+    contract_address = request.form.get('search', '7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs')
 
-    # Since this isn't fetching user purchases, we'll use None or an empty list
-    user_purchases = None  # or []
+    user_portfolio = None  # Renamed from user_purchases to better reflect its purpose
 
     with app.app_context():
-        session = db.session
-        # Pass the search address to handle the case without user purchases
-        sorted_opportunities = process_arbitrage_data(user_purchases, session, initial_investment, slippage, fee_percentage, search_address=address)
+        db_session = db.session  # Renamed for clarity
+        arbitrage_results = process_arbitrage_data(
+            user_portfolio, 
+            db_session, 
+            investment_amount, 
+            slippage_rate, 
+            transaction_fee, 
+            search_address=contract_address
+        )
     
-    # print('SORTED OPPS:', sorted_opportunities)
-    return jsonify(sorted_opportunities), 200
+    return jsonify(arbitrage_results), 200
 
 from utils.main_utils import client_handler
 @app.route('/get_logs', methods=['GET'])

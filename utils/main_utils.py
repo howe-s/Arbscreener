@@ -117,48 +117,55 @@ def fetch_and_cache_pairs(session, contract: Union[str, List[str]]):
         logging.error(f"Error in fetch_and_cache_pairs with query {search_query}: {e}")
         return None
     
-def process_token_pairs(search):
-    token_pairs = []
-    for TokenPair in search:        
-        liquidity = TokenPair.liquidity if TokenPair.liquidity is not None else {}
+def process_token_pairs(dex_pairs):
+    formatted_pairs = []
+    for pair in dex_pairs:        
+        liquidity_data = safe_get(pair, 'liquidity', {})
         
-        token_pairs.append({
-            'pair': safe_get(TokenPair.base_token, 'name', 'N/A') + '/' + safe_get(TokenPair.quote_token, 'name', 'N/A'),
-            'pool_address': safe_get(TokenPair, 'pair_address', 'N/A'),
-            'pool_url': safe_get(TokenPair, 'url', 'N/A'),
-            'price_usd': safe_get(TokenPair, 'price_usd', 0.0),
-            'price_native': safe_get(TokenPair, 'price_native', 0.0),
-            'liquidity_usd': safe_get(liquidity, 'usd', 0.0),
-            'liquidity_base': safe_get(liquidity, 'base', 0.0),
-            'liquidity_quote': safe_get(liquidity, 'quote', 0.0),
-            'baseToken_address': safe_get(TokenPair.base_token, 'address', 'N/A'),
-            'quoteToken_address': safe_get(TokenPair.quote_token, 'address', 'N/A'),
-            'chain_id': safe_get(TokenPair, 'chain_id', 'N/A'),
-            'dex_id': safe_get(TokenPair, 'dex_id', 'N/A'),
-            'baseToken_name': safe_get(TokenPair.base_token, 'name', 'N/A'),
-            'quoteToken_Name': safe_get(TokenPair.quote_token, 'name', 'N/A')
+        formatted_pairs.append({
+            'pair': safe_get(pair.base_token, 'name', 'N/A') + '/' + safe_get(pair.quote_token, 'name', 'N/A'),
+            'pool_address': safe_get(pair, 'pair_address', 'N/A'),
+            'pool_url': safe_get(pair, 'url', 'N/A'),
+            'price_usd': safe_get(pair, 'price_usd', 0.0),
+            'price_native': safe_get(pair, 'price_native', 0.0),
+            'liquidity_usd': safe_get(liquidity_data, 'usd', 0.0),
+            'liquidity_base': safe_get(liquidity_data, 'base', 0.0),
+            'liquidity_quote': safe_get(liquidity_data, 'quote', 0.0),
+            'baseToken_address': safe_get(pair.base_token, 'address', 'N/A'),
+            'quoteToken_address': safe_get(pair.quote_token, 'address', 'N/A'),
+            'chain_id': safe_get(pair, 'chain_id', 'N/A'),
+            'dex_id': safe_get(pair, 'dex_id', 'N/A'),
+            'baseToken_name': safe_get(pair.base_token, 'name', 'N/A'),
+            'quoteToken_name': safe_get(pair.quote_token, 'name', 'N/A')
         })
-    return token_pairs
+    return formatted_pairs
 
-def calculate_arbitrage_profit(initial_investment, price_pair1, price_pair2, slippage, fee_percentage, liquidity_pair1, liquidity_pair2):
-    # Convert initial investment to amount in pair1
-    amount_pair1 = initial_investment / price_pair1
+def calculate_arbitrage_profit(
+    investment_amount,
+    entry_price,
+    exit_price,
+    slippage_rate,
+    fee_rate,
+    entry_liquidity,
+    exit_liquidity
+):
+    # Convert investment to entry position
+    entry_position = investment_amount / entry_price
     
-    # Simplified slippage model
-    def apply_slippage(amount, liquidity, slippage):
-        return amount * (1 - slippage * (amount / float(liquidity)))  # Convert liquidity to float to ensure arithmetic operation works
+    def apply_slippage(position_size, liquidity_pool, slippage_rate):
+        return position_size * (1 - slippage_rate * (position_size / float(liquidity_pool)))
+
+    adjusted_entry = apply_slippage(entry_position, entry_liquidity, slippage_rate)
+    exit_value = adjusted_entry * exit_price
+    final_amount = apply_slippage(exit_value, exit_liquidity, slippage_rate)
     
-    adjusted_amount_pair1 = apply_slippage(amount_pair1, liquidity_pair1, slippage)
-    value_pair2 = adjusted_amount_pair1 * price_pair2
-    final_amount_pair2 = apply_slippage(value_pair2, liquidity_pair2, slippage)
+    # Calculate total transaction fees
+    total_fees = investment_amount * fee_rate * 2  # Two trades
     
-    # Calculate fees
-    fees = initial_investment * fee_percentage * 2  # Considering two trades for fees
+    # Calculate net profit
+    net_profit = final_amount - investment_amount - total_fees
     
-    # Profit calculation
-    profit = final_amount_pair2 - initial_investment - fees
-    
-    return profit
+    return net_profit
 
 import logging
 
@@ -310,7 +317,7 @@ def find_third_contract_data(unique_pair_addresses, arbitrage_opportunities, ses
             else:
                 logging.debug(f'Skipped duplicate opportunity: {combined_opportunity}')
         else:
-            logging.warning(f"No third pair matched for opportunity: {opportunity}")
+            logging.warning(f"No third pair matched for opportunity: {opportunity["pair1"], opportunity["pair2"]}")
 
     # logging.info(f'Final number of arbitrage opportunities with third pair: {len(combined_opportunities)}')
     return combined_opportunities
