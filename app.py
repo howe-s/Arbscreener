@@ -1,3 +1,9 @@
+import os
+import sys
+
+# Add the current directory to Python path
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 from flask import (
     Flask,
     render_template,
@@ -16,7 +22,6 @@ import matplotlib
 matplotlib.use('Agg')  
 from utils.models import db, User
 import logging
-import os
 from dotenv import load_dotenv
 
 # Load environment variables
