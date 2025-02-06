@@ -23,6 +23,8 @@ matplotlib.use('Agg')
 from utils.models import db, User
 import logging
 from dotenv import load_dotenv
+from sqlalchemy import create_engine
+from sqlalchemy.exc import OperationalError
 
 # Configure logging
 logging.basicConfig(
@@ -41,28 +43,44 @@ app = Flask(__name__)
 is_production = os.getenv('RAILWAY_ENVIRONMENT') == 'production'
 logger.info(f"Running in {'production' if is_production else 'development'} mode")
 
-# Database configuration - make it optional
-db_url = None
+# Database configuration
 if is_production:
-    db_url = os.getenv('DATABASE_URL', '')
-    if db_url:
-        # Ensure the URL uses postgresql:// instead of postgres://
-        db_url = db_url.replace('postgres://', 'postgresql://')
-        logger.info("Using PostgreSQL database")
-    else:
-        logger.warning("No DATABASE_URL provided in production")
+    db_url = os.getenv('DATABASE_URL')
+    if not db_url:
+        logger.error("No DATABASE_URL provided in production")
+        raise ValueError("DATABASE_URL environment variable is required in production")
+    
+    # Ensure the URL uses postgresql:// instead of postgres://
+    if db_url.startswith('postgres://'):
+        db_url = db_url.replace('postgres://', 'postgresql://', 1)
+    
+    logger.info("Using PostgreSQL database")
+    
+    # Test the database connection
+    try:
+        engine = create_engine(db_url)
+        with engine.connect() as connection:
+            logger.info("Successfully connected to the database")
+    except OperationalError as e:
+        logger.error(f"Failed to connect to the database: {str(e)}")
+        raise
 else:
-    # Use SQLite locally if needed
+    # Use SQLite locally
     db_url = 'sqlite:///users.db'
     logger.info("Using SQLite database")
 
-logger.info(f"Database URL: {db_url if db_url else 'Using in-memory SQLite'}")
+logger.info(f"Database URL: {db_url}")
 
 # Single configuration block for all app settings
 app.config.update(
     SECRET_KEY=os.getenv('SECRET_KEY', 'your-secret-key-here'),
-    SQLALCHEMY_DATABASE_URI=db_url if db_url else 'sqlite:///:memory:',
+    SQLALCHEMY_DATABASE_URI=db_url,
     SQLALCHEMY_TRACK_MODIFICATIONS=False,
+    SQLALCHEMY_ENGINE_OPTIONS={
+        'pool_size': 5,
+        'pool_timeout': 30,
+        'pool_recycle': 1800,
+    },
     STATIC_FOLDER='static',
     CACHING=True,
     CACHE_TYPE='simple'
