@@ -65,7 +65,6 @@ instance/
 
 # No Share
 arbscreener.mp4
-/utils/main_utils.py
 /static/GROKARB.jpg
 /static/css/dex_search.css
 /static/css/login.css
@@ -88,7 +87,6 @@ ENV/
 env/
 .venv/
 
-
 # Miscellaneous
 *.DS_Store
 *.thumb
@@ -99,7 +97,6 @@ env/
 *.rar
 *.7z
 migrations/
-
 
 # Coverage reports
 .coverage

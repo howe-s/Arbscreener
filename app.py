@@ -33,22 +33,21 @@ app = Flask(__name__)
 # Determine if we're running on Railway
 is_production = os.getenv('RAILWAY_ENVIRONMENT') == 'production'
 
-# Database configuration
+# Database configuration - make it optional
+db_url = None
 if is_production:
-    # Use PostgreSQL on Railway
     db_url = os.getenv('DATABASE_URL', '')
-    if not db_url:
-        raise RuntimeError('DATABASE_URL environment variable is not set')
-    # Ensure the URL uses postgresql:// instead of postgres://
-    db_url = db_url.replace('postgres://', 'postgresql://')
+    if db_url:
+        # Ensure the URL uses postgresql:// instead of postgres://
+        db_url = db_url.replace('postgres://', 'postgresql://')
 else:
-    # Use SQLite locally
+    # Use SQLite locally if needed
     db_url = 'sqlite:///users.db'
 
 # Single configuration block for all app settings
 app.config.update(
     SECRET_KEY=os.getenv('SECRET_KEY', 'your-secret-key-here'),
-    SQLALCHEMY_DATABASE_URI=db_url,
+    SQLALCHEMY_DATABASE_URI=db_url if db_url else 'sqlite:///:memory:',  # Use in-memory SQLite if no DB URL
     SQLALCHEMY_TRACK_MODIFICATIONS=False,
     STATIC_FOLDER='static',
     CACHING=True,
