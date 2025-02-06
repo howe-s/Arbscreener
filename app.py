@@ -30,19 +30,26 @@ load_dotenv()
 # RUN FLASK
 app = Flask(__name__)
 
+# Determine if we're running on Railway
+is_production = os.getenv('RAILWAY_ENVIRONMENT') == 'production'
+
+# Database configuration
+if is_production:
+    # Use PostgreSQL on Railway
+    db_url = os.getenv('DATABASE_URL', '').replace('postgres://', 'postgresql://')
+else:
+    # Use SQLite locally
+    db_url = 'sqlite:///users.db'
+
 # Single configuration block for all app settings
 app.config.update(
     SECRET_KEY=os.getenv('SECRET_KEY', 'your-secret-key-here'),
-    SQLALCHEMY_DATABASE_URI=os.getenv('DATABASE_URL', 'sqlite:///users.db'),
+    SQLALCHEMY_DATABASE_URI=db_url,
     SQLALCHEMY_TRACK_MODIFICATIONS=False,
     STATIC_FOLDER='static',
     CACHING=True,
     CACHE_TYPE='simple'
 )
-
-# Handle potential "postgres://" to "postgresql://" conversion (Railway specific)
-if app.config['SQLALCHEMY_DATABASE_URI'].startswith('postgres://'):
-    app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_URI'].replace('postgres://', 'postgresql://', 1)
 
 # Single cache initialization
 cache = Cache(app)
