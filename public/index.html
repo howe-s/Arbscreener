@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arbscreener</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Firebase App (the core Firebase SDK) -->
+    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-app.js"></script>
+    <!-- Add Firebase products that you want to use -->
+    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-firestore.js"></script>
+    <script src="scripts.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Arbscreener</h1>
+            <div id="auth-status">
+                <button id="login-btn" style="display: none;">Login</button>
+                <button id="logout-btn" style="display: none;">Logout</button>
+            </div>
+        </header>
+
+        <form id="search-form">
+            <div class="form-group">
+                <label for="search">Contract Address:</label>
+                <input type="text" id="search" name="search" value="7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs">
+            </div>
+            <div class="form-group">
+                <label for="initial_investment">Initial Investment:</label>
+                <input type="number" id="initial_investment" name="initial_investment" value="10000">
+            </div>
+            <div class="form-group">
+                <label for="slippage">Slippage:</label>
+                <input type="number" id="slippage" name="slippage" value="0.0005" step="0.0001">
+            </div>
+            <div class="form-group">
+                <label for="fee_percentage">Fee Percentage:</label>
+                <input type="number" id="fee_percentage" name="fee_percentage" value="0.0003" step="0.0001">
+            </div>
+            <button type="submit">Search</button>
+        </form>
+
+        <div id="arbitrage-opportunities" class="row row-cols-1 row-cols-md-2 g-4"></div>
+        <div id="log-window" class="hidden"></div>
+    </div>
+
+    <script>
+        // Firebase configuration will be added here during deployment
+        const firebaseConfig = {
+            // Your Firebase config will go here
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+    </script>
+</body>
+</html> 

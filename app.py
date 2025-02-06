@@ -16,19 +16,28 @@ import matplotlib
 matplotlib.use('Agg')  
 from utils.models import db, User
 import logging
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # RUN FLASK
 app = Flask(__name__)
 
 # Single configuration block for all app settings
 app.config.update(
-    SECRET_KEY='your_secret_key',
-    SQLALCHEMY_DATABASE_URI='sqlite:///users.db',
+    SECRET_KEY=os.getenv('SECRET_KEY', 'your-secret-key-here'),
+    SQLALCHEMY_DATABASE_URI=os.getenv('DATABASE_URL', 'sqlite:///users.db'),
     SQLALCHEMY_TRACK_MODIFICATIONS=False,
     STATIC_FOLDER='static',
     CACHING=True,
     CACHE_TYPE='simple'
 )
+
+# Handle potential "postgres://" to "postgresql://" conversion (Railway specific)
+if app.config['SQLALCHEMY_DATABASE_URI'].startswith('postgres://'):
+    app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_URI'].replace('postgres://', 'postgresql://', 1)
 
 # Single cache initialization
 cache = Cache(app)
@@ -44,8 +53,6 @@ client = DexscreenerClient()
 # Initialize DB
 db.init_app(app)
 migrate = Migrate(app, db)
-# Gather token pairs without caching
-
 
 # Setup Flask-Login
 login_manager = LoginManager()
@@ -67,22 +74,21 @@ def index():
         'index.html', 
         is_logged_in=current_user.is_authenticated,
         arbitrage_opportunities=[]
-        )
+    )
 
 @app.route('/landing_page_data', methods=['POST'])
 def fetch_arbitrage_opportunities():
     from utils.main_utils import process_arbitrage_data
 
-    # Renamed variables to be more descriptive
     investment_amount = float(request.form.get('initial_investment', 10000))
     slippage_rate = float(request.form.get('slippage', 0.0005))
     transaction_fee = float(request.form.get('fee_percentage', 0.0003))
     contract_address = request.form.get('search', '7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs')
 
-    user_portfolio = None  # Renamed from user_purchases to better reflect its purpose
+    user_portfolio = None
 
     with app.app_context():
-        db_session = db.session  # Renamed for clarity
+        db_session = db.session
         arbitrage_results = process_arbitrage_data(
             user_portfolio, 
             db_session, 
@@ -101,5 +107,7 @@ def get_logs():
     return jsonify(logs)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Use PORT environment variable for Railway
+    port = int(os.getenv('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
 
