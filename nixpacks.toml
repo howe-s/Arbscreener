@@ -1,13 +1,17 @@
 [phases.setup]
 nixPkgs = ["python39", "gcc", "postgresql"]
+cmds = [
+    "useradd -m -s /bin/bash appuser",
+    "mkdir -p /app && chown -R appuser:appuser /app"
+]
 
 [phases.install]
 cmds = [
-  "python -m venv /opt/venv",
-  ". /opt/venv/bin/activate",
-  "pip install --upgrade pip setuptools wheel",
-  "pip install -r requirements.txt"
+    "python -m venv /app/venv",
+    "chown -R appuser:appuser /app/venv",
+    "su appuser -c '. /app/venv/bin/activate && pip install --upgrade pip setuptools wheel'",
+    "su appuser -c '. /app/venv/bin/activate && pip install -r requirements.txt'"
 ]
 
 [start]
-cmd = "gunicorn app:app" 
+cmd = "su appuser -c '. /app/venv/bin/activate && gunicorn app:app'" 

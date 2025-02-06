@@ -45,15 +45,19 @@ logger.info(f"Running in {'production' if is_production else 'development'} mode
 
 # Database configuration
 if is_production:
-    db_url = os.getenv('DATABASE_URL')
-    if not db_url:
-        logger.error("No DATABASE_URL provided in production")
-        raise ValueError("DATABASE_URL environment variable is required in production")
+    # Get individual connection parameters
+    db_user = os.getenv('PGUSER')
+    db_password = os.getenv('PGPASSWORD')
+    db_host = os.getenv('PGHOST')
+    db_port = os.getenv('PGPORT')
+    db_name = os.getenv('PGDATABASE')
     
-    # Ensure the URL uses postgresql:// instead of postgres://
-    if db_url.startswith('postgres://'):
-        db_url = db_url.replace('postgres://', 'postgresql://', 1)
+    if not all([db_user, db_password, db_host, db_port, db_name]):
+        logger.error("Missing database connection parameters")
+        raise ValueError("Database connection parameters are required in production")
     
+    # Construct the database URL
+    db_url = f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
     logger.info("Using PostgreSQL database")
     
     # Test the database connection
