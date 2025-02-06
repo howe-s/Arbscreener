@@ -36,7 +36,13 @@ is_production = os.getenv('RAILWAY_ENVIRONMENT') == 'production'
 # Database configuration
 if is_production:
     # Use PostgreSQL on Railway
-    db_url = os.getenv('DATABASE_URL', '').replace('postgres://', 'postgresql://')
+    db_url = os.getenv('DATABASE_URL')
+    if not db_url:
+        # Provide a default PostgreSQL URL if DATABASE_URL is not set
+        db_url = 'postgresql://postgres:postgres@localhost:5432/arbscreener'
+    else:
+        # Ensure the URL uses postgresql:// instead of postgres://
+        db_url = db_url.replace('postgres://', 'postgresql://')
 else:
     # Use SQLite locally
     db_url = 'sqlite:///users.db'
