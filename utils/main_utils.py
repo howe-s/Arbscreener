@@ -317,7 +317,7 @@ def find_third_contract_data(unique_pair_addresses, arbitrage_opportunities, ses
             else:
                 logging.debug(f'Skipped duplicate opportunity: {combined_opportunity}')
         else:
-            logging.warning(f"No third pair matched for opportunity: {opportunity["pair1"], opportunity["pair2"]}")
+            logging.warning(f"No third pair matched for opportunity: {(opportunity['pair1'], opportunity['pair2'])}")
 
     # logging.info(f'Final number of arbitrage opportunities with third pair: {len(combined_opportunities)}')
     return combined_opportunities
