@@ -45,35 +45,58 @@ logger.info(f"Running in {'production' if is_production else 'development'} mode
 
 # Database configuration
 if is_production:
-    # Get individual connection parameters
-    db_user = os.getenv('PGUSER')
-    db_password = os.getenv('PGPASSWORD')
-    db_host = os.getenv('PGHOST')
-    db_port = os.getenv('PGPORT')
-    db_name = os.getenv('PGDATABASE')
+    # First try to get the DATABASE_URL
+    db_url = os.getenv('DATABASE_URL')
     
-    if not all([db_user, db_password, db_host, db_port, db_name]):
-        logger.error("Missing database connection parameters")
-        raise ValueError("Database connection parameters are required in production")
+    if db_url:
+        # Ensure URL starts with postgresql://
+        if db_url.startswith('postgres://'):
+            db_url = db_url.replace('postgres://', 'postgresql://', 1)
+        logger.info("Using DATABASE_URL from environment")
+    else:
+        # Fall back to individual parameters
+        db_user = os.getenv('PGUSER')
+        db_password = os.getenv('PGPASSWORD')
+        db_host = os.getenv('PGHOST')
+        db_port = os.getenv('PGPORT')
+        db_name = os.getenv('PGDATABASE')
+        
+        if not all([db_user, db_password, db_host, db_port, db_name]):
+            missing = [param for param, value in {
+                'PGUSER': db_user,
+                'PGPASSWORD': db_password,
+                'PGHOST': db_host,
+                'PGPORT': db_port,
+                'PGDATABASE': db_name
+            }.items() if not value]
+            error_msg = f"Missing database parameters: {', '.join(missing)}"
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+        
+        # Construct the database URL
+        db_url = f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+        logger.info("Using constructed database URL from parameters")
     
-    # Construct the database URL
-    db_url = f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
     logger.info("Using PostgreSQL database")
     
     # Test the database connection
     try:
-        engine = create_engine(db_url)
+        engine = create_engine(db_url, pool_size=5, pool_timeout=30, pool_recycle=1800)
         with engine.connect() as connection:
+            connection.execute("SELECT 1")  # Simple query to test connection
             logger.info("Successfully connected to the database")
-    except OperationalError as e:
+    except Exception as e:
         logger.error(f"Failed to connect to the database: {str(e)}")
+        logger.error(f"Database URL format: postgresql://user:***@host:port/dbname")
         raise
 else:
     # Use SQLite locally
     db_url = 'sqlite:///users.db'
     logger.info("Using SQLite database")
 
-logger.info(f"Database URL: {db_url}")
+# Mask password before logging
+masked_url = db_url.replace(db_url.split('@')[0].split(':')[-1], '***') if '@' in db_url else db_url
+logger.info(f"Database URL format: {masked_url}")
 
 # Single configuration block for all app settings
 app.config.update(
