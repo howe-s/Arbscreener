@@ -19,9 +19,8 @@ COPY . .
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app
+ENV FLASK_ENV=production
+ENV RAILWAY_ENVIRONMENT=production
 
-# Expose port
-EXPOSE 8000
-
-# Run the application
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "app:app"] 
+# Run the application with environment variable PORT
+CMD gunicorn --bind 0.0.0.0:$PORT --workers 4 --threads 2 --timeout 120 --log-level debug app:app 

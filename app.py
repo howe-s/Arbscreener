@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 
 # Add the current directory to Python path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -10,21 +11,13 @@ from flask import (
     request,
     jsonify,
 )
-from flask_login import (
-    LoginManager,
-    current_user
-)
 from flask_caching import Cache
-from flask_migrate import Migrate
 from dexscreener import DexscreenerClient
 import pandas as pd
 import matplotlib
 matplotlib.use('Agg')  
-from utils.models import db, User
 import logging
 from dotenv import load_dotenv
-from sqlalchemy import create_engine
-from sqlalchemy.exc import OperationalError
 
 # Configure logging
 logging.basicConfig(
@@ -39,75 +32,9 @@ load_dotenv()
 # RUN FLASK
 app = Flask(__name__)
 
-# Determine if we're running on Railway
-is_production = os.getenv('RAILWAY_ENVIRONMENT') == 'production'
-logger.info(f"Running in {'production' if is_production else 'development'} mode")
-
-# Database configuration
-if is_production:
-    # First try to get the DATABASE_URL
-    db_url = os.getenv('DATABASE_URL')
-    
-    if db_url:
-        # Ensure URL starts with postgresql://
-        if db_url.startswith('postgres://'):
-            db_url = db_url.replace('postgres://', 'postgresql://', 1)
-        logger.info("Using DATABASE_URL from environment")
-    else:
-        # Fall back to individual parameters
-        db_user = os.getenv('PGUSER')
-        db_password = os.getenv('PGPASSWORD')
-        db_host = os.getenv('PGHOST')
-        db_port = os.getenv('PGPORT')
-        db_name = os.getenv('PGDATABASE')
-        
-        if not all([db_user, db_password, db_host, db_port, db_name]):
-            missing = [param for param, value in {
-                'PGUSER': db_user,
-                'PGPASSWORD': db_password,
-                'PGHOST': db_host,
-                'PGPORT': db_port,
-                'PGDATABASE': db_name
-            }.items() if not value]
-            error_msg = f"Missing database parameters: {', '.join(missing)}"
-            logger.error(error_msg)
-            raise ValueError(error_msg)
-        
-        # Construct the database URL
-        db_url = f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
-        logger.info("Using constructed database URL from parameters")
-    
-    logger.info("Using PostgreSQL database")
-    
-    # Test the database connection
-    try:
-        engine = create_engine(db_url, pool_size=5, pool_timeout=30, pool_recycle=1800)
-        with engine.connect() as connection:
-            connection.execute("SELECT 1")  # Simple query to test connection
-            logger.info("Successfully connected to the database")
-    except Exception as e:
-        logger.error(f"Failed to connect to the database: {str(e)}")
-        logger.error(f"Database URL format: postgresql://user:***@host:port/dbname")
-        raise
-else:
-    # Use SQLite locally
-    db_url = 'sqlite:///users.db'
-    logger.info("Using SQLite database")
-
-# Mask password before logging
-masked_url = db_url.replace(db_url.split('@')[0].split(':')[-1], '***') if '@' in db_url else db_url
-logger.info(f"Database URL format: {masked_url}")
-
 # Single configuration block for all app settings
 app.config.update(
     SECRET_KEY=os.getenv('SECRET_KEY', 'your-secret-key-here'),
-    SQLALCHEMY_DATABASE_URI=db_url,
-    SQLALCHEMY_TRACK_MODIFICATIONS=False,
-    SQLALCHEMY_ENGINE_OPTIONS={
-        'pool_size': 5,
-        'pool_timeout': 30,
-        'pool_recycle': 1800,
-    },
     STATIC_FOLDER='static',
     CACHING=True,
     CACHE_TYPE='simple'
@@ -126,34 +53,16 @@ def not_found_error(error):
     logger.error(f"Not Found Error: {error}")
     return jsonify({"error": "Not Found", "details": str(error)}), 404
 
+@app.errorhandler(Exception)
+def handle_exception(error):
+    logger.error(f"Unhandled Exception: {error}", exc_info=True)
+    return jsonify({"error": "Internal Server Error", "details": str(error)}), 500
+
 # Single cache initialization
 cache = Cache(app)
 logger.info("Cache initialized")
 
 client = DexscreenerClient()
-
-# Initialize DB
-db.init_app(app)
-migrate = Migrate(app, db)
-logger.info("Database initialized")
-
-# Setup Flask-Login
-login_manager = LoginManager()
-login_manager.login_view = 'login'
-login_manager.init_app(app)
-logger.info("Login manager initialized")
-
-@login_manager.user_loader
-def load_user(user_id):
-    return db.session.get(User, int(user_id))
-
-# Initialize the database tables directly
-with app.app_context():
-    try:
-        db.create_all()
-        logger.info("Database tables created successfully")
-    except Exception as e:
-        logger.error(f"Error creating database tables: {e}")
 
 # APPLICATION ROUTES
 @app.route('/', methods=['GET', 'POST'])
@@ -162,7 +71,7 @@ def index():
     try:
         return render_template(
             'index.html', 
-            is_logged_in=current_user.is_authenticated,
+            is_logged_in=False,
             arbitrage_opportunities=[]
         )
     except Exception as e:
@@ -182,18 +91,13 @@ def fetch_arbitrage_opportunities():
 
         logger.debug(f"Processing request with parameters: investment={investment_amount}, slippage={slippage_rate}, fee={transaction_fee}, contract={contract_address}")
 
-        user_portfolio = None
-
-        with app.app_context():
-            db_session = db.session
-            arbitrage_results = process_arbitrage_data(
-                user_portfolio, 
-                db_session, 
-                investment_amount, 
-                slippage_rate, 
-                transaction_fee, 
-                search_address=contract_address
-            )
+        arbitrage_results = process_arbitrage_data(
+            None,  # No user portfolio needed 
+            investment_amount, 
+            slippage_rate, 
+            transaction_fee, 
+            search_address=contract_address
+        )
         
         return jsonify(arbitrage_results), 200
     except Exception as e:
@@ -211,8 +115,28 @@ def get_logs():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    # Use PORT environment variable for Railway
-    port = int(os.getenv('PORT', 5000))
-    logger.info(f"Starting application on port {port}")
-    app.run(host='0.0.0.0', port=port)
+    try:
+        # Use PORT environment variable for Railway
+        port = int(os.getenv('PORT', 8080))
+        logger.info(f"Starting application on port {port}")
+        app.run(host='0.0.0.0', port=port)
+    except Exception as e:
+        logger.critical(f"Failed to start application: {e}", exc_info=True)
+        raise
+
+# Health check endpoint
+@app.route('/health')
+def health_check():
+    try:
+        return jsonify({
+            "status": "healthy",
+            "timestamp": time.time()
+        })
+    except Exception as e:
+        logger.error(f"Health check failed: {e}")
+        return jsonify({
+            "status": "unhealthy",
+            "error": str(e),
+            "timestamp": time.time()
+        }), 500
 

@@ -1,5 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
+from datetime import datetime
 
 db = SQLAlchemy()
 
@@ -10,6 +11,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(150), unique=True, nullable=False)
     full_name = db.Column(db.String(150))
     portfolio_balance = db.Column(db.Float, nullable=False, default=0.0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
     # Relationships
     purchases = db.relationship('Purchase', backref='user', lazy=True)
 
@@ -17,7 +19,8 @@ class Purchase(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     asset_name = db.Column(db.String(100), nullable=False)
-    baseToken_address = db.Column(db.String(100)) 
+    baseToken_address = db.Column(db.String(100))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
     # quantity = db.Column(db.Float, nullable=False)
     # purchase_price = db.Column(db.Float, nullable=False)
     # purchase_date = db.Column(db.Date, nullable=False)
@@ -36,17 +39,15 @@ class Purchase(db.Model):
 class Contracts(db.Model):
     __tablename__ = 'contracts'
     
-    __tablename__ = 'contracts'
     id = db.Column(db.Integer, primary_key=True)
     contract_address = db.Column(db.String(255), unique=True, nullable=False)
     base_token_address = db.Column(db.String(255))
     quote_token_address = db.Column(db.String(255))
-    chain_id = db.Column(db.Integer)
-    dex_id = db.Column(db.Integer)
+    chain_id = db.Column(db.String(50))
+    dex_id = db.Column(db.String(50))
     last_updated = db.Column(db.DateTime)
     price_native = db.Column(db.Float)
-    price_usd = db.Column(db.Float) #I just added this
- 
+    price_usd = db.Column(db.Float)
 
     def __repr__(self):
         return f'<Contract {self.contract_address}>'
@@ -57,8 +58,8 @@ class ContractLake(db.Model):
     contract_address = db.Column(db.String(255), unique=True, nullable=False)
     base_token_address = db.Column(db.String(255))
     quote_token_address = db.Column(db.String(255))
-    chain_id = db.Column(db.Integer)
-    dex_id = db.Column(db.Integer)
+    chain_id = db.Column(db.String(50))
+    dex_id = db.Column(db.String(50))
     last_updated = db.Column(db.DateTime)
     price_native = db.Column(db.Float)
     price_usd = db.Column(db.Float)  # I just added this
