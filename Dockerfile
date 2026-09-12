@@ -1,4 +1,4 @@
-FROM python:3.9-slim
+FROM python:3.12-slim
 
 WORKDIR /app
 
@@ -23,4 +23,4 @@ ENV FLASK_ENV=production
 ENV RAILWAY_ENVIRONMENT=production
 
 # Run the application with environment variable PORT
-CMD gunicorn --bind 0.0.0.0:$PORT --workers 4 --threads 2 --timeout 120 --log-level debug app:app 
+CMD gunicorn --bind 0.0.0.0:${PORT:-8080} --workers 4 --threads 2 --timeout 120 --log-level debug app:app

@@ -10,7 +10,7 @@ class PoolRetrievalService:
 
     def get_pools(self, asset_address: str) -> List[LiquidityPool]:
         """Fetch liquidity pools containing the specified asset address."""
-        response = requests.get(f"{self.api_url}/pools?asset={asset_address}")
+        response = requests.get(f"{self.api_url}/pools", params={"asset": asset_address}, timeout=(5, 15))
         response.raise_for_status()
         pools_data = response.json()
         return [LiquidityPool(pool['base_token'], pool['quote_token']) for pool in pools_data] 

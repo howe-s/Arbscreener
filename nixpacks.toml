@@ -1,5 +1,5 @@
 [phases.setup]
-nixPkgs = ["python39", "gcc", "postgresql"]
+nixPkgs = ["python312", "gcc", "postgresql"]
 cmds = [
     "useradd -m -s /bin/bash appuser",
     "mkdir -p /app && chown -R appuser:appuser /app"
@@ -14,4 +14,4 @@ cmds = [
 ]
 
 [start]
-cmd = "su appuser -c '. /app/venv/bin/activate && gunicorn app:app'" 
+cmd = "su appuser -c '. /app/venv/bin/activate && gunicorn --bind 0.0.0.0:${PORT:-8080} --timeout 120 app:app'"

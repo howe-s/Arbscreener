@@ -107,3 +107,8 @@ nosetests.xml
 test_coverage/
 notes.txt
 TODOLIST.txt
+
+# Cursor rules
+.cursorrules
+zoldReference
+quicktest.py

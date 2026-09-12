@@ -19,4 +19,7 @@ htmlcov/
 dist/
 build/
 *.egg-info/
-old_files/ 
+old_files/
+.venv/
+node_modules/
+**/node_modules/
